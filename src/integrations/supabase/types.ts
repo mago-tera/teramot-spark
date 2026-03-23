@@ -14,7 +14,107 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      campaigns: {
+        Row: {
+          created_at: string
+          frequency: string
+          geo_mix: Json
+          id: string
+          loom_links: Json | null
+          name: string | null
+          profile: string
+          quantity: number
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          frequency?: string
+          geo_mix?: Json
+          id?: string
+          loom_links?: Json | null
+          name?: string | null
+          profile: string
+          quantity?: number
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          frequency?: string
+          geo_mix?: Json
+          id?: string
+          loom_links?: Json | null
+          name?: string | null
+          profile?: string
+          quantity?: number
+          status?: string
+        }
+        Relationships: []
+      }
+      leads: {
+        Row: {
+          campaign_id: string | null
+          company: string | null
+          country: string | null
+          created_at: string
+          email: string | null
+          first_name: string | null
+          headcount: number | null
+          id: string
+          industry: string | null
+          last_name: string | null
+          linkedin_url: string | null
+          messages: Json | null
+          quartile: string | null
+          score: number | null
+          seniority: string | null
+          title: string | null
+        }
+        Insert: {
+          campaign_id?: string | null
+          company?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          headcount?: number | null
+          id?: string
+          industry?: string | null
+          last_name?: string | null
+          linkedin_url?: string | null
+          messages?: Json | null
+          quartile?: string | null
+          score?: number | null
+          seniority?: string | null
+          title?: string | null
+        }
+        Update: {
+          campaign_id?: string | null
+          company?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          first_name?: string | null
+          headcount?: number | null
+          id?: string
+          industry?: string | null
+          last_name?: string | null
+          linkedin_url?: string | null
+          messages?: Json | null
+          quartile?: string | null
+          score?: number | null
+          seniority?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "leads_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
