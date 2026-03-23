@@ -1,16 +1,39 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { useWizard } from "@/hooks/useWizard";
+import { WizardSidebar } from "@/components/WizardSidebar";
+import { ConfigStep } from "@/components/steps/ConfigStep";
+import { SearchStep } from "@/components/steps/SearchStep";
+import { ScoringStep } from "@/components/steps/ScoringStep";
+import { MessagesStep } from "@/components/steps/MessagesStep";
+import { TrackingStep } from "@/components/steps/TrackingStep";
 
-// IMPORTANT: Fully REPLACE this with your own code
-const PlaceholderIndex = () => {
-  // PLACEHOLDER: Replace this entire return statement with the user's app.
-  // The inline background color is intentionally not part of the design system.
+const Index = () => {
+  const wizard = useWizard();
+
+  const renderStep = () => {
+    switch (wizard.currentStep) {
+      case 0:
+        return <ConfigStep config={wizard.config} setConfig={wizard.setConfig} onComplete={() => wizard.completeStep(0)} />;
+      case 1:
+        return <SearchStep config={wizard.config} leads={wizard.leads} setLeads={wizard.setLeads} onComplete={() => wizard.completeStep(1)} />;
+      case 2:
+        return <ScoringStep leads={wizard.leads} scoredLeads={wizard.scoredLeads} setScoredLeads={wizard.setScoredLeads} onComplete={() => wizard.completeStep(2)} />;
+      case 3:
+        return <MessagesStep scoredLeads={wizard.scoredLeads} setScoredLeads={wizard.setScoredLeads} onComplete={() => wizard.completeStep(3)} />;
+      case 4:
+        return <TrackingStep />;
+      default:
+        return null;
+    }
+  };
+
   return (
-    <div className="flex min-h-screen items-center justify-center" style={{ backgroundColor: '#fcfbf8' }}>
-      <img data-lovable-blank-page-placeholder="REMOVE_THIS" src="/placeholder.svg" alt="Your app will live here!" />
+    <div className="flex min-h-screen w-full">
+      <WizardSidebar steps={wizard.steps} currentStep={wizard.currentStep} onStepClick={wizard.goToStep} />
+      <main className="flex-1 p-8 max-w-5xl">
+        {renderStep()}
+      </main>
     </div>
   );
 };
-
-const Index = PlaceholderIndex;
 
 export default Index;
