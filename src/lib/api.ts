@@ -31,7 +31,7 @@ export async function saveLeads(campaignId: string, leads: ScoredLead[]) {
     headcount: l.headcount,
     score: l.total,
     quartile: l.quartile,
-    messages: l.messages || null,
+    messages: (l.messages as Record<string, string>) || null,
   }));
 
   const { error } = await supabase.from("leads").insert(rows);
