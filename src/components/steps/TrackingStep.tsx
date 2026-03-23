@@ -1,4 +1,12 @@
 import { useState } from "react";
+import { CampaignConfig, ScoredLead } from "@/hooks/useWizard";
+import { saveCampaign, saveLeads } from "@/lib/api";
+import { toast } from "sonner";
+
+interface Props {
+  config: CampaignConfig;
+  scoredLeads: ScoredLead[];
+}
 
 const BENCHMARKS = [
   { metric: "Open rate email", target: "> 40%", status: "pending" },
@@ -10,11 +18,28 @@ const BENCHMARKS = [
 
 const CHECKPOINTS = [3, 5, 7, 10, 14, 21, "Cierre"];
 
-export function TrackingStep() {
+export function TrackingStep({ config, scoredLeads }: Props) {
   const now = new Date();
   const defaultName = `Teramot-Q1-${now.toLocaleString("es", { month: "short" })}-${now.getFullYear()}`;
   const [campaignName, setCampaignName] = useState(defaultName);
   const [loomLinks, setLoomLinks] = useState({ Q1: "", Q2: "", Q3: "", Q4: "" });
+  const [saving, setSaving] = useState(false);
+  const [saved, setSaved] = useState(false);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const campaign = await saveCampaign(config, campaignName, loomLinks);
+      await saveLeads(campaign.id, scoredLeads);
+      setSaved(true);
+      toast.success("Campaña guardada exitosamente");
+    } catch (e: any) {
+      console.error("Error saving campaign:", e);
+      toast.error(e.message || "Error guardando campaña");
+    } finally {
+      setSaving(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -84,8 +109,16 @@ export function TrackingStep() {
         </div>
       </div>
 
-      <button className="px-6 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20">
-        💾 Guardar campaña
+      <button
+        onClick={handleSave}
+        disabled={saving || saved}
+        className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
+          saved
+            ? "bg-success/20 text-success border border-success/30"
+            : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
+        }`}
+      >
+        {saving ? "Guardando..." : saved ? "✓ Campaña guardada" : "💾 Guardar campaña"}
       </button>
     </div>
   );

@@ -1,21 +1,13 @@
 import { useState } from "react";
 import { ScoredLead, GeneratedMessages } from "@/hooks/useWizard";
 import { Copy, RefreshCw } from "lucide-react";
+import { generateAIMessages } from "@/lib/api";
+import { toast } from "sonner";
 
 interface Props {
   scoredLeads: ScoredLead[];
   setScoredLeads: (l: ScoredLead[]) => void;
   onComplete: () => void;
-}
-
-function generateMockMessages(lead: ScoredLead, canal: "linkedin" | "email"): GeneratedMessages {
-  return {
-    linkedin: `${lead.firstName}, vi que en ${lead.company} manejan datos de ${lead.industry}. En Teramot ayudamos a limpiar y modelar datos empresariales con IA — ¿te interesa ver cómo funciona en 15 min?`,
-    email_asunto: `${lead.company}: modelado de datos sin fricción`,
-    email_cuerpo: `Hola ${lead.firstName},\n\nSoy del equipo de Teramot. Trabajamos con empresas de ${lead.industry} que necesitan datos limpios y bien modelados para tomar mejores decisiones.\n\nNuestra plataforma usa IA para sanitizar y estructurar datos empresariales en minutos, no semanas.\n\n¿Tenés 15 minutos esta semana para una demo rápida?`,
-    followup_d4: `${lead.firstName}, te escribí hace unos días sobre cómo Teramot puede ayudar a ${lead.company} con el modelado de datos. ¿Te interesa agendar una llamada corta?`,
-    cierre_d9: `Último mensaje, ${lead.firstName}. Si el timing no es el correcto, sin problema. Dejo el link por si querés explorar: teramot.com`,
-  };
 }
 
 export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props) {
@@ -26,19 +18,24 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
 
   const selectedLead = scoredLeads.find((l) => l.id === selectedId);
 
-  const generateForLead = (leadId: string) => {
+  const generateForLead = async (leadId: string) => {
     setGenerating(leadId);
-    setTimeout(() => {
+    try {
       const lead = scoredLeads.find((l) => l.id === leadId)!;
-      const messages = generateMockMessages(lead, canal);
+      const messages = await generateAIMessages(lead, canal);
       setScoredLeads(scoredLeads.map((l) => (l.id === leadId ? { ...l, messages } : l)));
+    } catch (e: any) {
+      console.error("Error generating messages:", e);
+      toast.error(e.message || "Error generando mensajes");
+    } finally {
       setGenerating(null);
-    }, 1500);
+    }
   };
 
   const copyText = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
     setCopied(key);
+    toast.success("Copiado al portapapeles");
     setTimeout(() => setCopied(null), 1500);
   };
 
@@ -90,7 +87,6 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
                   <p className="text-xs text-muted-foreground">{selectedLead.title} @ {selectedLead.company}</p>
                 </div>
                 <div className="flex items-center gap-2">
-                  {/* Canal toggle */}
                   <div className="flex rounded-lg border border-white/10 overflow-hidden">
                     {(["linkedin", "email"] as const).map((c) => (
                       <button
@@ -116,7 +112,7 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
                         <span className="w-1.5 h-1.5 rounded-full bg-primary pulse-dot" />
                         <span className="w-1.5 h-1.5 rounded-full bg-primary pulse-dot" />
                       </span>
-                      Generando mensajes...
+                      Generando mensajes con IA...
                     </div>
                   ) : (
                     <button
@@ -160,7 +156,10 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
                   ))}
 
                   <button
-                    onClick={() => generateForLead(selectedLead.id)}
+                    onClick={() => {
+                      setScoredLeads(scoredLeads.map((l) => (l.id === selectedLead.id ? { ...l, messages: undefined } : l)));
+                      generateForLead(selectedLead.id);
+                    }}
                     disabled={generating === selectedLead.id}
                     className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors"
                   >

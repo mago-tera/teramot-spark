@@ -20,7 +20,7 @@ const Index = () => {
       case 3:
         return <MessagesStep scoredLeads={wizard.scoredLeads} setScoredLeads={wizard.setScoredLeads} onComplete={() => wizard.completeStep(3)} />;
       case 4:
-        return <TrackingStep />;
+        return <TrackingStep config={wizard.config} scoredLeads={wizard.scoredLeads} />;
       default:
         return null;
     }
