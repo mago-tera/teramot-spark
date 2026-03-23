@@ -1,0 +1,79 @@
+import { StepInfo } from "@/hooks/useWizard";
+import { Check } from "lucide-react";
+
+interface Props {
+  steps: StepInfo[];
+  currentStep: number;
+  onStepClick: (id: number) => void;
+}
+
+export function WizardSidebar({ steps, currentStep, onStepClick }: Props) {
+  return (
+    <aside className="w-60 shrink-0 h-screen sticky top-0 flex flex-col border-r border-white/[0.08]" style={{ background: "hsl(240 15% 6%)" }}>
+      {/* Logo */}
+      <div className="px-5 py-6 border-b border-white/[0.08]">
+        <h1 className="text-lg font-semibold tracking-tight text-foreground">
+          <span className="text-primary">Teramot</span>{" "}
+          <span className="text-muted-foreground font-normal text-sm">Prospecting</span>
+        </h1>
+      </div>
+
+      {/* Steps */}
+      <nav className="flex-1 px-3 py-4 space-y-1">
+        {steps.map((step) => {
+          const isActive = step.id === currentStep;
+          const isComplete = step.status === "complete";
+          const isPending = step.status === "pending";
+
+          return (
+            <button
+              key={step.id}
+              onClick={() => onStepClick(step.id)}
+              disabled={isPending}
+              className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+                isActive
+                  ? "bg-primary/15 text-foreground"
+                  : isComplete
+                  ? "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
+                  : "text-muted-foreground/50 cursor-not-allowed"
+              }`}
+            >
+              <span className={`w-7 h-7 rounded-md flex items-center justify-center text-xs shrink-0 ${
+                isActive
+                  ? "bg-primary text-primary-foreground"
+                  : isComplete
+                  ? "bg-success/20 text-success"
+                  : "bg-white/[0.04] text-muted-foreground/50"
+              }`}>
+                {isComplete ? <Check className="w-3.5 h-3.5" /> : step.icon}
+              </span>
+              <span className="truncate">{step.label}</span>
+              {isActive && (
+                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+              )}
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* Connection status */}
+      <div className="px-4 py-4 border-t border-white/[0.08] space-y-2">
+        <p className="text-[11px] uppercase tracking-wider text-muted-foreground/60 mb-2">Conexiones</p>
+        <ConnectionBadge name="Apollo" connected={false} />
+        <ConnectionBadge name="Notion" connected={false} />
+      </div>
+    </aside>
+  );
+}
+
+function ConnectionBadge({ name, connected }: { name: string; connected: boolean }) {
+  return (
+    <div className="flex items-center gap-2 text-xs">
+      <span className={`w-1.5 h-1.5 rounded-full ${connected ? "bg-success" : "bg-muted-foreground/40"}`} />
+      <span className="text-muted-foreground">{name}</span>
+      <span className={`ml-auto text-[10px] ${connected ? "text-success" : "text-muted-foreground/50"}`}>
+        {connected ? "Activo" : "Pendiente"}
+      </span>
+    </div>
+  );
+}
