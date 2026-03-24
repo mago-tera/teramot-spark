@@ -3,7 +3,7 @@ import { CampaignConfig, Lead, ScoredLead } from "@/hooks/useWizard";
 import { searchApollo } from "@/lib/api";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { ICPForm } from "@/components/steps/ICPForm";
 import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users } from "lucide-react";
 
@@ -68,7 +68,9 @@ function scoreAndAssign(leads: Lead[]): ScoredLead[] {
 }
 
 export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads, onComplete }: Props) {
-  const { id: campaignId } = useParams();
+  const { id: paramId } = useParams();
+  const navigate = useNavigate();
+  const [campaignId, setCampaignId] = useState<string | null>(paramId && paramId !== "new" ? paramId : null);
   const [searching, setSearching] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
@@ -84,7 +86,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
 
   // Load existing lists
   useEffect(() => {
-    if (!campaignId || campaignId === "new") {
+    if (!campaignId) {
       setLoading(false);
       setShowICPForm(true);
       return;
@@ -155,12 +157,32 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     }));
     setProgress(10);
 
-    try {
+      // Auto-create campaign if needed
+      let activeCampaignId = campaignId;
+      if (!activeCampaignId) {
+        const { data: newCampaign, error: campErr } = await supabase
+          .from("campaigns")
+          .insert({
+            name: `Campaña ${new Date().toLocaleDateString("es-AR", { day: "numeric", month: "short" })}`,
+            profile: searchConfig.profile,
+            geo_mix: searchConfig.geoMix,
+            quantity: searchConfig.quantity,
+            frequency: "once",
+            status: "configuracion",
+          })
+          .select()
+          .single();
+        if (campErr || !newCampaign) throw new Error("No se pudo crear la campaña");
+        activeCampaignId = newCampaign.id;
+        setCampaignId(activeCampaignId);
+        navigate(`/campaign/${activeCampaignId}`, { replace: true });
+      }
+
       // Get all existing leads for dedup
       const { data: existingLeadsData } = await supabase
         .from("leads")
         .select("email, linkedin_url")
-        .eq("campaign_id", campaignId!);
+        .eq("campaign_id", activeCampaignId);
 
       const existingEmails = new Set((existingLeadsData || []).map((l) => l.email).filter(Boolean));
       const existingLinkedins = new Set((existingLeadsData || []).map((l) => l.linkedin_url).filter(Boolean));
@@ -223,12 +245,12 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       const { data: listData } = await supabase
         .from("lists")
         .insert({
-          campaign_id: campaignId!,
+          campaign_id: activeCampaignId,
           name: defaultName,
           profile: searchConfig.profile,
           geo_mix: searchConfig.geoMix,
           quantity: searchConfig.quantity,
-          frequency: searchConfig.frequency,
+          frequency: searchConfig.frequency || "once",
           lead_count: scored.length,
         })
         .select()
@@ -238,7 +260,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
 
       if (listId && scored.length > 0) {
         const rows = scored.map((l) => ({
-          campaign_id: campaignId!,
+          campaign_id: activeCampaignId,
           list_id: listId,
           first_name: l.firstName,
           last_name: l.lastName,
