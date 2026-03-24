@@ -462,7 +462,6 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-      </div>
 
       {/* Inline ICP Form */}
       {showICPForm && (
