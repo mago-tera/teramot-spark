@@ -16,6 +16,7 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
   const [mode, setMode] = useState<Mode>("objective");
   const [objective, setObjective] = useState("");
   const [whatToCommunicate, setWhatToCommunicate] = useState("");
+  const [selectedMode, setSelectedMode] = useState<"group" | "personalized" | null>(null);
 
   // Group mode state
   const [canal, setCanal] = useState<"linkedin" | "email">("linkedin");
@@ -77,78 +78,96 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-semibold text-foreground">Generar Comunicación</h2>
           <p className="text-sm text-muted-foreground">
-            Antes de generar los mensajes, necesitamos entender qué querés comunicar.
+            Elegí el tipo de comunicación y definí tu mensaje.
           </p>
         </div>
 
-        <div className="space-y-4">
-          <div className="space-y-2">
-            <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-              ¿Cuál es tu objetivo con este outreach?
-            </label>
-            <textarea
-              value={objective}
-              onChange={(e) => setObjective(e.target.value)}
-              placeholder="Ej: Agendar una demo de 15 minutos con decision makers de equipos de datos..."
-              className="glass-input w-full min-h-[80px] text-sm resize-none"
-            />
-          </div>
+        {/* Mode selection first */}
+        <div className="grid grid-cols-2 gap-4">
+          <button
+            onClick={() => setSelectedMode("group")}
+            className={`glass-card p-6 text-left space-y-3 transition-all group border ${
+              selectedMode === "group" ? "border-primary/40 bg-primary/5" : "border-white/[0.06] hover:border-primary/20"
+            }`}
+          >
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              <MessageSquare className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Comunicación grupal</h3>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                Un mensaje único para todas las listas. 
+                Ideal para campañas masivas con un mensaje unificado.
+              </p>
+            </div>
+            <p className="text-[11px] text-muted-foreground/70 pt-1">
+              {scoredLeads.length} leads
+            </p>
+          </button>
 
-          <div className="space-y-2">
-            <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-              ¿Qué querés comunicar?
-            </label>
-            <textarea
-              value={whatToCommunicate}
-              onChange={(e) => setWhatToCommunicate(e.target.value)}
-              placeholder="Ej: Mostrar cómo Teramot reduce el tiempo de construcción de infraestructura de datos de semanas a horas..."
-              className="glass-input w-full min-h-[80px] text-sm resize-none"
-            />
-          </div>
+          <button
+            onClick={() => setSelectedMode("personalized")}
+            className={`glass-card p-6 text-left space-y-3 transition-all group border ${
+              selectedMode === "personalized" ? "border-primary/40 bg-primary/5" : "border-white/[0.06] hover:border-primary/20"
+            }`}
+          >
+            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
+              <UserRound className="w-6 h-6 text-primary" />
+            </div>
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Personalizado por lead</h3>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                Mensajes únicos para cada prospecto, 
+                adaptados a su cargo, empresa e industria.
+              </p>
+            </div>
+            <p className="text-[11px] text-muted-foreground/70 pt-1">
+              {scoredLeads.length} leads disponibles
+            </p>
+          </button>
         </div>
 
-        {canProceed && (
-          <div className="grid grid-cols-2 gap-4 pt-2">
-            <button
-              onClick={() => setMode("group")}
-              className="glass-card glass-card-hover p-6 text-left space-y-3 transition-all group border border-white/[0.06] hover:border-primary/30"
-            >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <MessageSquare className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">Comunicación grupal</h3>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                  Genera un mensaje único para toda la lista. 
-                  Ideal para campañas masivas con un mensaje unificado.
-                </p>
-              </div>
-              <p className="text-[11px] text-muted-foreground/70 pt-1">
-                {scoredLeads.length} leads
-              </p>
-            </button>
+        {/* Objective and message fields */}
+        {selectedMode && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                ¿Cuál es tu objetivo con este outreach?
+              </label>
+              <textarea
+                value={objective}
+                onChange={(e) => setObjective(e.target.value)}
+                placeholder="Ej: Agendar una demo de 15 minutos con decision makers de equipos de datos..."
+                className="glass-input w-full min-h-[80px] text-sm resize-none"
+              />
+            </div>
 
-            <button
-              onClick={() => {
-                setMode("personalized");
-                setSelectedId(sortedLeads[0]?.id || null);
-              }}
-              className="glass-card glass-card-hover p-6 text-left space-y-3 transition-all group border border-white/[0.06] hover:border-primary/30"
-            >
-              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <UserRound className="w-6 h-6 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-foreground">Personalizado por lead</h3>
-                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                  Genera mensajes únicos para cada prospecto individual, 
-                  adaptados a su cargo, empresa e industria.
-                </p>
-              </div>
-              <p className="text-[11px] text-muted-foreground/70 pt-1">
-                {scoredLeads.length} leads disponibles
-              </p>
-            </button>
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+                ¿Qué querés comunicar?
+              </label>
+              <textarea
+                value={whatToCommunicate}
+                onChange={(e) => setWhatToCommunicate(e.target.value)}
+                placeholder="Ej: Mostrar cómo Teramot reduce el tiempo de construcción de infraestructura de datos de semanas a horas..."
+                className="glass-input w-full min-h-[80px] text-sm resize-none"
+              />
+            </div>
+
+            {canProceed && (
+              <button
+                onClick={() => {
+                  if (selectedMode === "group") setMode("group");
+                  else {
+                    setMode("personalized");
+                    setSelectedId(sortedLeads[0]?.id || null);
+                  }
+                }}
+                className="w-full px-6 py-3 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+              >
+                Continuar →
+              </button>
+            )}
           </div>
         )}
 
