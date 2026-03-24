@@ -61,29 +61,36 @@ export function SearchStep({ config, leads, setLeads, onComplete }: Props) {
   const [logs, setLogs] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
 
-  const startSearch = () => {
+  const startSearch = async () => {
     setSearching(true);
     setLogs([]);
     setProgress(0);
 
     const countries = Object.entries(config.geoMix).filter(([, v]) => v > 0);
-    let step = 0;
+    setLogs(countries.map(([c, p]) => {
+      const qty = Math.round(((p as number) / 100) * config.quantity);
+      return `Buscando en ${c}... (${qty} leads)`;
+    }));
+    setProgress(30);
 
-    const interval = setInterval(() => {
-      if (step < countries.length) {
-        const [country, pct] = countries[step];
-        const qty = Math.round((pct / 100) * config.quantity);
-        setLogs((prev) => [...prev, `Buscando en ${country}... ✓ ${qty} leads`]);
-        setProgress(((step + 1) / countries.length) * 100);
-        step++;
-      } else {
-        clearInterval(interval);
-        const mockLeads = generateMockLeads(config);
-        setLeads(mockLeads);
-        setLogs((prev) => [...prev, `✓ Búsqueda completada — ${mockLeads.length} leads encontrados`]);
-        setSearching(false);
-      }
-    }, 800);
+    try {
+      const apolloLeads = await searchApollo(config);
+      setProgress(100);
+      setLeads(apolloLeads);
+      setLogs((prev) => [...prev, `✓ Búsqueda completada — ${apolloLeads.length} leads encontrados en Apollo`]);
+      toast.success(`${apolloLeads.length} leads encontrados`);
+    } catch (e: any) {
+      console.error("Apollo search error:", e);
+      toast.error(e.message || "Error buscando en Apollo");
+      setLogs((prev) => [...prev, `✗ Error: ${e.message}`]);
+
+      // Fallback to mock data
+      const mockLeads = generateMockLeads(config);
+      setLeads(mockLeads);
+      setLogs((prev) => [...prev, `⚠ Usando datos de prueba — ${mockLeads.length} leads generados`]);
+    } finally {
+      setSearching(false);
+    }
   };
 
   return (
