@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CampaignConfig, ScoredLead } from "@/hooks/useWizard";
-import { saveCampaign, saveLeads } from "@/lib/api";
+import { saveCampaign, saveLeads, createApolloSequence } from "@/lib/api";
 import { toast } from "sonner";
 
 interface Props {
@@ -25,6 +25,8 @@ export function TrackingStep({ config, scoredLeads }: Props) {
   const [loomLinks, setLoomLinks] = useState({ Q1: "", Q2: "", Q3: "", Q4: "" });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [launching, setLaunching] = useState(false);
+  const [launched, setLaunched] = useState(false);
 
   const handleSave = async () => {
     setSaving(true);
@@ -38,6 +40,20 @@ export function TrackingStep({ config, scoredLeads }: Props) {
       toast.error(e.message || "Error guardando campaña");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLaunch = async () => {
+    setLaunching(true);
+    try {
+      const result = await createApolloSequence(campaignName, scoredLeads);
+      setLaunched(true);
+      toast.success(result.message || "Secuencia creada en Apollo");
+    } catch (e: any) {
+      console.error("Error launching sequence:", e);
+      toast.error(e.message || "Error creando secuencia en Apollo");
+    } finally {
+      setLaunching(false);
     }
   };
 
@@ -109,17 +125,33 @@ export function TrackingStep({ config, scoredLeads }: Props) {
         </div>
       </div>
 
-      <button
-        onClick={handleSave}
-        disabled={saving || saved}
-        className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
-          saved
-            ? "bg-success/20 text-success border border-success/30"
-            : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
-        }`}
-      >
-        {saving ? "Guardando..." : saved ? "✓ Campaña guardada" : "💾 Guardar campaña"}
-      </button>
+      <div className="flex gap-3">
+        <button
+          onClick={handleSave}
+          disabled={saving || saved}
+          className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
+            saved
+              ? "bg-success/20 text-success border border-success/30"
+              : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
+          }`}
+        >
+          {saving ? "Guardando..." : saved ? "✓ Campaña guardada" : "💾 Guardar campaña"}
+        </button>
+
+        {saved && (
+          <button
+            onClick={handleLaunch}
+            disabled={launching || launched}
+            className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
+              launched
+                ? "bg-success/20 text-success border border-success/30"
+                : "bg-warning/90 text-black hover:bg-warning transition-colors shadow-lg shadow-warning/20"
+            }`}
+          >
+            {launching ? "Creando secuencia..." : launched ? "✓ Secuencia creada en Apollo" : "🚀 Lanzar en Apollo"}
+          </button>
+        )}
+      </div>
     </div>
   );
 }

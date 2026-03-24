@@ -47,3 +47,38 @@ export async function generateAIMessages(contact: ScoredLead, canal: "linkedin" 
   if (data.error) throw new Error(data.error);
   return data.messages;
 }
+
+export async function searchApollo(config: CampaignConfig) {
+  const { data, error } = await supabase.functions.invoke("search-apollo", {
+    body: {
+      profile: config.profile,
+      geoMix: config.geoMix,
+      quantity: config.quantity,
+    },
+  });
+
+  if (error) throw error;
+  if (data.error) throw new Error(data.error);
+  return data.leads;
+}
+
+export async function createApolloSequence(campaignName: string, leads: ScoredLead[]) {
+  const leadsWithMessages = leads.filter(l => l.messages && l.email);
+
+  const { data, error } = await supabase.functions.invoke("create-apollo-sequence", {
+    body: {
+      campaignName,
+      leads: leadsWithMessages.map(l => ({
+        apolloId: (l as any).apolloId || "",
+        email: l.email,
+        firstName: l.firstName,
+        lastName: l.lastName,
+        messages: l.messages,
+      })),
+    },
+  });
+
+  if (error) throw error;
+  if (data.error) throw new Error(data.error);
+  return data;
+}
