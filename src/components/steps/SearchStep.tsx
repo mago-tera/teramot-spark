@@ -444,7 +444,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
             <Input
               value={newListName}
               onChange={(e) => setNewListName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && newListName.trim()) { setShowNewListDialog(false); setShowICPForm(true); setConfig({ ...config, listName: newListName.trim() }); } }}
+              onKeyDown={(e) => { if (e.key === "Enter" && newListName.trim()) { setShowNewListDialog(false); setShowICPForm(true); } }}
               placeholder="Ej: SDRs Fintech Argentina"
               autoFocus
               className="glass-input"
