@@ -114,16 +114,18 @@ export function ConfigStep({ config, setConfig, onComplete }: Props) {
           {COUNTRIES.map((c) => (
             <div key={c} className="flex items-center gap-2">
               <label className="text-xs text-muted-foreground w-20 shrink-0">{c}</label>
-              <div className="relative flex-1">
-                <input
-                  type="number"
-                  min={0}
-                  max={100}
-                  value={config.geoMix[c] || 0}
-                  onChange={(e) => updateGeo(c, parseInt(e.target.value) || 0)}
-                  className="glass-input w-full pr-6 text-right font-mono text-xs"
-                />
-                <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">%</span>
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => updateGeo(c, Math.max(0, (config.geoMix[c] || 0) - 5))}
+                  className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-medium border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/[0.06] transition-colors"
+                >−</button>
+                <span className="w-10 text-center text-xs font-mono text-foreground">{config.geoMix[c] || 0}%</span>
+                <button
+                  type="button"
+                  onClick={() => updateGeo(c, Math.min(100, (config.geoMix[c] || 0) + 5))}
+                  className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-medium border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/[0.06] transition-colors"
+                >+</button>
               </div>
             </div>
           ))}
