@@ -380,6 +380,53 @@ export default function Projects() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* New project dialog */}
+      <AlertDialog open={showNewDialog} onOpenChange={(open) => { if (!open) { setShowNewDialog(false); setNewName(""); setNewInviteEmail(""); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Nuevo proyecto</AlertDialogTitle>
+            <AlertDialogDescription>
+              Dale un nombre a tu proyecto y opcionalmente invitá a alguien del equipo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Nombre del proyecto</label>
+              <input
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="Ej: Expansión LATAM Q2"
+                className="glass-input w-full text-sm py-2 px-3"
+                autoFocus
+                onKeyDown={(e) => { if (e.key === "Enter" && newName.trim()) createProject(); }}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-2">
+                <UserPlus className="w-3.5 h-3.5" />
+                Invitar a alguien
+                <span className="text-muted-foreground/50 normal-case tracking-normal font-normal">(opcional)</span>
+              </label>
+              <input
+                type="email"
+                value={newInviteEmail}
+                onChange={(e) => setNewInviteEmail(e.target.value)}
+                placeholder="usuario@teramot.com"
+                className="glass-input w-full text-sm py-2 px-3"
+                onKeyDown={(e) => { if (e.key === "Enter" && newName.trim()) createProject(); }}
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={createProject} disabled={creating || !newName.trim()}>
+              {creating ? "Creando..." : "Crear proyecto"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
