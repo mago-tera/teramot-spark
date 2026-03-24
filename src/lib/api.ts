@@ -48,12 +48,15 @@ export async function generateAIMessages(contact: ScoredLead, canal: "linkedin" 
   return data.messages;
 }
 
-export async function searchApollo(config: CampaignConfig) {
+export async function searchApollo(config: CampaignConfig, page = 1, excludeEmails: string[] = [], excludeLinkedins: string[] = []) {
   const { data, error } = await supabase.functions.invoke("search-apollo", {
     body: {
       profile: config.profile,
       geoMix: config.geoMix,
       quantity: config.quantity,
+      page,
+      excludeEmails,
+      excludeLinkedins,
     },
   });
 

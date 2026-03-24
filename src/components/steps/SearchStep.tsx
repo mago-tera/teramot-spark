@@ -153,31 +153,71 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       const qty = Math.round(((p as number) / 100) * searchConfig.quantity);
       return `Buscando en ${c}... (${qty} leads)`;
     }));
-    setProgress(20);
+    setProgress(10);
 
     try {
-      setLogs((prev) => [...prev, "🔄 Enriqueciendo contactos con Apollo (email + LinkedIn)..."]);
-      setProgress(40);
-      const apolloLeads = await searchApollo(searchConfig);
-      setProgress(80);
-
-      // Filter out duplicates vs ALL existing leads in this campaign
+      // Get all existing leads for dedup
       const { data: existingLeadsData } = await supabase
         .from("leads")
         .select("email, linkedin_url")
         .eq("campaign_id", campaignId!);
-      
+
       const existingEmails = new Set((existingLeadsData || []).map((l) => l.email).filter(Boolean));
       const existingLinkedins = new Set((existingLeadsData || []).map((l) => l.linkedin_url).filter(Boolean));
-      const newLeads = apolloLeads.filter((l: Lead) => {
-        if (l.email && existingEmails.has(l.email)) return false;
-        if (l.linkedinUrl && existingLinkedins.has(l.linkedinUrl)) return false;
-        return true;
-      });
 
-      const scored = scoreAndAssign(newLeads);
+      const targetQty = searchConfig.quantity;
+      let allNewLeads: Lead[] = [];
+      let page = 1;
+      const maxRetries = 5;
 
-      // Create the list record
+      while (allNewLeads.length < targetQty && page <= maxRetries) {
+        setLogs((prev) => [
+          ...prev,
+          `🔄 Búsqueda ${page}${page > 1 ? ` (faltan ${targetQty - allNewLeads.length} leads)` : ""}...`,
+        ]);
+        setProgress(10 + Math.min(70, (allNewLeads.length / targetQty) * 70));
+
+        const apolloLeads = await searchApollo(
+          searchConfig,
+          page,
+          Array.from(existingEmails),
+          Array.from(existingLinkedins),
+        );
+
+        // Filter duplicates against existing + already collected
+        const newBatch = apolloLeads.filter((l: Lead) => {
+          if (l.email && existingEmails.has(l.email)) return false;
+          if (l.linkedinUrl && existingLinkedins.has(l.linkedinUrl)) return false;
+          return true;
+        });
+
+        // Add to dedup sets
+        for (const l of newBatch) {
+          if (l.email) existingEmails.add(l.email);
+          if (l.linkedinUrl) existingLinkedins.add(l.linkedinUrl);
+        }
+
+        allNewLeads = [...allNewLeads, ...newBatch];
+
+        const dupeCount = apolloLeads.length - newBatch.length;
+        if (dupeCount > 0) {
+          setLogs((prev) => [...prev, `⚠ ${dupeCount} duplicados filtrados en página ${page}`]);
+        }
+
+        // If Apollo returned 0 results, no point continuing
+        if (apolloLeads.length === 0) {
+          setLogs((prev) => [...prev, `⚠ Apollo no devolvió más resultados`]);
+          break;
+        }
+
+        page++;
+      }
+
+      // Trim to target
+      const finalLeads = allNewLeads.slice(0, targetQty);
+      const scored = scoreAndAssign(finalLeads);
+
+      // Create list record
       const now = new Date();
       const defaultName = `Lista ${now.toLocaleDateString("es-AR", { day: "numeric", month: "short" })}`;
       const { data: listData } = await supabase
@@ -196,7 +236,6 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
 
       const listId = listData?.id;
 
-      // Persist leads
       if (listId && scored.length > 0) {
         const rows = scored.map((l) => ({
           campaign_id: campaignId!,
@@ -217,19 +256,16 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         await supabase.from("leads").insert(rows);
       }
 
-      // Update local state
       if (listData) {
         setLists((prev) => [{ ...listData, geo_mix: listData.geo_mix as Record<string, number> } as ListItem, ...prev]);
       }
 
       setProgress(100);
-      const dupeCount = apolloLeads.length - newLeads.length;
       setLogs((prev) => [
         ...prev,
-        `✓ ${newLeads.length} leads nuevos encontrados`,
-        ...(dupeCount > 0 ? [`⚠ ${dupeCount} duplicados filtrados`] : []),
+        `✓ ${scored.length} leads nuevos encontrados${scored.length < targetQty ? ` (de ${targetQty} solicitados)` : ""}`,
       ]);
-      toast.success(`${newLeads.length} leads nuevos agregados`);
+      toast.success(`${scored.length} leads nuevos agregados`);
     } catch (e: any) {
       console.error("Apollo search error:", e);
       toast.error(e.message || "Error buscando en Apollo");
