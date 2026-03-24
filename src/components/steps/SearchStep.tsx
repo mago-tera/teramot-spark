@@ -245,7 +245,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       const { data: listData } = await supabase
         .from("lists")
         .insert({
-          campaign_id: campaignId!,
+          campaign_id: activeCampaignId,
           name: defaultName,
           profile: searchConfig.profile,
           geo_mix: searchConfig.geoMix,
