@@ -171,7 +171,7 @@ export function ICPForm({ config: initialConfig, onConfirm, onCancel }: Props) {
             />
           ))}
         </div>
-        {availableExtras.length > 0 && (
+        <div>
         {!showAddCountry ? (
           <button
             onClick={() => setShowAddCountry(true)}
