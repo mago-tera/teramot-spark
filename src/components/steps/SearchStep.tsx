@@ -424,13 +424,44 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         </div>
         {!showICPForm && !searching && (
           <button
-            onClick={() => setShowICPForm(true)}
+            onClick={() => { setNewListName(""); setShowNewListDialog(true); }}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
           >
             <Plus className="w-4 h-4" />
             Agregar lista
           </button>
         )}
+      </div>
+
+      {/* New list name dialog */}
+      <AlertDialog open={showNewListDialog} onOpenChange={setShowNewListDialog}>
+        <AlertDialogContent className="glass-card border-white/10">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">Nueva lista</AlertDialogTitle>
+          </AlertDialogHeader>
+          <div className="space-y-3 py-2">
+            <label className="text-sm text-muted-foreground">Nombre de la lista</label>
+            <Input
+              value={newListName}
+              onChange={(e) => setNewListName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && newListName.trim()) { setShowNewListDialog(false); setShowICPForm(true); setConfig({ ...config, listName: newListName.trim() }); } }}
+              placeholder="Ej: SDRs Fintech Argentina"
+              autoFocus
+              className="glass-input"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-white/10 text-muted-foreground hover:bg-white/5">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={!newListName.trim()}
+              onClick={() => { setShowICPForm(true); setConfig({ ...config, listName: newListName.trim() }); }}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       </div>
 
       {/* Inline ICP Form */}
