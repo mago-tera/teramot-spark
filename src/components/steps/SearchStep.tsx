@@ -250,7 +250,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
           profile: searchConfig.profile,
           geo_mix: searchConfig.geoMix,
           quantity: searchConfig.quantity,
-          frequency: searchConfig.frequency,
+          frequency: searchConfig.frequency || "once",
           lead_count: scored.length,
         })
         .select()
