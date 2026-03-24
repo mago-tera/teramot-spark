@@ -173,13 +173,14 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
             frequency: "once",
             status: "configuracion",
             user_id: user?.id,
+            project_id: projectId || null,
           })
           .select()
           .single();
         if (campErr || !newCampaign) throw new Error("No se pudo crear la campaña");
         activeCampaignId = newCampaign.id;
         setCampaignId(activeCampaignId);
-        navigate(`/campaign/${activeCampaignId}`, { replace: true });
+        navigate(`/project/${projectId}/campaign/${activeCampaignId}`, { replace: true });
       }
 
       // Get all existing leads for dedup

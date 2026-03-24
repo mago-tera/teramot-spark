@@ -12,7 +12,7 @@ interface Props {
 
 export function WizardSidebar({ steps, currentStep, onStepClick }: Props) {
   const navigate = useNavigate();
-  const { id: campaignId } = useParams();
+  const { id: campaignId, projectId } = useParams();
 
   const deleteCampaign = async () => {
     if (!campaignId || campaignId === "new") return;
@@ -21,7 +21,7 @@ export function WizardSidebar({ steps, currentStep, onStepClick }: Props) {
     await supabase.from("lists").delete().eq("campaign_id", campaignId);
     await supabase.from("campaigns").delete().eq("id", campaignId);
     toast.success("Campaña eliminada");
-    navigate("/");
+    navigate(projectId ? `/project/${projectId}` : "/");
   };
 
   return (
