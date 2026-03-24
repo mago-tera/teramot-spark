@@ -97,5 +97,7 @@ export function useWizard() {
     setScoredLeads,
     completeStep,
     goToStep,
+    isInsideList,
+    setIsInsideList,
   };
 }
