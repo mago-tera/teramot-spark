@@ -86,7 +86,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
 
   // Load existing lists
   useEffect(() => {
-    if (!campaignId || campaignId === "new") {
+    if (!campaignId) {
       setLoading(false);
       setShowICPForm(true);
       return;
