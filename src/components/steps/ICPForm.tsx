@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { CampaignConfig } from "@/hooks/useWizard";
+import { Plus, X } from "lucide-react";
 
 interface Props {
   config: CampaignConfig;
@@ -7,18 +8,97 @@ interface Props {
   onCancel: () => void;
 }
 
-const COUNTRIES = ["Argentina", "Colombia", "Chile", "México", "Brasil", "USA"];
+const DEFAULT_COUNTRIES = ["Argentina", "USA", "Brasil"];
+const EXTRA_COUNTRIES = ["Colombia", "Chile", "México"];
 const PROFILES = ["Data Analyst", "BI Analyst", "Data Leader / CDO / Head of BI"] as const;
 
+function GeoSlider({ country, value, onChange, onRemove }: { country: string; value: number; onChange: (v: number) => void; onRemove?: () => void }) {
+  const trackRef = useRef<HTMLDivElement>(null);
+  const dragging = useRef(false);
+
+  const calcValue = useCallback((clientX: number) => {
+    if (!trackRef.current) return value;
+    const rect = trackRef.current.getBoundingClientRect();
+    const pct = Math.round(((clientX - rect.left) / rect.width) * 100 / 5) * 5;
+    return Math.max(0, Math.min(100, pct));
+  }, [value]);
+
+  const onPointerDown = (e: React.PointerEvent) => {
+    dragging.current = true;
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+    onChange(calcValue(e.clientX));
+  };
+
+  const onPointerMove = (e: React.PointerEvent) => {
+    if (!dragging.current) return;
+    onChange(calcValue(e.clientX));
+  };
+
+  const onPointerUp = () => { dragging.current = false; };
+
+  return (
+    <div className="flex items-center gap-3 group/geo">
+      <div className="flex items-center gap-2 w-24 shrink-0">
+        <span className="text-sm text-foreground font-medium">{country}</span>
+        {onRemove && (
+          <button onClick={onRemove} className="p-0.5 rounded hover:bg-white/10 text-muted-foreground/40 hover:text-destructive opacity-0 group-hover/geo:opacity-100 transition-all">
+            <X className="w-3 h-3" />
+          </button>
+        )}
+      </div>
+      <div
+        ref={trackRef}
+        className="flex-1 h-8 rounded-lg bg-white/[0.04] border border-white/[0.06] relative cursor-pointer select-none"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+      >
+        <div
+          className="absolute inset-y-0 left-0 rounded-lg bg-primary/20 transition-[width] duration-75"
+          style={{ width: `${value}%` }}
+        />
+        <div
+          className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-primary shadow-lg shadow-primary/30 border-2 border-primary-foreground/20 transition-[left] duration-75"
+          style={{ left: `calc(${value}% - 8px)` }}
+        />
+      </div>
+      <span className="text-sm font-mono text-foreground w-12 text-right tabular-nums">{value}%</span>
+    </div>
+  );
+}
+
 export function ICPForm({ config: initialConfig, onConfirm, onCancel }: Props) {
-  const [config, setConfig] = useState<CampaignConfig>({ ...initialConfig, profile: "", geoMix: { Argentina: 0, Colombia: 0, Chile: 0, México: 0, Brasil: 0, USA: 0 }, quantity: 50, frequency: "once" });
+  const [config, setConfig] = useState<CampaignConfig>({
+    ...initialConfig,
+    profile: "",
+    geoMix: { Argentina: 0, USA: 0, Brasil: 0 },
+    quantity: 50,
+    frequency: "once",
+  });
   const [isCustom, setIsCustom] = useState(false);
   const [customProfile, setCustomProfile] = useState("");
+  const [visibleCountries, setVisibleCountries] = useState<string[]>(DEFAULT_COUNTRIES);
+  const [showAddCountry, setShowAddCountry] = useState(false);
+
   const total = Object.values(config.geoMix).reduce((a, b) => a + b, 0);
   const isValid = config.profile !== "" && total === 100 && config.quantity > 0;
+  const availableExtras = EXTRA_COUNTRIES.filter((c) => !visibleCountries.includes(c));
 
   const updateGeo = (country: string, val: number) => {
     setConfig({ ...config, geoMix: { ...config.geoMix, [country]: val } });
+  };
+
+  const addCountry = (country: string) => {
+    setVisibleCountries([...visibleCountries, country]);
+    setConfig({ ...config, geoMix: { ...config.geoMix, [country]: 0 } });
+    setShowAddCountry(false);
+  };
+
+  const removeCountry = (country: string) => {
+    setVisibleCountries(visibleCountries.filter((c) => c !== country));
+    const newMix = { ...config.geoMix };
+    delete newMix[country];
+    setConfig({ ...config, geoMix: newMix });
   };
 
   return (
@@ -71,32 +151,50 @@ export function ICPForm({ config: initialConfig, onConfirm, onCancel }: Props) {
       </div>
 
       {/* Geo Mix */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h4 className="text-sm font-medium text-foreground">Mix geográfico</h4>
           <span className={`text-xs font-mono px-2 py-1 rounded ${
             total === 100 ? "bg-success/10 text-success" : total > 100 ? "bg-destructive/10 text-destructive" : "bg-warning/10 text-warning"
           }`}>
-            Total: {total}%
+            {total}%
           </span>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          {COUNTRIES.map((c) => (
-            <div key={c} className="flex items-center gap-2">
-              <label className="text-xs text-muted-foreground w-20 shrink-0">{c}</label>
-              <div className="flex items-center gap-1">
-                <button type="button" onClick={() => updateGeo(c, Math.max(0, (config.geoMix[c] || 0) - 5))}
-                  className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-medium border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/[0.06] transition-colors">−</button>
-                <input type="number" min={0} max={100} value={config.geoMix[c] || 0}
-                  onChange={(e) => updateGeo(c, Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
-                  className="w-12 text-center text-xs font-mono text-foreground bg-transparent border border-white/10 rounded-md py-1 focus:outline-none focus:border-primary/50" />
-                <span className="text-xs text-muted-foreground">%</span>
-                <button type="button" onClick={() => updateGeo(c, Math.min(100, (config.geoMix[c] || 0) + 5))}
-                  className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-medium border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/[0.06] transition-colors">+</button>
-              </div>
-            </div>
+        <div className="space-y-3">
+          {visibleCountries.map((c) => (
+            <GeoSlider
+              key={c}
+              country={c}
+              value={config.geoMix[c] || 0}
+              onChange={(v) => updateGeo(c, v)}
+              onRemove={!DEFAULT_COUNTRIES.includes(c) ? () => removeCountry(c) : undefined}
+            />
           ))}
         </div>
+        {availableExtras.length > 0 && (
+          <div className="relative">
+            <button
+              onClick={() => setShowAddCountry(!showAddCountry)}
+              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Agregar región
+            </button>
+            {showAddCountry && (
+              <div className="absolute top-full left-0 mt-1 py-1 rounded-lg bg-card border border-white/10 shadow-xl z-10 min-w-[140px]">
+                {availableExtras.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => addCountry(c)}
+                    className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-white/[0.06] transition-colors"
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Volume */}
