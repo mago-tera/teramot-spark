@@ -202,7 +202,7 @@ export function ICPForm({ config: initialConfig, onConfirm, onCancel }: Props) {
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
-        )}
+        </div>
       </div>
 
       {/* Volume */}
