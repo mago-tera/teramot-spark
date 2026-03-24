@@ -105,8 +105,9 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       });
   }, [campaignId]);
 
-  // Load leads for selected list
+  // Load leads for selected list & notify parent
   useEffect(() => {
+    setIsInsideList(!!selectedListId);
     if (!selectedListId) {
       setListLeads([]);
       return;
