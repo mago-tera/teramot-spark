@@ -7,6 +7,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { ICPForm } from "@/components/steps/ICPForm";
 import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 
 interface Props {
   config: CampaignConfig;
