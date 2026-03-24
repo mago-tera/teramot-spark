@@ -45,6 +45,7 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
   });
 
   const QUARTILE_COLORS = { Q1: "text-cyan-400", Q2: "text-green-400", Q3: "text-amber-400", Q4: "text-rose-400" };
+  const QUARTILE_LABELS = { Q1: "Top Fit", Q2: "Buen Fit", Q3: "Fit Moderado", Q4: "Fit Bajo" };
 
   return (
     <div className="space-y-6">
@@ -68,7 +69,7 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
               }`}
             >
               <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-mono ${QUARTILE_COLORS[lead.quartile]}`}>{lead.quartile}</span>
+                <span className={`text-[10px] font-mono ${QUARTILE_COLORS[lead.quartile]}`}>{QUARTILE_LABELS[lead.quartile]}</span>
                 <span className="text-xs text-foreground truncate">{lead.firstName} {lead.lastName}</span>
                 {lead.messages && <span className="ml-auto text-[10px] text-success">✓</span>}
               </div>
