@@ -14,6 +14,38 @@ export type Database = {
   }
   public: {
     Tables: {
+      campaign_members: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "campaign_members_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       campaigns: {
         Row: {
           created_at: string
@@ -25,6 +57,7 @@ export type Database = {
           profile: string
           quantity: number
           status: string
+          user_id: string | null
         }
         Insert: {
           created_at?: string
@@ -36,6 +69,7 @@ export type Database = {
           profile: string
           quantity?: number
           status?: string
+          user_id?: string | null
         }
         Update: {
           created_at?: string
@@ -47,6 +81,7 @@ export type Database = {
           profile?: string
           quantity?: number
           status?: string
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -168,6 +203,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+        }
+        Relationships: []
       }
     }
     Views: {
