@@ -56,13 +56,15 @@ export function WizardSidebar({ steps, currentStep, onStepClick }: Props) {
             <button
               key={step.id}
               onClick={() => onStepClick(step.id)}
-              disabled={isPending}
+              disabled={isPending && step.id >= 2}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
                 isActive
                   ? "bg-primary/15 text-foreground"
                   : isComplete
                   ? "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
-                  : "text-muted-foreground/50 cursor-not-allowed"
+                  : isPending && step.id >= 2
+                  ? "text-muted-foreground/50 cursor-not-allowed"
+                  : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
               }`}
             >
               <span className={`w-7 h-7 rounded-md flex items-center justify-center text-xs shrink-0 ${
