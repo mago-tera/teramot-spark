@@ -36,11 +36,11 @@ export function WizardSidebar({ steps, currentStep, onStepClick }: Props) {
 
       {/* Back to projects */}
       <button
-        onClick={() => navigate("/")}
+        onClick={() => navigate(projectId ? `/project/${projectId}` : "/")}
         className="flex items-center gap-2 px-5 py-3 text-xs text-muted-foreground hover:text-foreground border-b border-white/[0.06] transition-colors"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
-        Volver a Projects
+        Volver a Campañas
       </button>
 
       {/* Steps */}
