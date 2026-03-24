@@ -158,25 +158,23 @@ serve(async (req) => {
       console.log(`${country}: kept ${countryLeads} leads out of ${people.length}`);
     }
 
-    // Enrich leads that are missing email or linkedin
+    // Enrich leads that are missing email or linkedin (one by one)
     const leadsToEnrich = allLeads.filter(l => l.apolloId && (!l.email || !l.linkedinUrl));
     if (leadsToEnrich.length > 0) {
-      console.log(`Enriching ${leadsToEnrich.length} leads in batches of 10...`);
+      console.log(`Enriching ${leadsToEnrich.length} leads individually...`);
+      let enrichedCount = 0;
 
-      for (let i = 0; i < leadsToEnrich.length; i += 10) {
-        const batch = leadsToEnrich.slice(i, i + 10);
-        const ids = batch.map(l => l.apolloId);
-        const enriched = await bulkEnrich(ids, APOLLO_API_KEY);
-
-        for (const lead of allLeads) {
-          if (lead.apolloId && enriched[lead.apolloId]) {
-            const data = enriched[lead.apolloId];
-            if (data.email && !lead.email) lead.email = data.email;
-            if (data.linkedinUrl && !lead.linkedinUrl) lead.linkedinUrl = data.linkedinUrl;
-          }
+      for (const lead of leadsToEnrich) {
+        const data = await enrichSingle(lead.apolloId, lead.firstName, lead.lastName, lead.company, APOLLO_API_KEY);
+        if (data) {
+          if (data.email && !lead.email) lead.email = data.email;
+          if (data.linkedinUrl && !lead.linkedinUrl) lead.linkedinUrl = data.linkedinUrl;
+          enrichedCount++;
         }
-        console.log(`Batch ${Math.floor(i / 10) + 1}: enriched ${Object.keys(enriched).length} contacts`);
+        // Small delay to avoid rate limiting
+        await new Promise(r => setTimeout(r, 200));
       }
+      console.log(`Enriched ${enrichedCount} out of ${leadsToEnrich.length} leads`);
     }
 
     const returnedLeads = allLeads.slice(0, quantity);
