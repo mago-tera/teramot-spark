@@ -1,5 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { CampaignConfig, Lead } from "@/hooks/useWizard";
+import { searchApollo } from "@/lib/api";
+import { toast } from "sonner";
 
 interface Props {
   config: CampaignConfig;
