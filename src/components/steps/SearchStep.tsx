@@ -172,6 +172,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
             quantity: searchConfig.quantity,
             frequency: "once",
             status: "configuracion",
+            user_id: user?.id,
           })
           .select()
           .single();
