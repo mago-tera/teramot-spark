@@ -54,6 +54,9 @@ export default function CampaignsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showNewDialog, setShowNewDialog] = useState(false);
+  const [newCampaignName, setNewCampaignName] = useState("");
+  const [creatingCampaign, setCreatingCampaign] = useState(false);
 
   const isOwner = project?.user_id === user?.id;
 
