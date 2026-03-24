@@ -36,13 +36,14 @@ serve(async (req) => {
     if (!leads?.length) throw new Error("No leads provided");
 
     // Step 1: Create a sequence in Apollo via Composio
-    const createSeqResponse = await fetch(`${COMPOSIO_BASE}/tools/execute/APOLLO_CREATE_SEQUENCE`, {
+    const createSeqResponse = await fetch(`${COMPOSIO_BASE}/tools/execute/APOLLO_SEARCH_SEQUENCES`, {
       method: "POST",
       headers: {
         "x-api-key": COMPOSIO_API_KEY,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
+        entity_id: "pg-test-053c2a3a-372c-4246-bc7c-a447eeb7d606",
         arguments: {
           name: campaignName,
         },
@@ -75,13 +76,14 @@ serve(async (req) => {
     ];
 
     for (const step of steps) {
-      await fetch(`${COMPOSIO_BASE}/tools/execute/APOLLO_CREATE_SEQUENCE_STEP`, {
+      await fetch(`${COMPOSIO_BASE}/tools/execute/APOLLO_CREATE_TASK`, {
         method: "POST",
         headers: {
           "x-api-key": COMPOSIO_API_KEY,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          entity_id: "pg-test-053c2a3a-372c-4246-bc7c-a447eeb7d606",
           arguments: {
             emailer_campaign_id: sequenceId,
             emailer_step: {
@@ -109,6 +111,7 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          entity_id: "pg-test-053c2a3a-372c-4246-bc7c-a447eeb7d606",
           arguments: {
             id: sequenceId,
             contact_ids: contactIds,
