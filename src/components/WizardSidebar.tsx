@@ -50,6 +50,8 @@ export function WizardSidebar({ steps, currentStep, onStepClick }: Props) {
           const isComplete = step.status === "complete";
           const isPending = step.status === "pending";
 
+          if (isPending) return null;
+
           return (
             <button
               key={step.id}
