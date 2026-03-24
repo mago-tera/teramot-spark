@@ -53,7 +53,7 @@ export interface GeneratedMessages {
 
 const INITIAL_STEPS: StepInfo[] = [
   { id: 0, label: "Listas", icon: "📋", status: "active" },
-  { id: 1, label: "Mensajes con IA", icon: "✉", status: "pending" },
+  { id: 1, label: "Comunicaciones", icon: "✉", status: "pending" },
   { id: 2, label: "Tracking", icon: "📈", status: "pending" },
 ];
 
