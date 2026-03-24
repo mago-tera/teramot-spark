@@ -2,7 +2,6 @@ import { useWizard } from "@/hooks/useWizard";
 import { WizardSidebar } from "@/components/WizardSidebar";
 import { ConfigStep } from "@/components/steps/ConfigStep";
 import { SearchStep } from "@/components/steps/SearchStep";
-import { ScoringStep } from "@/components/steps/ScoringStep";
 import { MessagesStep } from "@/components/steps/MessagesStep";
 import { TrackingStep } from "@/components/steps/TrackingStep";
 
@@ -14,12 +13,10 @@ const Index = () => {
       case 0:
         return <ConfigStep config={wizard.config} setConfig={wizard.setConfig} onComplete={() => wizard.completeStep(0)} />;
       case 1:
-        return <SearchStep config={wizard.config} leads={wizard.leads} setLeads={wizard.setLeads} onComplete={() => wizard.completeStep(1)} />;
+        return <SearchStep config={wizard.config} leads={wizard.leads} setLeads={wizard.setLeads} setScoredLeads={wizard.setScoredLeads} onComplete={() => wizard.completeStep(1)} />;
       case 2:
-        return <ScoringStep leads={wizard.leads} scoredLeads={wizard.scoredLeads} setScoredLeads={wizard.setScoredLeads} onComplete={() => wizard.completeStep(2)} />;
+        return <MessagesStep scoredLeads={wizard.scoredLeads} setScoredLeads={wizard.setScoredLeads} onComplete={() => wizard.completeStep(2)} />;
       case 3:
-        return <MessagesStep scoredLeads={wizard.scoredLeads} setScoredLeads={wizard.setScoredLeads} onComplete={() => wizard.completeStep(3)} />;
-      case 4:
         return <TrackingStep config={wizard.config} scoredLeads={wizard.scoredLeads} />;
       default:
         return null;
