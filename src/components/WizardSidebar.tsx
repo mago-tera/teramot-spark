@@ -1,5 +1,8 @@
 import { StepInfo } from "@/hooks/useWizard";
-import { Check } from "lucide-react";
+import { Check, ArrowLeft, Trash2 } from "lucide-react";
+import { useNavigate, useParams } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Props {
   steps: StepInfo[];
