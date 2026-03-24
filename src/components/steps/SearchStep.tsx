@@ -69,7 +69,7 @@ function scoreAndAssign(leads: Lead[]): ScoredLead[] {
 }
 
 export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads, onComplete }: Props) {
-  const { id: paramId } = useParams();
+  const { id: paramId, projectId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [campaignId, setCampaignId] = useState<string | null>(paramId && paramId !== "new" ? paramId : null);
