@@ -31,30 +31,39 @@ serve(async (req) => {
       const qty = Math.round(((pct as number) / 100) * quantity);
       if (qty <= 0) continue;
 
-      const response = await fetch(`${COMPOSIO_BASE}/tools/execute/APOLLO_PEOPLE_SEARCH`, {
-        method: "POST",
-        headers: {
-          "x-api-key": COMPOSIO_API_KEY,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          entity_id: "pg-test-053c2a3a-372c-4246-bc7c-a447eeb7d606",
-          arguments: {},
-        }),
-      });
+      // Try People Search first, fallback to Contacts Search
+      let people: any[] = [];
+      
+      for (const toolSlug of ["APOLLO_PEOPLE_SEARCH", "APOLLO_SEARCH_CONTACTS"]) {
+        const response = await fetch(`${COMPOSIO_BASE}/tools/execute/${toolSlug}`, {
+          method: "POST",
+          headers: {
+            "x-api-key": COMPOSIO_API_KEY,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            entity_id: "pg-test-053c2a3a-372c-4246-bc7c-a447eeb7d606",
+            arguments: {
+              person_titles: personTitles,
+              person_locations: [country],
+              per_page: Math.min(qty, 25),
+            },
+          }),
+        });
 
-      if (!response.ok) {
-        const errText = await response.text();
-        console.error(`Apollo search error for ${country}:`, response.status, errText);
-        continue;
+        const result = await response.json();
+        console.log(`${toolSlug} for ${country}:`, JSON.stringify(result).slice(0, 800));
+
+        if (result.successful) {
+          people = result?.data?.people || result?.data?.contacts || [];
+          break;
+        }
       }
 
-      const result = await response.json();
-      // Log full response keys for debugging
-      console.log(`Apollo keys for ${country}:`, JSON.stringify(Object.keys(result)));
-      console.log(`Apollo response for ${country}:`, JSON.stringify(result).slice(0, 1500));
-
-      const people = result?.data?.people || result?.response_data?.people || result?.people || [];
+      if (people.length === 0) {
+        console.log(`No results for ${country}, skipping`);
+        continue;
+      }
 
       for (const p of people.slice(0, qty)) {
         allLeads.push({
