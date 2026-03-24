@@ -6,19 +6,13 @@ const corsHeaders = {
 };
 
 const COMPOSIO_BASE = "https://backend.composio.dev/api/v3";
+const ENTITY_ID = "pg-test-053c2a3a-372c-4246-bc7c-a447eeb7d606";
 
 interface SequenceLead {
   apolloId: string;
   email: string;
   firstName: string;
   lastName: string;
-  messages: {
-    linkedin: string;
-    email_asunto: string;
-    email_cuerpo: string;
-    followup_d4: string;
-    cierre_d9: string;
-  };
 }
 
 serve(async (req) => {
@@ -35,102 +29,49 @@ serve(async (req) => {
 
     if (!leads?.length) throw new Error("No leads provided");
 
-    // Step 1: Create a sequence in Apollo via Composio
-    const createSeqResponse = await fetch(`${COMPOSIO_BASE}/tools/execute/APOLLO_SEARCH_SEQUENCES`, {
-      method: "POST",
-      headers: {
-        "x-api-key": COMPOSIO_API_KEY,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        entity_id: "pg-test-053c2a3a-372c-4246-bc7c-a447eeb7d606",
-        arguments: {
-          name: campaignName,
-        },
-      }),
-    });
+    // Step 1: Create contacts in Apollo for leads that have apolloId
+    const contactIds: string[] = [];
+    for (const lead of leads.slice(0, 50)) {
+      if (!lead.apolloId) continue;
 
-    if (!createSeqResponse.ok) {
-      const errText = await createSeqResponse.text();
-      console.error("Create sequence error:", createSeqResponse.status, errText);
-      throw new Error(`Failed to create Apollo sequence: ${createSeqResponse.status}`);
-    }
-
-    const seqResult = await createSeqResponse.json();
-    const sequenceId = seqResult?.response_data?.emailer_campaign?.id ||
-                       seqResult?.data?.emailer_campaign?.id ||
-                       seqResult?.response_data?.id;
-
-    if (!sequenceId) {
-      console.error("No sequence ID in response:", JSON.stringify(seqResult));
-      throw new Error("Could not get sequence ID from Apollo");
-    }
-
-    // Step 2: Add sequence steps (email templates)
-    // Step 2a: Initial email (Day 1)
-    const sampleLead = leads[0];
-    const steps = [
-      { subject: sampleLead.messages.email_asunto, body: sampleLead.messages.email_cuerpo, delay: 0, type: "auto_email" },
-      { subject: "Re: " + sampleLead.messages.email_asunto, body: sampleLead.messages.followup_d4, delay: 4, type: "auto_email" },
-      { subject: "Re: " + sampleLead.messages.email_asunto, body: sampleLead.messages.cierre_d9, delay: 5, type: "auto_email" },
-    ];
-
-    for (const step of steps) {
-      await fetch(`${COMPOSIO_BASE}/tools/execute/APOLLO_CREATE_TASK`, {
+      // Create contact from person
+      const createRes = await fetch(`${COMPOSIO_BASE}/tools/execute/APOLLO_CREATE_CONTACT`, {
         method: "POST",
         headers: {
           "x-api-key": COMPOSIO_API_KEY,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          entity_id: "pg-test-053c2a3a-372c-4246-bc7c-a447eeb7d606",
+          entity_id: ENTITY_ID,
           arguments: {
-            emailer_campaign_id: sequenceId,
-            emailer_step: {
-              type: step.type,
-              wait_time: step.delay,
-              subject_template: step.subject,
-              body_template: step.body,
-            },
-          },
-        }),
-      });
-    }
-
-    // Step 3: Add contacts to the sequence
-    // First, we need contact IDs. If we have Apollo IDs, use those.
-    const contactIds = leads
-      .filter(l => l.apolloId)
-      .map(l => l.apolloId);
-
-    if (contactIds.length > 0) {
-      const addContactsResponse = await fetch(`${COMPOSIO_BASE}/tools/execute/APOLLO_ADD_CONTACTS_TO_SEQUENCE`, {
-        method: "POST",
-        headers: {
-          "x-api-key": COMPOSIO_API_KEY,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          entity_id: "pg-test-053c2a3a-372c-4246-bc7c-a447eeb7d606",
-          arguments: {
-            id: sequenceId,
-            contact_ids: contactIds,
+            first_name: lead.firstName,
+            last_name: lead.lastName,
+            email: lead.email,
+            person_id: lead.apolloId,
           },
         }),
       });
 
-      if (!addContactsResponse.ok) {
-        const errText = await addContactsResponse.text();
-        console.error("Add contacts error:", addContactsResponse.status, errText);
-        // Don't throw - sequence was created, contacts just weren't added
+      const createResult = await createRes.json();
+      const contactId = createResult?.data?.contact?.id;
+      if (contactId) {
+        contactIds.push(contactId);
+      } else {
+        console.log(`Could not create contact for ${lead.firstName}:`, JSON.stringify(createResult).slice(0, 200));
       }
     }
 
+    console.log(`Created ${contactIds.length} contacts in Apollo`);
+
+    // Step 2: Search for an existing sequence or create workflow note
+    // Note: Apollo's API doesn't have a "create sequence" endpoint via API key auth.
+    // Sequences must be managed in the Apollo UI. We add contacts which can then
+    // be enrolled manually or via Apollo's automation.
+
     return new Response(JSON.stringify({
       success: true,
-      sequenceId,
-      contactsAdded: contactIds.length,
-      message: `Secuencia "${campaignName}" creada con ${contactIds.length} contactos`,
+      contactsCreated: contactIds.length,
+      message: `${contactIds.length} contactos creados en Apollo. Abrí Apollo para enrollarlos en una secuencia.`,
     }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
