@@ -387,9 +387,6 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                         <td className="px-4 py-2.5">
                           <span className={`px-2 py-0.5 rounded text-[10px] border ${COUNTRY_COLORS[lead.country] || "text-muted-foreground"}`}>{lead.country}</span>
                         </td>
-                        <td className="px-4 py-2.5">
-                          <span className={`px-2 py-0.5 rounded text-[10px] border ${qs.bg} ${qs.text} ${qs.border}`}>{qs.label}</span>
-                        </td>
                         <td className="px-4 py-2.5 text-muted-foreground font-mono text-[10px]">
                           {lead.email || <span className="text-muted-foreground/40">—</span>}
                         </td>
