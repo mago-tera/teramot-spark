@@ -11,19 +11,16 @@ serve(async (req) => {
   const COMPOSIO_API_KEY = Deno.env.get("COMPOSIO_API_KEY");
 
   // List Apollo tools
-  const res = await fetch("https://backend.composio.dev/api/v3/tools?search=apollo&limit=50", {
+  const slug = (await req.json()).slug || "APOLLO_PEOPLE_SEARCH";
+  const res = await fetch(`https://backend.composio.dev/api/v3/tools/${slug}`, {
     headers: { "x-api-key": COMPOSIO_API_KEY! },
   });
-
   const data = await res.json();
-  const items = data.items || [];
-  const slugs = items.map((i: any) => ({
-    slug: i.slug,
-    name: i.deprecated?.displayName || "",
-    toolkit: i.toolkit?.slug || "",
-  })).filter((s: any) => s.toolkit === "apollo" || s.slug?.toLowerCase().includes("apollo"));
-  
-  return new Response(JSON.stringify({ count: slugs.length, tools: slugs }, null, 2), {
+  return new Response(JSON.stringify({
+    slug: data.slug,
+    params: data.input_parameters,
+    response: data.response_schema,
+  }, null, 2), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 });
