@@ -283,7 +283,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         .from("lists")
         .insert({
           campaign_id: activeCampaignId,
-          name: defaultName,
+          name: listName,
           profile: searchConfig.profile,
           geo_mix: searchConfig.geoMix,
           quantity: searchConfig.quantity,
