@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { ScoredLead, GeneratedMessages } from "@/hooks/useWizard";
-import { Copy, RefreshCw, Users, UserRound, ArrowLeft, Send, MessageSquare } from "lucide-react";
-import { generateAIMessages, generateGroupMessages } from "@/lib/api";
+import { Copy, RefreshCw, UserRound, ArrowLeft, MessageSquare } from "lucide-react";
+import { generateGroupMessages, generateAIMessages } from "@/lib/api";
 import { toast } from "sonner";
 
 interface Props {
@@ -10,38 +10,44 @@ interface Props {
   onComplete: () => void;
 }
 
-type Mode = null | "objective" | "generic" | "personalized";
-
-const QUARTILE_COLORS = { Q1: "text-cyan-400", Q2: "text-green-400", Q3: "text-amber-400", Q4: "text-rose-400" };
-const QUARTILE_BG = { Q1: "bg-cyan-500/10 border-cyan-500/20", Q2: "bg-green-500/10 border-green-500/20", Q3: "bg-amber-500/10 border-amber-500/20", Q4: "bg-rose-500/10 border-rose-500/20" };
-const QUARTILE_LABELS = { Q1: "Top Fit", Q2: "Buen Fit", Q3: "Fit Moderado", Q4: "Fit Bajo" };
+type Mode = "objective" | "group" | "personalized";
 
 export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props) {
-  const [mode, setMode] = useState<Mode>(null);
+  const [mode, setMode] = useState<Mode>("objective");
   const [objective, setObjective] = useState("");
   const [whatToCommunicate, setWhatToCommunicate] = useState("");
 
+  // Group mode state
+  const [canal, setCanal] = useState<"linkedin" | "email">("linkedin");
+  const [generatingGroup, setGeneratingGroup] = useState(false);
+  const [groupMessages, setGroupMessages] = useState<GeneratedMessages | null>(null);
+
   // Personalized mode state
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [canal, setCanal] = useState<"linkedin" | "email">("linkedin");
   const [generating, setGenerating] = useState<string | null>(null);
   const [copied, setCopied] = useState<string | null>(null);
 
-  // Generic mode state
-  const [generatingGroup, setGeneratingGroup] = useState<string | null>(null);
-  const [groupMessages, setGroupMessages] = useState<Record<string, GeneratedMessages>>({});
-
   const selectedLead = scoredLeads.find((l) => l.id === selectedId);
-
   const sortedLeads = [...scoredLeads].sort((a, b) => {
     const order = { Q1: 0, Q2: 1, Q3: 2, Q4: 3 };
     return order[a.quartile] - order[b.quartile];
   });
 
-  const quartileGroups = (["Q1", "Q2", "Q3", "Q4"] as const).map((q) => ({
-    quartile: q,
-    leads: sortedLeads.filter((l) => l.quartile === q),
-  })).filter((g) => g.leads.length > 0);
+  const canProceed = objective.trim().length > 0 && whatToCommunicate.trim().length > 0;
+
+  const generateForGroup = async () => {
+    setGeneratingGroup(true);
+    try {
+      const representative = sortedLeads[0];
+      const messages = await generateGroupMessages(representative, "Q2", canal, objective, whatToCommunicate);
+      setGroupMessages(messages);
+    } catch (e: any) {
+      console.error("Error generating group messages:", e);
+      toast.error(e.message || "Error generando mensajes");
+    } finally {
+      setGeneratingGroup(false);
+    }
+  };
 
   const generateForLead = async (leadId: string) => {
     setGenerating(leadId);
@@ -57,21 +63,6 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
     }
   };
 
-  const generateForGroup = async (quartile: string) => {
-    setGeneratingGroup(quartile);
-    try {
-      const groupLeads = sortedLeads.filter((l) => l.quartile === quartile);
-      const representative = groupLeads[0];
-      const messages = await generateGroupMessages(representative, quartile, canal, objective, whatToCommunicate);
-      setGroupMessages((prev) => ({ ...prev, [quartile]: messages }));
-    } catch (e: any) {
-      console.error("Error generating group messages:", e);
-      toast.error(e.message || "Error generando mensajes");
-    } finally {
-      setGeneratingGroup(null);
-    }
-  };
-
   const copyText = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
     setCopied(key);
@@ -79,10 +70,8 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
     setTimeout(() => setCopied(null), 1500);
   };
 
-  const canProceed = objective.trim().length > 0 && whatToCommunicate.trim().length > 0;
-
-  // ─── INITIAL: Choose mode ───
-  if (mode === null) {
+  // ─── STEP 1: Objective ───
+  if (mode === "objective") {
     return (
       <div className="space-y-8 max-w-2xl mx-auto pt-8">
         <div className="text-center space-y-2">
@@ -121,30 +110,22 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
         {canProceed && (
           <div className="grid grid-cols-2 gap-4 pt-2">
             <button
-              onClick={() => setMode("generic")}
+              onClick={() => setMode("group")}
               className="glass-card glass-card-hover p-6 text-left space-y-3 transition-all group border border-white/[0.06] hover:border-primary/30"
             >
               <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Users className="w-6 h-6 text-primary" />
+                <MessageSquare className="w-6 h-6 text-primary" />
               </div>
               <div>
-                <h3 className="text-sm font-semibold text-foreground">Por grupo de fit</h3>
+                <h3 className="text-sm font-semibold text-foreground">Comunicación grupal</h3>
                 <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                  Genera un mensaje genérico por cada nivel de fit (Top, Buen, Moderado, Bajo). 
-                  Ideal para campañas masivas donde el tono varía según el nivel de afinidad.
+                  Genera un mensaje único para toda la lista. 
+                  Ideal para campañas masivas con un mensaje unificado.
                 </p>
               </div>
-              <div className="flex gap-1.5 pt-1">
-                {(["Q1", "Q2", "Q3", "Q4"] as const).map((q) => {
-                  const count = scoredLeads.filter((l) => l.quartile === q).length;
-                  if (count === 0) return null;
-                  return (
-                    <span key={q} className={`px-2 py-0.5 rounded text-[10px] border ${QUARTILE_BG[q]} ${QUARTILE_COLORS[q]}`}>
-                      {QUARTILE_LABELS[q]} ({count})
-                    </span>
-                  );
-                })}
-              </div>
+              <p className="text-[11px] text-muted-foreground/70 pt-1">
+                {scoredLeads.length} leads
+              </p>
             </button>
 
             <button
@@ -161,7 +142,7 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
                 <h3 className="text-sm font-semibold text-foreground">Personalizado por lead</h3>
                 <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                   Genera mensajes únicos para cada prospecto individual, 
-                  adaptados a su cargo, empresa e industria. Ideal para outreach de alto valor.
+                  adaptados a su cargo, empresa e industria.
                 </p>
               </div>
               <p className="text-[11px] text-muted-foreground/70 pt-1">
@@ -182,18 +163,18 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
     );
   }
 
-  // ─── GENERIC MODE: by quartile group ───
-  if (mode === "generic") {
+  // ─── GROUP MODE: single message for all ───
+  if (mode === "group") {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <button onClick={() => setMode(null)} className="p-2 rounded-lg hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors">
+          <button onClick={() => setMode("objective")} className="p-2 rounded-lg hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors">
             <ArrowLeft className="w-4 h-4" />
           </button>
           <div>
-            <h2 className="text-xl font-semibold text-foreground">Comunicación por grupo de fit</h2>
+            <h2 className="text-xl font-semibold text-foreground">Comunicación grupal</h2>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Un mensaje por nivel de afinidad · Objetivo: {objective.slice(0, 60)}{objective.length > 60 ? "..." : ""}
+              Un mensaje para toda la lista · {scoredLeads.length} leads
             </p>
           </div>
           <div className="ml-auto flex rounded-lg border border-white/10 overflow-hidden">
@@ -211,90 +192,75 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
           </div>
         </div>
 
-        <div className="space-y-4">
-          {quartileGroups.map(({ quartile, leads: groupLeads }) => {
-            const msgs = groupMessages[quartile];
-            return (
-              <div key={quartile} className={`glass-card border ${QUARTILE_BG[quartile]} overflow-hidden`}>
-                <div className="p-4 flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <span className={`text-sm font-semibold ${QUARTILE_COLORS[quartile]}`}>
-                      {QUARTILE_LABELS[quartile]}
+        <div className="glass-card overflow-hidden">
+          <div className="p-4 flex items-center justify-between border-b border-white/[0.06]">
+            <div className="flex items-center gap-3">
+              <span className="text-sm font-semibold text-foreground">Mensaje para toda la lista</span>
+              <span className="text-xs text-muted-foreground">{scoredLeads.length} leads</span>
+            </div>
+            {!groupMessages ? (
+              <button
+                onClick={generateForGroup}
+                disabled={generatingGroup}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                {generatingGroup ? (
+                  <>
+                    <span className="flex gap-1">
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground pulse-dot" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground pulse-dot" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground pulse-dot" />
                     </span>
-                    <span className="text-xs text-muted-foreground">
-                      {groupLeads.length} leads
-                    </span>
-                  </div>
-                  {!msgs && (
-                    <button
-                      onClick={() => generateForGroup(quartile)}
-                      disabled={generatingGroup === quartile}
-                      className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-                    >
-                      {generatingGroup === quartile ? (
-                        <>
-                          <span className="flex gap-1">
-                            <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground pulse-dot" />
-                            <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground pulse-dot" />
-                            <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground pulse-dot" />
-                          </span>
-                          Generando...
-                        </>
-                      ) : (
-                        <>
-                          <MessageSquare className="w-3 h-3" />
-                          Generar mensajes
-                        </>
-                      )}
-                    </button>
-                  )}
-                  {msgs && (
-                    <button
-                      onClick={() => {
-                        setGroupMessages((prev) => { const n = { ...prev }; delete n[quartile]; return n; });
-                        generateForGroup(quartile);
-                      }}
-                      disabled={generatingGroup === quartile}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors"
-                    >
-                      <RefreshCw className="w-3 h-3" /> Regenerar
-                    </button>
-                  )}
-                </div>
-
-                {msgs && (
-                  <div className="border-t border-white/[0.06] p-4 space-y-3">
-                    {[
-                      { key: "linkedin", label: "LinkedIn (máx 300 chars)", value: msgs.linkedin, maxChars: 300 },
-                      { key: "email_asunto", label: "Asunto email", value: msgs.email_asunto },
-                      { key: "email_cuerpo", label: "Cuerpo email", value: msgs.email_cuerpo },
-                      { key: "followup_d4", label: "Follow-up día 4", value: msgs.followup_d4 },
-                      { key: "cierre_d9", label: "Cierre día 9", value: msgs.cierre_d9 },
-                    ].map((msg) => (
-                      <div key={msg.key} className="space-y-1">
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{msg.label}</span>
-                          <div className="flex items-center gap-1">
-                            {msg.maxChars && (
-                              <span className={`text-[10px] font-mono ${msg.value.length > msg.maxChars ? "text-destructive" : "text-muted-foreground"}`}>
-                                {msg.value.length}/{msg.maxChars}
-                              </span>
-                            )}
-                            <button onClick={() => copyText(msg.value, `${quartile}-${msg.key}`)} className="p-1 rounded hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors">
-                              <Copy className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-                        <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/[0.06] text-xs text-foreground whitespace-pre-wrap leading-relaxed">
-                          {msg.value}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                    Generando...
+                  </>
+                ) : (
+                  <>
+                    <MessageSquare className="w-3 h-3" />
+                    Generar mensajes
+                  </>
                 )}
-              </div>
-            );
-          })}
+              </button>
+            ) : (
+              <button
+                onClick={() => { setGroupMessages(null); generateForGroup(); }}
+                disabled={generatingGroup}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors"
+              >
+                <RefreshCw className="w-3 h-3" /> Regenerar
+              </button>
+            )}
+          </div>
+
+          {groupMessages && (
+            <div className="p-4 space-y-3">
+              {[
+                { key: "linkedin", label: "LinkedIn (máx 300 chars)", value: groupMessages.linkedin, maxChars: 300 },
+                { key: "email_asunto", label: "Asunto email", value: groupMessages.email_asunto },
+                { key: "email_cuerpo", label: "Cuerpo email", value: groupMessages.email_cuerpo },
+                { key: "followup_d4", label: "Follow-up día 4", value: groupMessages.followup_d4 },
+                { key: "cierre_d9", label: "Cierre día 9", value: groupMessages.cierre_d9 },
+              ].map((msg) => (
+                <div key={msg.key} className="space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{msg.label}</span>
+                    <div className="flex items-center gap-1">
+                      {msg.maxChars && (
+                        <span className={`text-[10px] font-mono ${msg.value.length > msg.maxChars ? "text-destructive" : "text-muted-foreground"}`}>
+                          {msg.value.length}/{msg.maxChars}
+                        </span>
+                      )}
+                      <button onClick={() => copyText(msg.value, `group-${msg.key}`)} className="p-1 rounded hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors">
+                        <Copy className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/[0.06] text-xs text-foreground whitespace-pre-wrap leading-relaxed">
+                    {msg.value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <button
@@ -311,7 +277,7 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-3">
-        <button onClick={() => setMode(null)} className="p-2 rounded-lg hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors">
+        <button onClick={() => setMode("objective")} className="p-2 rounded-lg hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeft className="w-4 h-4" />
         </button>
         <div>
@@ -337,7 +303,6 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
               }`}
             >
               <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-mono ${QUARTILE_COLORS[lead.quartile]}`}>{QUARTILE_LABELS[lead.quartile]}</span>
                 <span className="text-xs text-foreground truncate">{lead.firstName} {lead.lastName}</span>
                 {lead.messages && <span className="ml-auto text-[10px] text-success">✓</span>}
               </div>
