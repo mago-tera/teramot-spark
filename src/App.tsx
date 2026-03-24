@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
 import Projects from "./pages/Projects";
+import CampaignsPage from "./pages/CampaignsPage";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
@@ -23,11 +24,7 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) return <Navigate to="/login" replace />;
-
-  // Domain check
-  if (!user.email?.endsWith("@teramot.com")) {
-    return <Navigate to="/login" replace />;
-  }
+  if (!user.email?.endsWith("@teramot.com")) return <Navigate to="/login" replace />;
 
   return <>{children}</>;
 }
@@ -41,8 +38,11 @@ const App = () => (
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<AuthGuard><Projects /></AuthGuard>} />
-          <Route path="/campaign/new" element={<AuthGuard><Index /></AuthGuard>} />
-          <Route path="/campaign/:id" element={<AuthGuard><Index /></AuthGuard>} />
+          <Route path="/project/:projectId" element={<AuthGuard><CampaignsPage /></AuthGuard>} />
+          <Route path="/project/:projectId/campaign/new" element={<AuthGuard><Index /></AuthGuard>} />
+          <Route path="/project/:projectId/campaign/:id" element={<AuthGuard><Index /></AuthGuard>} />
+          {/* Legacy routes redirect */}
+          <Route path="/campaign/*" element={<Navigate to="/" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

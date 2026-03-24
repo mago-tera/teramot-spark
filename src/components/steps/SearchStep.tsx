@@ -69,7 +69,7 @@ function scoreAndAssign(leads: Lead[]): ScoredLead[] {
 }
 
 export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads, onComplete }: Props) {
-  const { id: paramId } = useParams();
+  const { id: paramId, projectId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [campaignId, setCampaignId] = useState<string | null>(paramId && paramId !== "new" ? paramId : null);
@@ -173,23 +173,42 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
             frequency: "once",
             status: "configuracion",
             user_id: user?.id,
+            project_id: projectId || null,
           })
           .select()
           .single();
         if (campErr || !newCampaign) throw new Error("No se pudo crear la campaña");
         activeCampaignId = newCampaign.id;
         setCampaignId(activeCampaignId);
-        navigate(`/campaign/${activeCampaignId}`, { replace: true });
+        navigate(`/project/${projectId}/campaign/${activeCampaignId}`, { replace: true });
       }
 
-      // Get all existing leads for dedup
-      const { data: existingLeadsData } = await supabase
-        .from("leads")
-        .select("email, linkedin_url")
-        .eq("campaign_id", activeCampaignId);
+      // Get all existing leads across the ENTIRE project for dedup
+      let existingLeadsData: { email: string | null; linkedin_url: string | null }[] = [];
+      if (projectId) {
+        // Get all campaign IDs in this project
+        const { data: projectCampaigns } = await supabase
+          .from("campaigns")
+          .select("id")
+          .eq("project_id", projectId);
+        const campaignIds = (projectCampaigns || []).map((c) => c.id);
+        if (campaignIds.length > 0) {
+          const { data } = await supabase
+            .from("leads")
+            .select("email, linkedin_url")
+            .in("campaign_id", campaignIds);
+          existingLeadsData = data || [];
+        }
+      } else {
+        const { data } = await supabase
+          .from("leads")
+          .select("email, linkedin_url")
+          .eq("campaign_id", activeCampaignId);
+        existingLeadsData = data || [];
+      }
 
-      const existingEmails = new Set((existingLeadsData || []).map((l) => l.email).filter(Boolean));
-      const existingLinkedins = new Set((existingLeadsData || []).map((l) => l.linkedin_url).filter(Boolean));
+      const existingEmails = new Set(existingLeadsData.map((l) => l.email).filter(Boolean));
+      const existingLinkedins = new Set(existingLeadsData.map((l) => l.linkedin_url).filter(Boolean));
 
       const targetQty = searchConfig.quantity;
       let allNewLeads: Lead[] = [];

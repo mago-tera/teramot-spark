@@ -12,7 +12,7 @@ interface Props {
 
 export function WizardSidebar({ steps, currentStep, onStepClick }: Props) {
   const navigate = useNavigate();
-  const { id: campaignId } = useParams();
+  const { id: campaignId, projectId } = useParams();
 
   const deleteCampaign = async () => {
     if (!campaignId || campaignId === "new") return;
@@ -21,7 +21,7 @@ export function WizardSidebar({ steps, currentStep, onStepClick }: Props) {
     await supabase.from("lists").delete().eq("campaign_id", campaignId);
     await supabase.from("campaigns").delete().eq("id", campaignId);
     toast.success("Campaña eliminada");
-    navigate("/");
+    navigate(projectId ? `/project/${projectId}` : "/");
   };
 
   return (
@@ -36,11 +36,11 @@ export function WizardSidebar({ steps, currentStep, onStepClick }: Props) {
 
       {/* Back to projects */}
       <button
-        onClick={() => navigate("/")}
+        onClick={() => navigate(projectId ? `/project/${projectId}` : "/")}
         className="flex items-center gap-2 px-5 py-3 text-xs text-muted-foreground hover:text-foreground border-b border-white/[0.06] transition-colors"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
-        Volver a Projects
+        Volver a Campañas
       </button>
 
       {/* Steps */}
