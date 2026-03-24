@@ -1,0 +1,2 @@
+CREATE UNIQUE INDEX leads_campaign_email_unique ON public.leads (campaign_id, email) WHERE email IS NOT NULL AND email != '';
+CREATE UNIQUE INDEX leads_campaign_linkedin_unique ON public.leads (campaign_id, linkedin_url) WHERE linkedin_url IS NOT NULL AND linkedin_url != '';

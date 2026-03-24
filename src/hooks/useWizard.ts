@@ -10,7 +10,7 @@ export interface StepInfo {
 }
 
 export interface CampaignConfig {
-  profile: "Data Analyst" | "BI Analyst" | "Data Leader / CDO / Head of BI" | "Ambos" | string;
+  profile: string;
   geoMix: Record<string, number>;
   frequency: "once" | "weekly" | "monthly";
   quantity: number;
@@ -52,10 +52,9 @@ export interface GeneratedMessages {
 }
 
 const INITIAL_STEPS: StepInfo[] = [
-  { id: 0, label: "Choose ICP", icon: "⚙", status: "active" },
-  { id: 1, label: "Listas", icon: "📋", status: "pending" },
-  { id: 2, label: "Mensajes con IA", icon: "✉", status: "pending" },
-  { id: 3, label: "Tracking", icon: "📈", status: "pending" },
+  { id: 0, label: "Listas", icon: "📋", status: "active" },
+  { id: 1, label: "Mensajes con IA", icon: "✉", status: "pending" },
+  { id: 2, label: "Tracking", icon: "📈", status: "pending" },
 ];
 
 export function useWizard() {
