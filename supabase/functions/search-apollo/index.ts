@@ -55,9 +55,11 @@ serve(async (req) => {
       }
 
       const result = await response.json();
-      console.log(`Apollo response for ${country}:`, JSON.stringify(result).slice(0, 500));
+      // Log full response keys for debugging
+      console.log(`Apollo keys for ${country}:`, JSON.stringify(Object.keys(result)));
+      console.log(`Apollo response for ${country}:`, JSON.stringify(result).slice(0, 1500));
 
-      const people = result?.data?.people || result?.response_data?.people || [];
+      const people = result?.data?.people || result?.response_data?.people || result?.people || [];
 
       for (const p of people.slice(0, qty)) {
         allLeads.push({
