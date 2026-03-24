@@ -201,7 +201,7 @@ export function ICPForm({ config: initialConfig, onConfirm, onCancel }: Props) {
             <button onClick={() => { setShowAddCountry(false); setCustomCountry(""); }} className="p-1 text-muted-foreground hover:text-foreground">
               <X className="w-3.5 h-3.5" />
             </button>
-          </div>
+        )}
         </div>
       </div>
 
