@@ -68,8 +68,9 @@ function scoreAndAssign(leads: Lead[]): ScoredLead[] {
 }
 
 export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads, onComplete }: Props) {
-  const { id: campaignId } = useParams();
-  const [searching, setSearching] = useState(false);
+  const { id: paramId } = useParams();
+  const navigate = useNavigate();
+  const [campaignId, setCampaignId] = useState<string | null>(paramId && paramId !== "new" ? paramId : null);
   const [logs, setLogs] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
   const [showICPForm, setShowICPForm] = useState(false);
