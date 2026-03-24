@@ -9,7 +9,7 @@ interface Props {
 }
 
 const DEFAULT_COUNTRIES = ["Argentina", "USA", "Brasil"];
-const EXTRA_COUNTRIES = ["Colombia", "Chile", "México"];
+
 const PROFILES = ["Data Analyst", "BI Analyst", "Data Leader / CDO / Head of BI"] as const;
 
 function GeoSlider({ country, value, onChange, onRemove }: { country: string; value: number; onChange: (v: number) => void; onRemove?: () => void }) {
