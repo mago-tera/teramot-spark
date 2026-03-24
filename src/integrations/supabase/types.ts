@@ -63,6 +63,7 @@ export type Database = {
           industry: string | null
           last_name: string | null
           linkedin_url: string | null
+          list_id: string | null
           messages: Json | null
           quartile: string | null
           score: number | null
@@ -81,6 +82,7 @@ export type Database = {
           industry?: string | null
           last_name?: string | null
           linkedin_url?: string | null
+          list_id?: string | null
           messages?: Json | null
           quartile?: string | null
           score?: number | null
@@ -99,6 +101,7 @@ export type Database = {
           industry?: string | null
           last_name?: string | null
           linkedin_url?: string | null
+          list_id?: string | null
           messages?: Json | null
           quartile?: string | null
           score?: number | null
@@ -108,6 +111,57 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "leads_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "leads_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lists: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          frequency: string
+          geo_mix: Json
+          id: string
+          lead_count: number
+          name: string
+          profile: string
+          quantity: number
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          frequency?: string
+          geo_mix?: Json
+          id?: string
+          lead_count?: number
+          name?: string
+          profile: string
+          quantity?: number
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          frequency?: string
+          geo_mix?: Json
+          id?: string
+          lead_count?: number
+          name?: string
+          profile?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lists_campaign_id_fkey"
             columns: ["campaign_id"]
             isOneToOne: false
             referencedRelation: "campaigns"
