@@ -157,12 +157,32 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     }));
     setProgress(10);
 
-    try {
+      // Auto-create campaign if needed
+      let activeCampaignId = campaignId;
+      if (!activeCampaignId) {
+        const { data: newCampaign, error: campErr } = await supabase
+          .from("campaigns")
+          .insert({
+            name: `Campaña ${new Date().toLocaleDateString("es-AR", { day: "numeric", month: "short" })}`,
+            profile: searchConfig.profile,
+            geo_mix: searchConfig.geoMix,
+            quantity: searchConfig.quantity,
+            frequency: "once",
+            status: "configuracion",
+          })
+          .select()
+          .single();
+        if (campErr || !newCampaign) throw new Error("No se pudo crear la campaña");
+        activeCampaignId = newCampaign.id;
+        setCampaignId(activeCampaignId);
+        navigate(`/campaign/${activeCampaignId}`, { replace: true });
+      }
+
       // Get all existing leads for dedup
       const { data: existingLeadsData } = await supabase
         .from("leads")
         .select("email, linkedin_url")
-        .eq("campaign_id", campaignId!);
+        .eq("campaign_id", activeCampaignId);
 
       const existingEmails = new Set((existingLeadsData || []).map((l) => l.email).filter(Boolean));
       const existingLinkedins = new Set((existingLeadsData || []).map((l) => l.linkedin_url).filter(Boolean));
