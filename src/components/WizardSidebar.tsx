@@ -11,6 +11,19 @@ interface Props {
 }
 
 export function WizardSidebar({ steps, currentStep, onStepClick }: Props) {
+  const navigate = useNavigate();
+  const { id: campaignId } = useParams();
+
+  const deleteCampaign = async () => {
+    if (!campaignId || campaignId === "new") return;
+    if (!confirm("¿Estás seguro de que querés eliminar esta campaña? Se borrarán todos los leads y listas asociados.")) return;
+    await supabase.from("leads").delete().eq("campaign_id", campaignId);
+    await supabase.from("lists").delete().eq("campaign_id", campaignId);
+    await supabase.from("campaigns").delete().eq("id", campaignId);
+    toast.success("Campaña eliminada");
+    navigate("/");
+  };
+
   return (
     <aside className="w-60 shrink-0 h-screen sticky top-0 flex flex-col border-r border-white/[0.08]" style={{ background: "hsl(240 15% 6%)" }}>
       {/* Logo */}
@@ -20,6 +33,15 @@ export function WizardSidebar({ steps, currentStep, onStepClick }: Props) {
           <span className="text-muted-foreground font-normal text-sm">Prospecting</span>
         </h1>
       </div>
+
+      {/* Back to projects */}
+      <button
+        onClick={() => navigate("/")}
+        className="flex items-center gap-2 px-5 py-3 text-xs text-muted-foreground hover:text-foreground border-b border-white/[0.06] transition-colors"
+      >
+        <ArrowLeft className="w-3.5 h-3.5" />
+        Volver a Projects
+      </button>
 
       {/* Steps */}
       <nav className="flex-1 px-3 py-4 space-y-1">
