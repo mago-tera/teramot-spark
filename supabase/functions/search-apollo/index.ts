@@ -60,13 +60,13 @@ serve(async (req) => {
           firstName: p.first_name || "",
           lastName: p.last_name || "",
           title: p.title || "",
-          company: p.organization?.name || "",
-          industry: p.organization?.industry || "",
+          company: p.organization?.name || p.employment_history?.[0]?.organization_name || "",
+          industry: p.organization?.industry || p.organization?.short_description || "",
           country,
           seniority: p.seniority || "",
           email: p.email || "",
           linkedinUrl: p.linkedin_url || "",
-          headcount: p.organization?.estimated_num_employees || 0,
+          headcount: p.organization?.estimated_num_employees || p.organization?.current_employee_count || 0,
           apolloId: p.id || "",
         });
       }
