@@ -101,15 +101,7 @@ export function ICPForm({ config: initialConfig, onConfirm, onCancel }: Props) {
 
       {/* Volume */}
       <div className="space-y-3">
-        <h4 className="text-sm font-medium text-foreground">Volumen y frecuencia</h4>
-        <div className="flex gap-3">
-          {([["once", "Una sola vez"], ["weekly", "Semanal"], ["monthly", "Mensual"]] as const).map(([val, label]) => (
-            <button key={val} onClick={() => setConfig({ ...config, frequency: val })}
-              className={`px-4 py-2 rounded-lg text-xs transition-colors ${
-                config.frequency === val ? "bg-primary/15 text-primary border border-primary/30" : "border border-white/10 text-muted-foreground hover:text-foreground"
-              }`}>{label}</button>
-          ))}
-        </div>
+        <h4 className="text-sm font-medium text-foreground">Volumen</h4>
         <div className="flex items-center gap-3">
           <label className="text-xs text-muted-foreground">Cantidad de leads</label>
           <input type="number" min={1} value={config.quantity}
