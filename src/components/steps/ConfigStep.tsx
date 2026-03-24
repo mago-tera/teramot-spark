@@ -120,7 +120,15 @@ export function ConfigStep({ config, setConfig, onComplete }: Props) {
                   onClick={() => updateGeo(c, Math.max(0, (config.geoMix[c] || 0) - 5))}
                   className="w-7 h-7 rounded-md flex items-center justify-center text-xs font-medium border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/[0.06] transition-colors"
                 >−</button>
-                <span className="w-10 text-center text-xs font-mono text-foreground">{config.geoMix[c] || 0}%</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={config.geoMix[c] || 0}
+                  onChange={(e) => updateGeo(c, Math.max(0, Math.min(100, parseInt(e.target.value) || 0)))}
+                  className="w-12 text-center text-xs font-mono text-foreground bg-transparent border border-white/10 rounded-md py-1 focus:outline-none focus:border-primary/50"
+                />
+                <span className="text-xs text-muted-foreground">%</span>
                 <button
                   type="button"
                   onClick={() => updateGeo(c, Math.min(100, (config.geoMix[c] || 0) + 5))}
