@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { CampaignConfig, ScoredLead } from "@/hooks/useWizard";
 
 export async function saveCampaign(config: CampaignConfig, name: string, loomLinks: Record<string, string>) {
+  const { data: { user } } = await supabase.auth.getUser();
   const { data, error } = await supabase.from("campaigns").insert({
     name,
     profile: config.profile,
@@ -10,6 +11,7 @@ export async function saveCampaign(config: CampaignConfig, name: string, loomLin
     frequency: config.frequency,
     loom_links: loomLinks,
     status: "tracking",
+    user_id: user?.id,
   }).select().single();
 
   if (error) throw error;

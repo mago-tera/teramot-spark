@@ -4,6 +4,7 @@ import { searchApollo } from "@/lib/api";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useParams, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import { ICPForm } from "@/components/steps/ICPForm";
 import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users } from "lucide-react";
 
@@ -70,6 +71,7 @@ function scoreAndAssign(leads: Lead[]): ScoredLead[] {
 export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads, onComplete }: Props) {
   const { id: paramId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [campaignId, setCampaignId] = useState<string | null>(paramId && paramId !== "new" ? paramId : null);
   const [searching, setSearching] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
@@ -157,6 +159,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     }));
     setProgress(10);
 
+    try {
       // Auto-create campaign if needed
       let activeCampaignId = campaignId;
       if (!activeCampaignId) {
@@ -169,6 +172,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
             quantity: searchConfig.quantity,
             frequency: "once",
             status: "configuracion",
+            user_id: user?.id,
           })
           .select()
           .single();
