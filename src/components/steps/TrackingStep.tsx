@@ -19,9 +19,7 @@ const BENCHMARKS = [
 const CHECKPOINTS = [3, 5, 7, 10, 14, 21, "Cierre"];
 
 export function TrackingStep({ config, scoredLeads }: Props) {
-  const now = new Date();
-  const defaultName = `Teramot-Q1-${now.toLocaleString("es", { month: "short" })}-${now.getFullYear()}`;
-  const [campaignName, setCampaignName] = useState(defaultName);
+  const [campaignName, setCampaignName] = useState("Cambiale el nombre che!");
   const [loomLinks, setLoomLinks] = useState({ Q1: "", Q2: "", Q3: "", Q4: "" });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);

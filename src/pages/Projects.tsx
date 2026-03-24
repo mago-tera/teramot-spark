@@ -69,7 +69,7 @@ export default function Projects() {
   };
 
   const createProject = async () => {
-    const name = `Proyecto ${new Date().toLocaleDateString("es-AR", { day: "numeric", month: "short" })}`;
+    const name = "Cambiale el nombre che!";
     const { data, error } = await supabase
       .from("projects")
       .insert({ name, user_id: user!.id })
