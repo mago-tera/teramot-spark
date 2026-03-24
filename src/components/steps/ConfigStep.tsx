@@ -74,8 +74,30 @@ export function ConfigStep({ config, setConfig, onComplete }: Props) {
               <input type="radio" className="sr-only" checked={config.profile === p} onChange={() => setConfig({ ...config, profile: p })} />
             </label>
           ))}
+          {/* Otros - custom */}
+          <label className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors ${
+            isCustom ? "bg-primary/10 border border-primary/30" : "hover:bg-white/[0.03] border border-transparent"
+          }`}
+            onClick={() => { setIsCustom(true); setConfig({ ...config, profile: customProfile }); }}
+          >
+            <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
+              isCustom ? "border-primary" : "border-muted-foreground/30"
+            }`}>
+              {isCustom && <span className="w-2 h-2 rounded-full bg-primary" />}
+            </span>
+            <span className="text-sm text-foreground">Otros</span>
+          </label>
+          {isCustom && (
+            <input
+              type="text"
+              placeholder="Ej: Marketing Manager, CTO..."
+              value={customProfile}
+              onChange={(e) => { setCustomProfile(e.target.value); setConfig({ ...config, profile: e.target.value }); }}
+              className="glass-input w-full text-sm ml-7"
+              autoFocus
+            />
+          )}
         </div>
-      </div>
 
       {/* Geo Mix */}
       <div className="glass-card p-5 space-y-4">
