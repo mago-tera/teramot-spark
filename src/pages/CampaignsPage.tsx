@@ -279,6 +279,35 @@ export default function CampaignsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* New campaign dialog */}
+      <AlertDialog open={showNewDialog} onOpenChange={(open) => { if (!open) { setShowNewDialog(false); setNewCampaignName(""); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Nueva campaña</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ponele un nombre a tu campaña para empezar.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-2">
+            <input
+              type="text"
+              value={newCampaignName}
+              onChange={(e) => setNewCampaignName(e.target.value)}
+              placeholder="Ej: Outreach Data Leaders Q2"
+              className="glass-input w-full text-sm py-2 px-3"
+              autoFocus
+              onKeyDown={(e) => { if (e.key === "Enter" && newCampaignName.trim()) createCampaign(); }}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={createCampaign} disabled={creatingCampaign || !newCampaignName.trim()}>
+              {creatingCampaign ? "Creando..." : "Crear campaña"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
