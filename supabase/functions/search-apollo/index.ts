@@ -40,10 +40,9 @@ serve(async (req) => {
         body: JSON.stringify({
           entity_id: "pg-test-053c2a3a-372c-4246-bc7c-a447eeb7d606",
           arguments: {
-            person_titles: personTitles,
+            q_keywords: personTitles[0],
             person_locations: [country],
-            per_page: Math.min(qty, 100),
-            page: 1,
+            per_page: Math.min(qty, 25),
           },
         }),
       });
