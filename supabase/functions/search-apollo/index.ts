@@ -30,7 +30,7 @@ serve(async (req) => {
       if (qty <= 0) continue;
 
       // Call Apollo API directly
-      const response = await fetch("https://api.apollo.io/api/v1/mixed_people/search", {
+      const response = await fetch("https://api.apollo.io/api/v1/mixed_people/api_search", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
