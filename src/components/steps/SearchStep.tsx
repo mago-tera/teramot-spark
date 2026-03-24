@@ -539,14 +539,6 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         </div>
       )}
 
-      {lists.length > 0 && (
-        <button
-          onClick={onComplete}
-          className="px-6 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-        >
-          Continuar a mensajes →
-        </button>
-      )}
     </div>
   );
 }
