@@ -82,8 +82,28 @@ export default function CampaignsPage() {
     setLoading(false);
   };
 
-  const createCampaign = () => {
-    navigate(`/project/${projectId}/campaign/new`);
+  const createCampaign = async () => {
+    if (!newCampaignName.trim()) return;
+    setCreatingCampaign(true);
+    try {
+      const { data, error } = await supabase
+        .from("campaigns")
+        .insert({
+          name: newCampaignName.trim(),
+          profile: "",
+          user_id: user!.id,
+          project_id: projectId,
+          status: "configuracion",
+        })
+        .select()
+        .single();
+      if (error) { toast.error("Error al crear campaña"); return; }
+      setShowNewDialog(false);
+      setNewCampaignName("");
+      navigate(`/project/${projectId}/campaign/${data.id}`);
+    } finally {
+      setCreatingCampaign(false);
+    }
   };
 
   const updateName = async (id: string, name: string) => {
