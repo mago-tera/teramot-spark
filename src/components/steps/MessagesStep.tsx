@@ -16,6 +16,7 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
   const [mode, setMode] = useState<Mode>("objective");
   const [objective, setObjective] = useState("");
   const [whatToCommunicate, setWhatToCommunicate] = useState("");
+  const [selectedMode, setSelectedMode] = useState<"group" | "personalized" | null>(null);
 
   // Group mode state
   const [canal, setCanal] = useState<"linkedin" | "email">("linkedin");
