@@ -172,27 +172,35 @@ export function ICPForm({ config: initialConfig, onConfirm, onCancel }: Props) {
           ))}
         </div>
         {availableExtras.length > 0 && (
-          <div className="relative">
+        {!showAddCountry ? (
+          <button
+            onClick={() => setShowAddCountry(true)}
+            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Agregar región
+          </button>
+        ) : (
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              placeholder="Ej: Colombia, Chile, España..."
+              value={customCountry}
+              onChange={(e) => setCustomCountry(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && customCountry.trim()) { addCountry(customCountry.trim()); setCustomCountry(""); } if (e.key === "Escape") { setShowAddCountry(false); setCustomCountry(""); } }}
+              className="glass-input text-sm py-1.5 px-3 w-48"
+              autoFocus
+            />
             <button
-              onClick={() => setShowAddCountry(!showAddCountry)}
-              className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors"
+              onClick={() => { if (customCountry.trim()) { addCountry(customCountry.trim()); setCustomCountry(""); } }}
+              disabled={!customCountry.trim()}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
-              <Plus className="w-3.5 h-3.5" />
-              Agregar región
+              Agregar
             </button>
-            {showAddCountry && (
-              <div className="absolute top-full left-0 mt-1 py-1 rounded-lg bg-card border border-white/10 shadow-xl z-10 min-w-[140px]">
-                {availableExtras.map((c) => (
-                  <button
-                    key={c}
-                    onClick={() => addCountry(c)}
-                    className="w-full text-left px-3 py-2 text-sm text-foreground hover:bg-white/[0.06] transition-colors"
-                  >
-                    {c}
-                  </button>
-                ))}
-              </div>
-            )}
+            <button onClick={() => { setShowAddCountry(false); setCustomCountry(""); }} className="p-1 text-muted-foreground hover:text-foreground">
+              <X className="w-3.5 h-3.5" />
+            </button>
           </div>
         )}
       </div>
