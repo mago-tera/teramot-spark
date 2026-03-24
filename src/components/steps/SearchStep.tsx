@@ -157,6 +157,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     }));
     setProgress(10);
 
+    try {
       // Auto-create campaign if needed
       let activeCampaignId = campaignId;
       if (!activeCampaignId) {
