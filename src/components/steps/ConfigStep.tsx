@@ -63,12 +63,12 @@ export function ConfigStep({ config, setConfig, onComplete }: Props) {
         <div className="space-y-2">
           {PROFILES.map((p) => (
             <label key={p} className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors ${
-              config.profile === p ? "bg-primary/10 border border-primary/30" : "hover:bg-white/[0.03] border border-transparent"
+              config.profile === p && !isCustom ? "bg-primary/10 border border-primary/30" : "hover:bg-white/[0.03] border border-transparent"
             }`}>
               <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                config.profile === p ? "border-primary" : "border-muted-foreground/30"
+                config.profile === p && !isCustom ? "border-primary" : "border-muted-foreground/30"
               }`}>
-                {config.profile === p && <span className="w-2 h-2 rounded-full bg-primary" />}
+                {config.profile === p && !isCustom && <span className="w-2 h-2 rounded-full bg-primary" />}
               </span>
               <span className="text-sm text-foreground">{p}</span>
               <input type="radio" className="sr-only" checked={config.profile === p && !isCustom} onChange={() => { setIsCustom(false); setConfig({ ...config, profile: p }); }} />
