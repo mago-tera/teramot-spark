@@ -215,7 +215,7 @@ export default function CampaignsPage() {
                       </span>
                     </div>
                     <p className="text-xs text-muted-foreground truncate">
-                      {c.quantity} leads · {geoSummary(c.geo_mix as Record<string, number>)}
+                      {new Date(c.created_at).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}
                     </p>
                   </div>
 
