@@ -5,14 +5,12 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-const COMPOSIO_BASE = "https://backend.composio.dev/api/v3";
-
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const COMPOSIO_API_KEY = Deno.env.get("COMPOSIO_API_KEY");
-    if (!COMPOSIO_API_KEY) throw new Error("COMPOSIO_API_KEY is not configured");
+    const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY");
+    if (!APOLLO_API_KEY) throw new Error("APOLLO_API_KEY is not configured");
 
     const { profile, geoMix, quantity } = await req.json();
 
@@ -31,39 +29,30 @@ serve(async (req) => {
       const qty = Math.round(((pct as number) / 100) * quantity);
       if (qty <= 0) continue;
 
-      // Try People Search first, fallback to Contacts Search
-      let people: any[] = [];
-      
-      for (const toolSlug of ["APOLLO_PEOPLE_SEARCH", "APOLLO_SEARCH_CONTACTS"]) {
-        const response = await fetch(`${COMPOSIO_BASE}/tools/execute/${toolSlug}`, {
-          method: "POST",
-          headers: {
-            "x-api-key": COMPOSIO_API_KEY,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            entity_id: "pg-test-053c2a3a-372c-4246-bc7c-a447eeb7d606",
-            arguments: {
-              person_titles: personTitles,
-              person_locations: [country],
-              per_page: Math.min(qty, 25),
-            },
-          }),
-        });
+      // Call Apollo API directly
+      const response = await fetch("https://api.apollo.io/api/v1/mixed_people/search", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Api-Key": APOLLO_API_KEY,
+        },
+        body: JSON.stringify({
+          person_titles: personTitles,
+          person_locations: [country],
+          per_page: Math.min(qty, 100),
+          page: 1,
+        }),
+      });
 
-        const result = await response.json();
-        console.log(`${toolSlug} for ${country}:`, JSON.stringify(result).slice(0, 800));
-
-        if (result.successful) {
-          people = result?.data?.people || result?.data?.contacts || [];
-          break;
-        }
-      }
-
-      if (people.length === 0) {
-        console.log(`No results for ${country}, skipping`);
+      if (!response.ok) {
+        const errText = await response.text();
+        console.error(`Apollo search error for ${country}:`, response.status, errText);
         continue;
       }
+
+      const result = await response.json();
+      const people = result?.people || [];
+      console.log(`Apollo ${country}: ${people.length} people found`);
 
       for (const p of people.slice(0, qty)) {
         allLeads.push({
@@ -71,9 +60,9 @@ serve(async (req) => {
           firstName: p.first_name || "",
           lastName: p.last_name || "",
           title: p.title || "",
-          company: p.organization?.name || p.organization_name || "",
+          company: p.organization?.name || "",
           industry: p.organization?.industry || "",
-          country: country,
+          country,
           seniority: p.seniority || "",
           email: p.email || "",
           linkedinUrl: p.linkedin_url || "",
