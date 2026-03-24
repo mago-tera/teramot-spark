@@ -80,7 +80,7 @@ serve(async (req) => {
           person_titles: personTitles,
           person_locations: [country],
           per_page: Math.min(qty, 100),
-          page: 1,
+          page: page,
         }),
       });
 
