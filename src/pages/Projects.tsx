@@ -36,6 +36,12 @@ export default function Projects() {
   const [sharing, setSharing] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  // New project dialog state
+  const [showNewDialog, setShowNewDialog] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newInviteEmail, setNewInviteEmail] = useState("");
+  const [creating, setCreating] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     loadProjects();
