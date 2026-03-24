@@ -5,6 +5,51 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+// Brand context extracted from Teramot's Notion one-pagers
+const BRAND_CONTEXT = `
+=== CONTEXTO DE MARCA TERAMOT ===
+
+PROPUESTA DE VALOR:
+Teramot es la mejor forma de trabajar con datos. Descubre esquemas, corrige problemas de calidad, asesora, escribe transformaciones y despliega pipelines SQL listos para producción.
+
+CLAIM PRINCIPAL: "Teramot is the best way to work with data."
+SUBCLAIM: "Built to make data analysts incredibly productive."
+
+ANALOGÍA: Teramot es el Cursor para equipos de datos. Así como Cursor permite que los desarrolladores escriban software mucho más rápido, Teramot permite que los equipos de datos conviertan requerimientos de negocio en sistemas de datos operativos a una velocidad completamente distinta.
+
+CATEGORÍA: AI for Business Data — No es una herramienta de analytics ni un chatbot de datos. Es un sistema diseñado para convertir necesidades de negocio en infraestructura de datos en producción.
+
+ATRIBUTOS CLAVE:
+- Inteligente: Analiza la estructura de los datos y asesora cómo modelarlos para responder mejor las preguntas del negocio.
+- Confiable: Trabaja directamente sobre las bases de datos y genera queries transparentes y auditables.
+- Rápida: Automatiza la limpieza, transformación y construcción de infraestructura de datos.
+- Única: Tecnología patentada que permite a LLMs trabajar en forma directa con Bases de Datos reales y complejas.
+
+MENSAJES CLAVE:
+- "The AI for Data Infrastructure"
+- "Converse. Structure. Deploy your data with AI."
+- "Build data infrastructure through conversation."
+- "From business question to deployed data."
+- "Turn questions into data systems."
+
+PAIN POINTS DEL PROSPECTO:
+- Gran parte del tiempo se pierde preparando datos en lugar de analizarlos
+- Cada análisis requiere escribir SQL desde cero
+- Mucho trabajo manual de limpieza y normalización
+- Falta de adopción de IA en procesos de modelado de datos
+- Convertir preguntas ambiguas del negocio en estructuras de datos correctas
+
+DIFERENCIADOR: De "pedir y ejecutar" a "pensar y construir juntos". Un sistema que acompaña el proceso de razonamiento técnico y ejecuta cuando hay claridad.
+
+RESULTADO: Equipos de datos convierten requerimientos de negocio en infraestructura de datos en producción en horas en lugar de semanas. x30 más rápido.
+
+TONALIDAD DE MARCA:
+- Directo, técnico, sin hype de marketing
+- NO usar: "solución innovadora", "transformación digital", "revolucionario", "cutting-edge"
+- SÍ usar: lenguaje concreto, técnico, orientado a resultados medibles
+- Conectar con dolores reales de equipos de datos
+`;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -14,14 +59,19 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const systemPrompt = `Sos experto en outreach B2B técnico para Teramot, una plataforma de modelado, limpieza y sanitización de datos empresariales con IA.
+    const systemPrompt = `Sos experto en outreach B2B técnico para Teramot.
 
-Reglas:
-- Tono: directo, técnico, sin hype ni frases genéricas
-- No mencionar "solución innovadora" ni "transformación digital"
-- Personalizar con industria y cargo del prospecto
-- Conectar con dolor real de datos sucios o mal modelados
-- Canal: ${canal}`;
+${BRAND_CONTEXT}
+
+REGLAS DE GENERACIÓN:
+- Tono: directo, técnico, sin hype ni frases genéricas. Seguí la tonalidad de marca.
+- Personalizá con la industria y cargo del prospecto, conectando con sus pain points reales.
+- Usá los mensajes clave y la propuesta de valor de Teramot de forma natural, sin sonar robótico.
+- Conectá con el dolor real de datos sucios, mal modelados, o procesos manuales de infraestructura de datos.
+- Adaptá la intensidad según el cuartil: Q1 (Top Fit) = más agresivo y directo, Q4 (Fit Bajo) = más exploratorio.
+- Canal: ${canal}
+- Si es LinkedIn, máximo 300 caracteres. Sé conciso y directo.
+- Si es email, el asunto debe generar curiosidad sin clickbait.`;
 
     const userPrompt = `Generá 5 piezas de outreach para:
 Nombre: ${contact.firstName}
