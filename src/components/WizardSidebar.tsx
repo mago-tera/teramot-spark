@@ -81,6 +81,19 @@ export function WizardSidebar({ steps, currentStep, onStepClick }: Props) {
         })}
       </nav>
 
+      {/* Delete campaign */}
+      {campaignId && campaignId !== "new" && (
+        <div className="px-4 py-3 border-t border-white/[0.08]">
+          <button
+            onClick={deleteCampaign}
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            Eliminar campaña
+          </button>
+        </div>
+      )}
+
       {/* Connection status */}
       <div className="px-4 py-4 border-t border-white/[0.08] space-y-2">
         <p className="text-[11px] uppercase tracking-wider text-muted-foreground/60 mb-2">Conexiones</p>
