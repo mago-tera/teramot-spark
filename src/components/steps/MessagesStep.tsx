@@ -69,7 +69,7 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
               }`}
             >
               <div className="flex items-center gap-2">
-                <span className={`text-[10px] font-mono ${QUARTILE_COLORS[lead.quartile]}`}>{lead.quartile}</span>
+                <span className={`text-[10px] font-mono ${QUARTILE_COLORS[lead.quartile]}`}>{QUARTILE_LABELS[lead.quartile]}</span>
                 <span className="text-xs text-foreground truncate">{lead.firstName} {lead.lastName}</span>
                 {lead.messages && <span className="ml-auto text-[10px] text-success">✓</span>}
               </div>
