@@ -130,7 +130,9 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       .eq("list_id", selectedListId)
       .then(({ data }) => {
         if (data) {
-          const mapped: ScoredLead[] = data.map((d) => ({
+          const mapped: ScoredLead[] = data
+            .filter((d) => d.first_name && d.last_name && d.title && d.company && d.email && d.linkedin_url)
+            .map((d) => ({
             id: d.id,
             firstName: d.first_name || "",
             lastName: d.last_name || "",
@@ -272,9 +274,11 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         page++;
       }
 
-      // Trim to target
-      const finalLeads = allNewLeads.slice(0, targetQty);
-      const scored = scoreAndAssign(finalLeads);
+      // Filter out leads missing required fields
+      const completeFinalLeads = allNewLeads
+        .filter((l) => l.firstName && l.lastName && l.title && l.company && l.email && l.linkedinUrl)
+        .slice(0, targetQty);
+      const scored = scoreAndAssign(completeFinalLeads);
 
       // Create list record
       const now = new Date();
@@ -367,24 +371,21 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-white/[0.06]">
-                    {["Nombre", "Cargo", "Empresa", "País", "Nivel", "Email", "LinkedIn"].map((h) => (
+                    {["Nombre", "Apellido", "Cargo", "Empresa", "País", "Email", "LinkedIn"].map((h) => (
                       <th key={h} className="px-4 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {listLeads.map((lead, i) => {
-                    const qs = QUARTILE_STYLES[lead.quartile];
                     return (
                       <tr key={lead.id} className={`border-b border-white/[0.03] ${i % 2 === 0 ? "bg-white/[0.01]" : ""} hover:bg-white/[0.03] transition-colors`}>
-                        <td className="px-4 py-2.5 text-foreground font-medium">{lead.firstName} {lead.lastName}</td>
+                        <td className="px-4 py-2.5 text-foreground font-medium">{lead.firstName}</td>
+                        <td className="px-4 py-2.5 text-foreground font-medium">{lead.lastName}</td>
                         <td className="px-4 py-2.5 text-muted-foreground max-w-[180px] truncate">{lead.title}</td>
                         <td className="px-4 py-2.5 text-muted-foreground">{lead.company}</td>
                         <td className="px-4 py-2.5">
                           <span className={`px-2 py-0.5 rounded text-[10px] border ${COUNTRY_COLORS[lead.country] || "text-muted-foreground"}`}>{lead.country}</span>
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <span className={`px-2 py-0.5 rounded text-[10px] border ${qs.bg} ${qs.text} ${qs.border}`}>{qs.label}</span>
                         </td>
                         <td className="px-4 py-2.5 text-muted-foreground font-mono text-[10px]">
                           {lead.email || <span className="text-muted-foreground/40">—</span>}
