@@ -5,45 +5,44 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-async function bulkEnrich(apolloIds: string[], apiKey: string): Promise<Record<string, { email: string; linkedinUrl: string }>> {
-  const result: Record<string, { email: string; linkedinUrl: string }> = {};
-  
+async function enrichSingle(apolloId: string, firstName: string, lastName: string, company: string, apiKey: string): Promise<{ email: string; linkedinUrl: string } | null> {
   try {
-    const response = await fetch("https://api.apollo.io/api/v1/people/bulk_match", {
+    const body: Record<string, string> = {
+      id: apolloId,
+      reveal_personal_emails: "false",
+      reveal_phone_number: "false",
+    };
+    if (firstName) body.first_name = firstName;
+    if (lastName) body.last_name = lastName;
+    if (company) body.organization_name = company;
+
+    const response = await fetch("https://api.apollo.io/api/v1/people/match", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-Api-Key": apiKey,
       },
-      body: JSON.stringify({
-        details: apolloIds.map(id => ({ id })),
-        reveal_personal_emails: false,
-        reveal_phone_number: false,
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("Bulk enrich error:", response.status, errText);
-      return result;
+      console.error(`Enrich error for ${apolloId}:`, response.status, errText);
+      return null;
     }
 
     const data = await response.json();
-    const matches = data?.matches || [];
-    
-    for (const match of matches) {
-      if (match?.id) {
-        result[match.id] = {
-          email: match.email || "",
-          linkedinUrl: match.linkedin_url || "",
-        };
-      }
-    }
+    const person = data?.person;
+    if (!person) return null;
+
+    return {
+      email: person.email || "",
+      linkedinUrl: person.linkedin_url || "",
+    };
   } catch (e) {
-    console.error("Bulk enrich exception:", e);
+    console.error(`Enrich exception for ${apolloId}:`, e);
+    return null;
   }
-  
-  return result;
 }
 
 // Try to extract last name from linkedin URL slug
