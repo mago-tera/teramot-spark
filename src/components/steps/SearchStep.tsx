@@ -2,6 +2,7 @@ import { useState } from "react";
 import { CampaignConfig, Lead, ScoredLead } from "@/hooks/useWizard";
 import { searchApollo } from "@/lib/api";
 import { toast } from "sonner";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 interface Props {
   config: CampaignConfig;
@@ -51,6 +52,12 @@ function scoreAndAssign(leads: Lead[]): ScoredLead[] {
   }));
 }
 
+const FREQ_LABELS: Record<string, string> = {
+  once: "Una vez",
+  weekly: "Semanal",
+  monthly: "Mensual",
+};
+
 export function SearchStep({ config, leads, setLeads, setScoredLeads, onComplete }: Props) {
   const [searching, setSearching] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
@@ -76,7 +83,6 @@ export function SearchStep({ config, leads, setLeads, setScoredLeads, onComplete
       setProgress(80);
       setLeads(apolloLeads);
 
-      // Auto-score
       const scored = scoreAndAssign(apolloLeads);
       setScoredLeads(scored);
       setDisplayLeads(scored);
@@ -99,139 +105,152 @@ export function SearchStep({ config, leads, setLeads, setScoredLeads, onComplete
     }
   };
 
+  const renderLeadsTable = () => (
+    <>
+      <div className="glass-card overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-white/[0.06]">
+                {["Nombre", "Cargo", "Empresa", "País", "Nivel", "Email", "LinkedIn"].map((h) => (
+                  <th key={h} className="px-4 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {displayLeads.slice(0, 30).map((lead, i) => {
+                const qs = QUARTILE_STYLES[lead.quartile];
+                return (
+                  <tr key={lead.id} className={`border-b border-white/[0.03] ${i % 2 === 0 ? "bg-white/[0.01]" : ""} hover:bg-white/[0.03] transition-colors`}>
+                    <td className="px-4 py-2.5 text-foreground font-medium">{lead.firstName} {lead.lastName}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground max-w-[180px] truncate">{lead.title}</td>
+                    <td className="px-4 py-2.5 text-muted-foreground">{lead.company}</td>
+                    <td className="px-4 py-2.5">
+                      <span className={`px-2 py-0.5 rounded text-[10px] border ${COUNTRY_COLORS[lead.country] || "text-muted-foreground"}`}>
+                        {lead.country}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5">
+                      <span className={`px-2 py-0.5 rounded text-[10px] border ${qs.bg} ${qs.text} ${qs.border}`}>
+                        {qs.label}
+                      </span>
+                    </td>
+                    <td className="px-4 py-2.5 text-muted-foreground font-mono text-[10px]">
+                      {lead.email || <span className="text-muted-foreground/40">—</span>}
+                    </td>
+                    <td className="px-4 py-2.5">
+                      {lead.linkedinUrl ? (
+                        <div className="flex items-center gap-1.5 max-w-[200px]">
+                          <a href={lead.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-[10px] truncate">
+                            {lead.linkedinUrl.replace(/^https?:\/\/(www\.)?/, '')}
+                          </a>
+                          <button
+                            onClick={() => { navigator.clipboard.writeText(lead.linkedinUrl); toast.success("LinkedIn copiado"); }}
+                            className="shrink-0 p-0.5 rounded hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
+                            title="Copiar URL"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                          </button>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground/40 text-[10px]">—</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        {displayLeads.length > 30 && (
+          <div className="px-4 py-2 text-[11px] text-muted-foreground border-t border-white/[0.06]">
+            Mostrando 30 de {displayLeads.length} leads
+          </div>
+        )}
+      </div>
+
+      <button
+        onClick={onComplete}
+        className="px-6 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+      >
+        Continuar a mensajes →
+      </button>
+    </>
+  );
+
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold text-foreground">Búsqueda en Apollo</h2>
+        <h2 className="text-xl font-semibold text-foreground">Listas</h2>
         <p className="text-sm text-muted-foreground mt-1">
-          Buscando <span className="text-foreground font-medium">{config.profile}</span> según tu mix geográfico.
+          Gestiona tus listas de prospectos.
         </p>
       </div>
 
-      {displayLeads.length === 0 && !searching && (
-        <button
-          onClick={startSearch}
-          className="px-6 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-        >
-          🔍 Iniciar búsqueda
-        </button>
-      )}
+      <Tabs defaultValue="static" className="w-full">
+        <TabsList className="bg-white/[0.04] border border-white/[0.08]">
+          <TabsTrigger value="static">Listas estáticas</TabsTrigger>
+          <TabsTrigger value="search">Por búsqueda</TabsTrigger>
+        </TabsList>
 
-      {/* Progress */}
-      {(searching || logs.length > 0) && (
-        <div className="glass-card p-5 space-y-3">
-          <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
-            <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${progress}%` }} />
-          </div>
-          <div className="space-y-1 font-mono text-xs">
-            {logs.map((log, i) => (
-              <p key={i} className={i === logs.length - 1 && !searching ? "text-success" : "text-muted-foreground"}>
-                {log}
-              </p>
-            ))}
-            {searching && (
-              <p className="text-muted-foreground flex items-center gap-2">
-                <span className="flex gap-1">
-                  <span className="w-1 h-1 rounded-full bg-primary pulse-dot" />
-                  <span className="w-1 h-1 rounded-full bg-primary pulse-dot" />
-                  <span className="w-1 h-1 rounded-full bg-primary pulse-dot" />
-                </span>
-                Procesando...
-              </p>
-            )}
-          </div>
-        </div>
-      )}
+        <TabsContent value="static" className="space-y-4 mt-4">
+          <p className="text-sm text-muted-foreground">
+            Las listas estáticas se generan una sola vez a partir de una búsqueda en Apollo.
+          </p>
+          {displayLeads.length === 0 && !searching && (
+            <button
+              onClick={startSearch}
+              className="px-6 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+            >
+              🔍 Iniciar búsqueda
+            </button>
+          )}
 
-      {/* Quartile summary */}
-      {displayLeads.length > 0 && (
-        <div className="grid grid-cols-4 gap-3">
-          {(["Q1", "Q2", "Q3", "Q4"] as const).map((q) => {
-            const s = QUARTILE_STYLES[q];
-            const count = displayLeads.filter(l => l.quartile === q).length;
-            return (
-              <div key={q} className={`glass-card p-4 ${s.border} border`}>
-                <div className={`text-2xl font-bold font-mono ${s.text}`}>{count}</div>
-                <div className="text-[11px] text-muted-foreground mt-1">{q} — {s.label}</div>
+          {(searching || logs.length > 0) && (
+            <div className="glass-card p-5 space-y-3">
+              <div className="h-1.5 rounded-full bg-white/[0.06] overflow-hidden">
+                <div className="h-full rounded-full bg-primary transition-all duration-500" style={{ width: `${progress}%` }} />
               </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* Results table */}
-      {displayLeads.length > 0 && (
-        <>
-          <div className="glass-card overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="border-b border-white/[0.06]">
-                    {["Nombre", "Cargo", "Empresa", "País", "Nivel", "Email", "LinkedIn"].map((h) => (
-                      <th key={h} className="px-4 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody>
-                  {displayLeads.slice(0, 30).map((lead, i) => {
-                    const qs = QUARTILE_STYLES[lead.quartile];
-                    return (
-                      <tr key={lead.id} className={`border-b border-white/[0.03] ${i % 2 === 0 ? "bg-white/[0.01]" : ""} hover:bg-white/[0.03] transition-colors`}>
-                        <td className="px-4 py-2.5 text-foreground font-medium">{lead.firstName} {lead.lastName}</td>
-                        <td className="px-4 py-2.5 text-muted-foreground max-w-[180px] truncate">{lead.title}</td>
-                        <td className="px-4 py-2.5 text-muted-foreground">{lead.company}</td>
-                        <td className="px-4 py-2.5">
-                          <span className={`px-2 py-0.5 rounded text-[10px] border ${COUNTRY_COLORS[lead.country] || "text-muted-foreground"}`}>
-                            {lead.country}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5">
-                          <span className={`px-2 py-0.5 rounded text-[10px] border ${qs.bg} ${qs.text} ${qs.border}`}>
-                            {qs.label}
-                          </span>
-                        </td>
-                        <td className="px-4 py-2.5 text-muted-foreground font-mono text-[10px]">
-                          {lead.email || <span className="text-muted-foreground/40">—</span>}
-                        </td>
-                        <td className="px-4 py-2.5">
-                          {lead.linkedinUrl ? (
-                            <div className="flex items-center gap-1.5 max-w-[200px]">
-                              <a href={lead.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-[10px] truncate">
-                                {lead.linkedinUrl.replace(/^https?:\/\/(www\.)?/, '')}
-                              </a>
-                              <button
-                                onClick={() => { navigator.clipboard.writeText(lead.linkedinUrl); toast.success("LinkedIn copiado"); }}
-                                className="shrink-0 p-0.5 rounded hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
-                                title="Copiar URL"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground/40 text-[10px]">—</span>
-                          )}
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+              <div className="space-y-1 font-mono text-xs">
+                {logs.map((log, i) => (
+                  <p key={i} className={i === logs.length - 1 && !searching ? "text-success" : "text-muted-foreground"}>
+                    {log}
+                  </p>
+                ))}
+                {searching && (
+                  <p className="text-muted-foreground flex items-center gap-2">
+                    <span className="flex gap-1">
+                      <span className="w-1 h-1 rounded-full bg-primary pulse-dot" />
+                      <span className="w-1 h-1 rounded-full bg-primary pulse-dot" />
+                      <span className="w-1 h-1 rounded-full bg-primary pulse-dot" />
+                    </span>
+                    Procesando...
+                  </p>
+                )}
+              </div>
             </div>
-            {displayLeads.length > 30 && (
-              <div className="px-4 py-2 text-[11px] text-muted-foreground border-t border-white/[0.06]">
-                Mostrando 30 de {displayLeads.length} leads
-              </div>
-            )}
-          </div>
+          )}
 
-          <button
-            onClick={onComplete}
-            className="px-6 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-          >
-            Continuar a mensajes →
-          </button>
-        </>
-      )}
+          {displayLeads.length > 0 && renderLeadsTable()}
+        </TabsContent>
+
+        <TabsContent value="search" className="space-y-4 mt-4">
+          <div className="glass-card p-5 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Las listas por búsqueda se actualizan automáticamente según la frecuencia configurada.
+            </p>
+            <div className="flex items-center gap-3 text-sm">
+              <span className="text-muted-foreground">Frecuencia actual:</span>
+              <span className="px-3 py-1 rounded-md bg-primary/10 text-primary border border-primary/20 font-medium">
+                {FREQ_LABELS[config.frequency] || config.frequency}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground/60">
+              Perfil: <span className="text-foreground">{config.profile}</span> · Cantidad: <span className="text-foreground">{config.quantity}</span>
+            </p>
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
