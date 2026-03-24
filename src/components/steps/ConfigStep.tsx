@@ -12,6 +12,8 @@ const PROFILES = ["Data Analyst", "BI Analyst", "Data Leader / CDO / Head of BI"
 
 export function ConfigStep({ config, setConfig, onComplete }: Props) {
   const [confirmed, setConfirmed] = useState(false);
+  const [isCustom, setIsCustom] = useState(false);
+  const [customProfile, setCustomProfile] = useState("");
   const total = Object.values(config.geoMix).reduce((a, b) => a + b, 0);
   const isValid = config.profile !== "" && total === 100 && config.quantity > 0;
 
