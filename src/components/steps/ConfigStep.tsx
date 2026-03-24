@@ -71,7 +71,7 @@ export function ConfigStep({ config, setConfig, onComplete }: Props) {
                 {config.profile === p && <span className="w-2 h-2 rounded-full bg-primary" />}
               </span>
               <span className="text-sm text-foreground">{p}</span>
-              <input type="radio" className="sr-only" checked={config.profile === p} onChange={() => setConfig({ ...config, profile: p })} />
+              <input type="radio" className="sr-only" checked={config.profile === p && !isCustom} onChange={() => { setIsCustom(false); setConfig({ ...config, profile: p }); }} />
             </label>
           ))}
           {/* Otros - custom */}
