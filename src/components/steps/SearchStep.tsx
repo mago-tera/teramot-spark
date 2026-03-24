@@ -3,7 +3,7 @@ import { CampaignConfig, Lead, ScoredLead } from "@/hooks/useWizard";
 import { searchApollo } from "@/lib/api";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { ICPForm } from "@/components/steps/ICPForm";
 import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users } from "lucide-react";
 
