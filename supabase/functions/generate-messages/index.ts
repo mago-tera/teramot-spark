@@ -54,26 +54,44 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { contact, canal } = await req.json();
+    const { contact, canal, objective, whatToCommunicate, mode, quartile } = await req.json();
 
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    const objectiveContext = objective ? `\nOBJETIVO DEL USUARIO: ${objective}` : "";
+    const communicateContext = whatToCommunicate ? `\nQUÉ QUIERE COMUNICAR: ${whatToCommunicate}` : "";
+
+    const isGeneric = mode === "generic";
+
     const systemPrompt = `Sos experto en outreach B2B técnico para Teramot.
 
 ${BRAND_CONTEXT}
+${objectiveContext}
+${communicateContext}
 
 REGLAS DE GENERACIÓN:
 - Tono: directo, técnico, sin hype ni frases genéricas. Seguí la tonalidad de marca.
-- Personalizá con la industria y cargo del prospecto, conectando con sus pain points reales.
+${isGeneric
+  ? `- Este es un mensaje GENÉRICO para el grupo "${quartile}" (${quartile === "Q1" ? "Top Fit" : quartile === "Q2" ? "Buen Fit" : quartile === "Q3" ? "Fit Moderado" : "Fit Bajo"}). No personalices por nombre ni empresa específica, usá placeholders como [Nombre] y [Empresa].
+- El tono debe adaptarse al nivel de fit: Q1 = directo y asertivo, Q2 = profesional con valor claro, Q3 = educativo y exploratorio, Q4 = suave y de bajo compromiso.`
+  : `- Personalizá con la industria y cargo del prospecto, conectando con sus pain points reales.`}
 - Usá los mensajes clave y la propuesta de valor de Teramot de forma natural, sin sonar robótico.
 - Conectá con el dolor real de datos sucios, mal modelados, o procesos manuales de infraestructura de datos.
 - Adaptá la intensidad según el cuartil: Q1 (Top Fit) = más agresivo y directo, Q4 (Fit Bajo) = más exploratorio.
 - Canal: ${canal}
 - Si es LinkedIn, máximo 300 caracteres. Sé conciso y directo.
-- Si es email, el asunto debe generar curiosidad sin clickbait.`;
+- Si es email, el asunto debe generar curiosidad sin clickbait.
+- IMPORTANTE: Integrá el objetivo y lo que el usuario quiere comunicar como eje central de cada pieza.`;
 
-    const userPrompt = `Generá 5 piezas de outreach para:
+    const userPrompt = isGeneric
+      ? `Generá 5 piezas de outreach genéricas para el grupo ${quartile} (${quartile === "Q1" ? "Top Fit" : quartile === "Q2" ? "Buen Fit" : quartile === "Q3" ? "Fit Moderado" : "Fit Bajo"}).
+Perfil típico del grupo: industria ${contact.industry}, cargo tipo ${contact.title}.
+Canal: ${canal}
+
+Usá [Nombre] y [Empresa] como placeholders.
+Devolvé SOLO las 5 piezas.`
+      : `Generá 5 piezas de outreach para:
 Nombre: ${contact.firstName}
 Empresa: ${contact.company}
 Cargo: ${contact.title}

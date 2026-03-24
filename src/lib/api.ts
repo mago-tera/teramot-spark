@@ -40,9 +40,19 @@ export async function saveLeads(campaignId: string, leads: ScoredLead[]) {
   if (error) throw error;
 }
 
-export async function generateAIMessages(contact: ScoredLead, canal: "linkedin" | "email") {
+export async function generateAIMessages(contact: ScoredLead, canal: "linkedin" | "email", objective?: string, whatToCommunicate?: string) {
   const { data, error } = await supabase.functions.invoke("generate-messages", {
-    body: { contact, canal },
+    body: { contact, canal, objective, whatToCommunicate, mode: "personalized" },
+  });
+
+  if (error) throw error;
+  if (data.error) throw new Error(data.error);
+  return data.messages;
+}
+
+export async function generateGroupMessages(representative: ScoredLead, quartile: string, canal: "linkedin" | "email", objective: string, whatToCommunicate: string) {
+  const { data, error } = await supabase.functions.invoke("generate-messages", {
+    body: { contact: representative, canal, objective, whatToCommunicate, mode: "generic", quartile },
   });
 
   if (error) throw error;
