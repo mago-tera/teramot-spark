@@ -53,7 +53,7 @@ serve(async (req) => {
     const APOLLO_API_KEY = Deno.env.get("APOLLO_API_KEY");
     if (!APOLLO_API_KEY) throw new Error("APOLLO_API_KEY is not configured");
 
-    const { profile, geoMix, quantity } = await req.json();
+    const { profile, geoMix, quantity, page = 1, excludeEmails = [], excludeLinkedins = [] } = await req.json();
 
     const titleMap: Record<string, string[]> = {
       "Data Analyst": ["Data Analyst", "BI Analyst", "Analytics Analyst", "Business Intelligence Analyst"],
