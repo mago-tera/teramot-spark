@@ -297,6 +297,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      is_campaign_accessible: {
+        Args: { _campaign_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_campaign_owner: {
+        Args: { _campaign_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_project_member: {
         Args: { _project_id: string; _user_id: string }
         Returns: boolean
