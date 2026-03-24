@@ -10,7 +10,7 @@ export interface StepInfo {
 }
 
 export interface CampaignConfig {
-  profile: "Data Analyst" | "Data Leader / CDO / Head of BI" | "Ambos" | "";
+  profile: "Data Analyst" | "BI Analyst" | "Data Leader / CDO / Head of BI" | "Ambos" | string;
   geoMix: Record<string, number>;
   frequency: "once" | "weekly" | "monthly";
   quantity: number;
