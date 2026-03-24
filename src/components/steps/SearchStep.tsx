@@ -96,6 +96,8 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [listLeads, setListLeads] = useState<ScoredLead[]>([]);
   const [editingListId, setEditingListId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [showNewListDialog, setShowNewListDialog] = useState(false);
+  const [newListName, setNewListName] = useState("");
 
   // Load existing lists
   useEffect(() => {
