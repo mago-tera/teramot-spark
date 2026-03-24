@@ -216,7 +216,7 @@ export default function Projects() {
             <p className="text-sm text-muted-foreground mt-1">Gestiona tus proyectos de prospección.</p>
           </div>
           <button
-            onClick={createProject}
+            onClick={() => setShowNewDialog(true)}
             className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
           >
             <Plus className="w-4 h-4" />
