@@ -15,6 +15,7 @@ interface Props {
   setLeads: (l: Lead[]) => void;
   setScoredLeads: (l: ScoredLead[]) => void;
   onComplete: () => void;
+  setIsInsideList: (v: boolean) => void;
 }
 
 interface ListItem {
@@ -68,7 +69,7 @@ function scoreAndAssign(leads: Lead[]): ScoredLead[] {
   }));
 }
 
-export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads, onComplete }: Props) {
+export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads, onComplete, setIsInsideList }: Props) {
   const { id: paramId, projectId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -104,8 +105,9 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       });
   }, [campaignId]);
 
-  // Load leads for selected list
+  // Load leads for selected list & notify parent
   useEffect(() => {
+    setIsInsideList(!!selectedListId);
     if (!selectedListId) {
       setListLeads([]);
       return;

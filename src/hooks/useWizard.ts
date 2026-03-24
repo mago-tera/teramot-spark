@@ -68,6 +68,7 @@ export function useWizard() {
   });
   const [leads, setLeads] = useState<Lead[]>([]);
   const [scoredLeads, setScoredLeads] = useState<ScoredLead[]>([]);
+  const [isInsideList, setIsInsideList] = useState(false);
 
   const completeStep = useCallback((stepId: number) => {
     setSteps((prev) =>
@@ -96,5 +97,7 @@ export function useWizard() {
     setScoredLeads,
     completeStep,
     goToStep,
+    isInsideList,
+    setIsInsideList,
   };
 }

@@ -8,9 +8,10 @@ interface Props {
   steps: StepInfo[];
   currentStep: number;
   onStepClick: (id: number) => void;
+  isInsideList: boolean;
 }
 
-export function WizardSidebar({ steps, currentStep, onStepClick }: Props) {
+export function WizardSidebar({ steps, currentStep, onStepClick, isInsideList }: Props) {
   const navigate = useNavigate();
   const { id: campaignId, projectId } = useParams();
 
@@ -51,6 +52,7 @@ export function WizardSidebar({ steps, currentStep, onStepClick }: Props) {
           const isPending = step.status === "pending";
 
           if (isPending && step.id >= 2) return null;
+          if (step.id === 1 && !isInsideList && currentStep !== 1) return null;
 
           return (
             <button

@@ -10,7 +10,7 @@ const Index = () => {
   const renderStep = () => {
     switch (wizard.currentStep) {
       case 0:
-        return <SearchStep config={wizard.config} setConfig={wizard.setConfig} leads={wizard.leads} setLeads={wizard.setLeads} setScoredLeads={wizard.setScoredLeads} onComplete={() => wizard.completeStep(0)} />;
+        return <SearchStep config={wizard.config} setConfig={wizard.setConfig} leads={wizard.leads} setLeads={wizard.setLeads} setScoredLeads={wizard.setScoredLeads} onComplete={() => wizard.completeStep(0)} setIsInsideList={wizard.setIsInsideList} />;
       case 1:
         return <MessagesStep scoredLeads={wizard.scoredLeads} setScoredLeads={wizard.setScoredLeads} onComplete={() => wizard.completeStep(1)} />;
       case 2:
@@ -22,7 +22,7 @@ const Index = () => {
 
   return (
     <div className="flex min-h-screen w-full">
-      <WizardSidebar steps={wizard.steps} currentStep={wizard.currentStep} onStepClick={wizard.goToStep} />
+      <WizardSidebar steps={wizard.steps} currentStep={wizard.currentStep} onStepClick={wizard.goToStep} isInsideList={wizard.isInsideList} />
       <main className="flex-1 p-8 max-w-5xl">
         {renderStep()}
       </main>
