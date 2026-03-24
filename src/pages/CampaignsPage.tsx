@@ -54,6 +54,9 @@ export default function CampaignsPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [showNewDialog, setShowNewDialog] = useState(false);
+  const [newCampaignName, setNewCampaignName] = useState("");
+  const [creatingCampaign, setCreatingCampaign] = useState(false);
 
   const isOwner = project?.user_id === user?.id;
 
@@ -79,8 +82,28 @@ export default function CampaignsPage() {
     setLoading(false);
   };
 
-  const createCampaign = () => {
-    navigate(`/project/${projectId}/campaign/new`);
+  const createCampaign = async () => {
+    if (!newCampaignName.trim()) return;
+    setCreatingCampaign(true);
+    try {
+      const { data, error } = await supabase
+        .from("campaigns")
+        .insert({
+          name: newCampaignName.trim(),
+          profile: "",
+          user_id: user!.id,
+          project_id: projectId,
+          status: "configuracion",
+        })
+        .select()
+        .single();
+      if (error) { toast.error("Error al crear campaña"); return; }
+      setShowNewDialog(false);
+      setNewCampaignName("");
+      navigate(`/project/${projectId}/campaign/${data.id}`);
+    } finally {
+      setCreatingCampaign(false);
+    }
   };
 
   const updateName = async (id: string, name: string) => {
@@ -138,7 +161,7 @@ export default function CampaignsPage() {
           </div>
           {isOwner && (
             <button
-              onClick={createCampaign}
+              onClick={() => setShowNewDialog(true)}
               className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
             >
               <Plus className="w-4 h-4" />
@@ -160,7 +183,7 @@ export default function CampaignsPage() {
             </p>
             {isOwner && (
               <button
-                onClick={createCampaign}
+                onClick={() => setShowNewDialog(true)}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors mt-2"
               >
                 <Plus className="w-4 h-4" />
@@ -252,6 +275,35 @@ export default function CampaignsPage() {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={deleteCampaign} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* New campaign dialog */}
+      <AlertDialog open={showNewDialog} onOpenChange={(open) => { if (!open) { setShowNewDialog(false); setNewCampaignName(""); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Nueva campaña</AlertDialogTitle>
+            <AlertDialogDescription>
+              Ponele un nombre a tu campaña para empezar.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="py-2">
+            <input
+              type="text"
+              value={newCampaignName}
+              onChange={(e) => setNewCampaignName(e.target.value)}
+              placeholder="Ej: Outreach Data Leaders Q2"
+              className="glass-input w-full text-sm py-2 px-3"
+              autoFocus
+              onKeyDown={(e) => { if (e.key === "Enter" && newCampaignName.trim()) createCampaign(); }}
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={createCampaign} disabled={creatingCampaign || !newCampaignName.trim()}>
+              {creatingCampaign ? "Creando..." : "Crear campaña"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
