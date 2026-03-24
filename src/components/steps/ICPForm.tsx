@@ -79,10 +79,10 @@ export function ICPForm({ config: initialConfig, onConfirm, onCancel }: Props) {
   const [customProfile, setCustomProfile] = useState("");
   const [visibleCountries, setVisibleCountries] = useState<string[]>(DEFAULT_COUNTRIES);
   const [showAddCountry, setShowAddCountry] = useState(false);
+  const [customCountry, setCustomCountry] = useState("");
 
   const total = Object.values(config.geoMix).reduce((a, b) => a + b, 0);
   const isValid = config.profile !== "" && total === 100 && config.quantity > 0;
-  const availableExtras = EXTRA_COUNTRIES.filter((c) => !visibleCountries.includes(c));
 
   const updateGeo = (country: string, val: number) => {
     setConfig({ ...config, geoMix: { ...config.geoMix, [country]: val } });
