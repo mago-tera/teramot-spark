@@ -111,6 +111,7 @@ serve(async (req) => {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          entity_id: "pg-test-053c2a3a-372c-4246-bc7c-a447eeb7d606",
           arguments: {
             id: sequenceId,
             contact_ids: contactIds,
