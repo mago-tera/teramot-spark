@@ -54,9 +54,8 @@ export interface GeneratedMessages {
 const INITIAL_STEPS: StepInfo[] = [
   { id: 0, label: "Choose ICP", icon: "⚙", status: "active" },
   { id: 1, label: "Búsqueda Apollo", icon: "🔍", status: "pending" },
-  { id: 2, label: "Scoring", icon: "📊", status: "pending" },
-  { id: 3, label: "Mensajes con IA", icon: "✉", status: "pending" },
-  { id: 4, label: "Tracking", icon: "📈", status: "pending" },
+  { id: 2, label: "Mensajes con IA", icon: "✉", status: "pending" },
+  { id: 3, label: "Tracking", icon: "📈", status: "pending" },
 ];
 
 export function useWizard() {

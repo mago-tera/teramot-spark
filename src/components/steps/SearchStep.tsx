@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CampaignConfig, Lead } from "@/hooks/useWizard";
+import { CampaignConfig, Lead, ScoredLead } from "@/hooks/useWizard";
 import { searchApollo } from "@/lib/api";
 import { toast } from "sonner";
 
@@ -7,6 +7,7 @@ interface Props {
   config: CampaignConfig;
   leads: Lead[];
   setLeads: (l: Lead[]) => void;
+  setScoredLeads: (l: ScoredLead[]) => void;
   onComplete: () => void;
 }
 
@@ -19,47 +20,42 @@ const COUNTRY_COLORS: Record<string, string> = {
   USA: "bg-purple-500/15 text-purple-300 border-purple-500/20",
 };
 
-// Mock data generator
-function generateMockLeads(config: CampaignConfig): Lead[] {
-  const titles = config.profile === "Data Analyst"
-    ? ["Data Analyst", "BI Analyst", "Analytics Analyst", "Business Intelligence Analyst"]
-    : config.profile === "Data Leader / CDO / Head of BI"
-    ? ["Head of Data", "CDO", "Director de Datos", "Head of Analytics", "Data Manager"]
-    : ["Data Analyst", "Head of Data", "BI Analyst", "CDO", "Analytics Lead"];
+const QUARTILE_STYLES = {
+  Q1: { bg: "bg-cyan-500/10", text: "text-cyan-400", border: "border-cyan-500/20", label: "Top Fit" },
+  Q2: { bg: "bg-green-500/10", text: "text-green-400", border: "border-green-500/20", label: "Buen Fit" },
+  Q3: { bg: "bg-amber-500/10", text: "text-amber-400", border: "border-amber-500/20", label: "Fit Moderado" },
+  Q4: { bg: "bg-rose-500/10", text: "text-rose-400", border: "border-rose-500/20", label: "Fit Bajo" },
+};
 
-  const companies = ["TechCorp", "DataFlow", "NovaPay", "CloudSync", "FinServ", "LogiTrack", "MedData", "RetailPro", "InsureTech", "AgriSmart"];
-  const industries = ["saas", "fintech", "ecommerce", "tech", "logistics", "pharma", "retail", "insurance"];
-  const seniorities = ["senior", "mid", "junior"];
-  const firstNames = ["María", "Carlos", "Ana", "Juan", "Lucía", "Pedro", "Sofia", "Diego", "Valentina", "Mateo"];
-  const lastNames = ["García", "Rodríguez", "López", "Martínez", "Hernández", "González", "Pérez", "Sánchez"];
+function scoreAndAssign(leads: Lead[]): ScoredLead[] {
+  const industryMap: Record<string, number> = {
+    saas: 3, tech: 3, ecommerce: 3, fintech: 3,
+    it: 2, pharma: 2, logistics: 2, insurance: 2,
+    retail: 1, government: 1, health: 1, automotive: 1,
+  };
 
-  const leads: Lead[] = [];
-  Object.entries(config.geoMix).forEach(([country, pct]) => {
-    if (pct <= 0) return;
-    const qty = Math.round((pct / 100) * config.quantity);
-    for (let i = 0; i < qty; i++) {
-      leads.push({
-        id: crypto.randomUUID(),
-        firstName: firstNames[Math.floor(Math.random() * firstNames.length)],
-        lastName: lastNames[Math.floor(Math.random() * lastNames.length)],
-        title: titles[Math.floor(Math.random() * titles.length)],
-        company: companies[Math.floor(Math.random() * companies.length)],
-        industry: industries[Math.floor(Math.random() * industries.length)],
-        country,
-        seniority: seniorities[Math.floor(Math.random() * seniorities.length)],
-        email: `lead${leads.length + 1}@example.com`,
-        linkedinUrl: `https://linkedin.com/in/lead${leads.length + 1}`,
-        headcount: Math.floor(Math.random() * 2000) + 50,
-      });
-    }
+  const scored = leads.map((lead) => {
+    const industryScore = industryMap[lead.industry.toLowerCase()] ?? 1;
+    const growthScore = lead.headcount > 500 ? 2 : lead.headcount > 100 ? 1 : 0;
+    const seniorityScore = lead.seniority === "senior" ? 2 : lead.seniority === "mid" ? 1 : 0;
+    const painScore = Math.floor(Math.random() * 4);
+    const total = industryScore + growthScore + seniorityScore + painScore;
+    return { ...lead, scores: { industryScore, growthScore, seniorityScore, painScore }, total, quartile: "Q1" as const };
   });
-  return leads;
+
+  const sorted = [...scored].sort((a, b) => b.total - a.total);
+  const n = sorted.length;
+  return sorted.map((lead, i) => ({
+    ...lead,
+    quartile: (i < n * 0.25 ? "Q1" : i < n * 0.5 ? "Q2" : i < n * 0.75 ? "Q3" : "Q4") as "Q1" | "Q2" | "Q3" | "Q4",
+  }));
 }
 
-export function SearchStep({ config, leads, setLeads, onComplete }: Props) {
+export function SearchStep({ config, leads, setLeads, setScoredLeads, onComplete }: Props) {
   const [searching, setSearching] = useState(false);
   const [logs, setLogs] = useState<string[]>([]);
   const [progress, setProgress] = useState(0);
+  const [displayLeads, setDisplayLeads] = useState<ScoredLead[]>([]);
 
   const startSearch = async () => {
     setSearching(true);
@@ -71,23 +67,33 @@ export function SearchStep({ config, leads, setLeads, onComplete }: Props) {
       const qty = Math.round(((p as number) / 100) * config.quantity);
       return `Buscando en ${c}... (${qty} leads)`;
     }));
-    setProgress(30);
+    setProgress(20);
 
     try {
+      setLogs((prev) => [...prev, "🔄 Enriqueciendo contactos con Apollo (email + LinkedIn)..."]);
+      setProgress(40);
       const apolloLeads = await searchApollo(config);
-      setProgress(100);
+      setProgress(80);
       setLeads(apolloLeads);
-      setLogs((prev) => [...prev, `✓ Búsqueda completada — ${apolloLeads.length} leads encontrados en Apollo`]);
-      toast.success(`${apolloLeads.length} leads encontrados`);
+
+      // Auto-score
+      const scored = scoreAndAssign(apolloLeads);
+      setScoredLeads(scored);
+      setDisplayLeads(scored);
+      setProgress(100);
+
+      const withEmail = scored.filter(l => l.email).length;
+      const withLinkedin = scored.filter(l => l.linkedinUrl).length;
+      setLogs((prev) => [
+        ...prev,
+        `✓ ${apolloLeads.length} leads encontrados y enriquecidos`,
+        `   📧 ${withEmail} con email · 🔗 ${withLinkedin} con LinkedIn`,
+      ]);
+      toast.success(`${apolloLeads.length} leads encontrados y clasificados`);
     } catch (e: any) {
       console.error("Apollo search error:", e);
       toast.error(e.message || "Error buscando en Apollo");
       setLogs((prev) => [...prev, `✗ Error: ${e.message}`]);
-
-      // Fallback to mock data
-      const mockLeads = generateMockLeads(config);
-      setLeads(mockLeads);
-      setLogs((prev) => [...prev, `⚠ Usando datos de prueba — ${mockLeads.length} leads generados`]);
     } finally {
       setSearching(false);
     }
@@ -102,7 +108,7 @@ export function SearchStep({ config, leads, setLeads, onComplete }: Props) {
         </p>
       </div>
 
-      {leads.length === 0 && !searching && (
+      {displayLeads.length === 0 && !searching && (
         <button
           onClick={startSearch}
           className="px-6 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
@@ -137,43 +143,74 @@ export function SearchStep({ config, leads, setLeads, onComplete }: Props) {
         </div>
       )}
 
+      {/* Quartile summary */}
+      {displayLeads.length > 0 && (
+        <div className="grid grid-cols-4 gap-3">
+          {(["Q1", "Q2", "Q3", "Q4"] as const).map((q) => {
+            const s = QUARTILE_STYLES[q];
+            const count = displayLeads.filter(l => l.quartile === q).length;
+            return (
+              <div key={q} className={`glass-card p-4 ${s.border} border`}>
+                <div className={`text-2xl font-bold font-mono ${s.text}`}>{count}</div>
+                <div className="text-[11px] text-muted-foreground mt-1">{q} — {s.label}</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Results table */}
-      {leads.length > 0 && (
+      {displayLeads.length > 0 && (
         <>
           <div className="glass-card overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-white/[0.06]">
-                    {["Nombre", "Cargo", "Empresa", "Industria", "País", "Seniority", "Email"].map((h) => (
+                    {["Nombre", "Cargo", "Empresa", "País", "Nivel", "Email", "LinkedIn"].map((h) => (
                       <th key={h} className="px-4 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
-                  {leads.slice(0, 20).map((lead, i) => (
-                    <tr key={lead.id} className={`border-b border-white/[0.03] ${i % 2 === 0 ? "bg-white/[0.01]" : ""} hover:bg-white/[0.03] transition-colors`}>
-                      <td className="px-4 py-2.5 text-foreground font-medium">{lead.firstName} {lead.lastName}</td>
-                      <td className="px-4 py-2.5 text-muted-foreground">{lead.title}</td>
-                      <td className="px-4 py-2.5 text-muted-foreground">{lead.company}</td>
-                      <td className="px-4 py-2.5">
-                        <span className="px-2 py-0.5 rounded text-[10px] bg-primary/10 text-primary border border-primary/20">{lead.industry}</span>
-                      </td>
-                      <td className="px-4 py-2.5">
-                        <span className={`px-2 py-0.5 rounded text-[10px] border ${COUNTRY_COLORS[lead.country] || "text-muted-foreground"}`}>
-                          {lead.country}
-                        </span>
-                      </td>
-                      <td className="px-4 py-2.5 text-muted-foreground capitalize">{lead.seniority}</td>
-                      <td className="px-4 py-2.5 text-muted-foreground font-mono">{lead.email}</td>
-                    </tr>
-                  ))}
+                  {displayLeads.slice(0, 30).map((lead, i) => {
+                    const qs = QUARTILE_STYLES[lead.quartile];
+                    return (
+                      <tr key={lead.id} className={`border-b border-white/[0.03] ${i % 2 === 0 ? "bg-white/[0.01]" : ""} hover:bg-white/[0.03] transition-colors`}>
+                        <td className="px-4 py-2.5 text-foreground font-medium">{lead.firstName} {lead.lastName}</td>
+                        <td className="px-4 py-2.5 text-muted-foreground max-w-[180px] truncate">{lead.title}</td>
+                        <td className="px-4 py-2.5 text-muted-foreground">{lead.company}</td>
+                        <td className="px-4 py-2.5">
+                          <span className={`px-2 py-0.5 rounded text-[10px] border ${COUNTRY_COLORS[lead.country] || "text-muted-foreground"}`}>
+                            {lead.country}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5">
+                          <span className={`px-2 py-0.5 rounded text-[10px] border ${qs.bg} ${qs.text} ${qs.border}`}>
+                            {qs.label}
+                          </span>
+                        </td>
+                        <td className="px-4 py-2.5 text-muted-foreground font-mono text-[10px]">
+                          {lead.email || <span className="text-muted-foreground/40">—</span>}
+                        </td>
+                        <td className="px-4 py-2.5">
+                          {lead.linkedinUrl ? (
+                            <a href={lead.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-[10px]">
+                              Ver perfil
+                            </a>
+                          ) : (
+                            <span className="text-muted-foreground/40 text-[10px]">—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
-            {leads.length > 20 && (
+            {displayLeads.length > 30 && (
               <div className="px-4 py-2 text-[11px] text-muted-foreground border-t border-white/[0.06]">
-                Mostrando 20 de {leads.length} leads
+                Mostrando 30 de {displayLeads.length} leads
               </div>
             )}
           </div>
@@ -182,7 +219,7 @@ export function SearchStep({ config, leads, setLeads, onComplete }: Props) {
             onClick={onComplete}
             className="px-6 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
           >
-            Continuar al scoring →
+            Continuar a mensajes →
           </button>
         </>
       )}
