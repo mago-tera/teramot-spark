@@ -5,45 +5,44 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-async function bulkEnrich(apolloIds: string[], apiKey: string): Promise<Record<string, { email: string; linkedinUrl: string }>> {
-  const result: Record<string, { email: string; linkedinUrl: string }> = {};
-  
+async function enrichSingle(apolloId: string, firstName: string, lastName: string, company: string, apiKey: string): Promise<{ email: string; linkedinUrl: string } | null> {
   try {
-    const response = await fetch("https://api.apollo.io/api/v1/people/bulk_match", {
+    const body: Record<string, string> = {
+      id: apolloId,
+      reveal_personal_emails: "false",
+      reveal_phone_number: "false",
+    };
+    if (firstName) body.first_name = firstName;
+    if (lastName) body.last_name = lastName;
+    if (company) body.organization_name = company;
+
+    const response = await fetch("https://api.apollo.io/api/v1/people/match", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "X-Api-Key": apiKey,
       },
-      body: JSON.stringify({
-        details: apolloIds.map(id => ({ id })),
-        reveal_personal_emails: false,
-        reveal_phone_number: false,
-      }),
+      body: JSON.stringify(body),
     });
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error("Bulk enrich error:", response.status, errText);
-      return result;
+      console.error(`Enrich error for ${apolloId}:`, response.status, errText);
+      return null;
     }
 
     const data = await response.json();
-    const matches = data?.matches || [];
-    
-    for (const match of matches) {
-      if (match?.id) {
-        result[match.id] = {
-          email: match.email || "",
-          linkedinUrl: match.linkedin_url || "",
-        };
-      }
-    }
+    const person = data?.person;
+    if (!person) return null;
+
+    return {
+      email: person.email || "",
+      linkedinUrl: person.linkedin_url || "",
+    };
   } catch (e) {
-    console.error("Bulk enrich exception:", e);
+    console.error(`Enrich exception for ${apolloId}:`, e);
+    return null;
   }
-  
-  return result;
 }
 
 // Try to extract last name from linkedin URL slug
@@ -159,25 +158,23 @@ serve(async (req) => {
       console.log(`${country}: kept ${countryLeads} leads out of ${people.length}`);
     }
 
-    // Enrich leads that are missing email or linkedin
+    // Enrich leads that are missing email or linkedin (one by one)
     const leadsToEnrich = allLeads.filter(l => l.apolloId && (!l.email || !l.linkedinUrl));
     if (leadsToEnrich.length > 0) {
-      console.log(`Enriching ${leadsToEnrich.length} leads in batches of 10...`);
+      console.log(`Enriching ${leadsToEnrich.length} leads individually...`);
+      let enrichedCount = 0;
 
-      for (let i = 0; i < leadsToEnrich.length; i += 10) {
-        const batch = leadsToEnrich.slice(i, i + 10);
-        const ids = batch.map(l => l.apolloId);
-        const enriched = await bulkEnrich(ids, APOLLO_API_KEY);
-
-        for (const lead of allLeads) {
-          if (lead.apolloId && enriched[lead.apolloId]) {
-            const data = enriched[lead.apolloId];
-            if (data.email && !lead.email) lead.email = data.email;
-            if (data.linkedinUrl && !lead.linkedinUrl) lead.linkedinUrl = data.linkedinUrl;
-          }
+      for (const lead of leadsToEnrich) {
+        const data = await enrichSingle(lead.apolloId, lead.firstName, lead.lastName, lead.company, APOLLO_API_KEY);
+        if (data) {
+          if (data.email && !lead.email) lead.email = data.email;
+          if (data.linkedinUrl && !lead.linkedinUrl) lead.linkedinUrl = data.linkedinUrl;
+          enrichedCount++;
         }
-        console.log(`Batch ${Math.floor(i / 10) + 1}: enriched ${Object.keys(enriched).length} contacts`);
+        // Small delay to avoid rate limiting
+        await new Promise(r => setTimeout(r, 200));
       }
+      console.log(`Enriched ${enrichedCount} out of ${leadsToEnrich.length} leads`);
     }
 
     const returnedLeads = allLeads.slice(0, quantity);
