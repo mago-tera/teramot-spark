@@ -44,7 +44,6 @@ serve(async (req) => {
             person_locations: [country],
             per_page: Math.min(qty, 100),
             page: 1,
-            contact_email_status: ["verified", "likely to engage"],
           },
         }),
       });
