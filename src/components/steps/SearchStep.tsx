@@ -260,7 +260,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
 
       if (listId && scored.length > 0) {
         const rows = scored.map((l) => ({
-          campaign_id: campaignId!,
+          campaign_id: activeCampaignId,
           list_id: listId,
           first_name: l.firstName,
           last_name: l.lastName,
