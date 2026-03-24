@@ -8,6 +8,7 @@ interface Props {
   steps: StepInfo[];
   currentStep: number;
   onStepClick: (id: number) => void;
+  isInsideList: boolean;
 }
 
 export function WizardSidebar({ steps, currentStep, onStepClick }: Props) {

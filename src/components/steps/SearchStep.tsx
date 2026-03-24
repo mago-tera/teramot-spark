@@ -15,6 +15,7 @@ interface Props {
   setLeads: (l: Lead[]) => void;
   setScoredLeads: (l: ScoredLead[]) => void;
   onComplete: () => void;
+  setIsInsideList: (v: boolean) => void;
 }
 
 interface ListItem {
