@@ -7,6 +7,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { ICPForm } from "@/components/steps/ICPForm";
 import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -98,6 +99,16 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [editingName, setEditingName] = useState("");
   const [showNewListDialog, setShowNewListDialog] = useState(false);
   const [newListName, setNewListName] = useState("");
+  const [deletingListId, setDeletingListId] = useState<string | null>(null);
+
+  const deleteList = async (listId: string) => {
+    // Delete leads first, then the list
+    await supabase.from("leads").delete().eq("list_id", listId);
+    await supabase.from("lists").delete().eq("id", listId);
+    setLists((prev) => prev.filter((l) => l.id !== listId));
+    setDeletingListId(null);
+    toast.success("Lista eliminada");
+  };
 
   // Load existing lists
   useEffect(() => {
@@ -556,12 +567,38 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                 <div className="text-xs text-muted-foreground/60 shrink-0">
                   {new Date(list.created_at).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}
                 </div>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setDeletingListId(list.id); }}
+                  className="p-1.5 rounded hover:bg-rose-500/10 text-muted-foreground/40 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                  title="Eliminar lista"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
                 <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-foreground transition-colors shrink-0" />
               </div>
             );
           })}
         </div>
       )}
+
+      {/* Delete list confirmation */}
+      <AlertDialog open={!!deletingListId} onOpenChange={() => setDeletingListId(null)}>
+        <AlertDialogContent className="glass-card border-white/10">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">¿Eliminar lista?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <p className="text-sm text-muted-foreground">Se eliminarán todos los leads asociados. Esta acción no se puede deshacer.</p>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-white/10 text-muted-foreground hover:bg-white/5">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deletingListId && deleteList(deletingListId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {lists.length === 0 && !showICPForm && !searching && (
         <div className="glass-card p-12 text-center space-y-4">
