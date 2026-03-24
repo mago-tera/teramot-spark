@@ -8,7 +8,7 @@ interface Props {
 }
 
 const COUNTRIES = ["Argentina", "Colombia", "Chile", "México", "Brasil", "USA"];
-const PROFILES = ["Data Analyst", "BI Analyst", "Data Leader / CDO / Head of BI", "Ambos"] as const;
+const PROFILES = ["Data Analyst", "BI Analyst", "Data Leader / CDO / Head of BI"] as const;
 
 export function ConfigStep({ config, setConfig, onComplete }: Props) {
   const [confirmed, setConfirmed] = useState(false);
