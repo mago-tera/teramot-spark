@@ -76,13 +76,14 @@ serve(async (req) => {
     ];
 
     for (const step of steps) {
-      await fetch(`${COMPOSIO_BASE}/tools/execute/APOLLO_CREATE_SEQUENCE_STEP`, {
+      await fetch(`${COMPOSIO_BASE}/tools/execute/APOLLO_CREATE_TASK`, {
         method: "POST",
         headers: {
           "x-api-key": COMPOSIO_API_KEY,
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          entity_id: "pg-test-053c2a3a-372c-4246-bc7c-a447eeb7d606",
           arguments: {
             emailer_campaign_id: sequenceId,
             emailer_step: {
