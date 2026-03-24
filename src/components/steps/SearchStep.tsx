@@ -278,7 +278,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
 
       // Create list record
       const now = new Date();
-      const defaultName = "Cambiale el nombre, organizate!";
+      const listName = newListName.trim() || `Lista ${now.toLocaleDateString("es-AR", { day: "numeric", month: "short" })}`;
       const { data: listData } = await supabase
         .from("lists")
         .insert({
