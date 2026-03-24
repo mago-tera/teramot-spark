@@ -371,17 +371,17 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-white/[0.06]">
-                    {["Nombre", "Cargo", "Empresa", "País", "Nivel", "Email", "LinkedIn"].map((h) => (
+                    {["Nombre", "Apellido", "Cargo", "Empresa", "País", "Email", "LinkedIn"].map((h) => (
                       <th key={h} className="px-4 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {listLeads.map((lead, i) => {
-                    const qs = QUARTILE_STYLES[lead.quartile];
                     return (
                       <tr key={lead.id} className={`border-b border-white/[0.03] ${i % 2 === 0 ? "bg-white/[0.01]" : ""} hover:bg-white/[0.03] transition-colors`}>
-                        <td className="px-4 py-2.5 text-foreground font-medium">{lead.firstName} {lead.lastName}</td>
+                        <td className="px-4 py-2.5 text-foreground font-medium">{lead.firstName}</td>
+                        <td className="px-4 py-2.5 text-foreground font-medium">{lead.lastName}</td>
                         <td className="px-4 py-2.5 text-muted-foreground max-w-[180px] truncate">{lead.title}</td>
                         <td className="px-4 py-2.5 text-muted-foreground">{lead.company}</td>
                         <td className="px-4 py-2.5">
