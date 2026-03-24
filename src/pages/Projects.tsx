@@ -75,14 +75,44 @@ export default function Projects() {
   };
 
   const createProject = async () => {
-    const name = "Cambiale el nombre che!";
-    const { data, error } = await supabase
-      .from("projects")
-      .insert({ name, user_id: user!.id })
-      .select()
-      .single();
-    if (error) { toast.error("Error al crear proyecto"); return; }
-    navigate(`/project/${data.id}`);
+    if (!newName.trim()) return;
+    setCreating(true);
+    try {
+      const { data, error } = await supabase
+        .from("projects")
+        .insert({ name: newName.trim(), user_id: user!.id })
+        .select()
+        .single();
+      if (error) { toast.error("Error al crear proyecto"); return; }
+
+      // Invite if email provided
+      if (newInviteEmail.trim()) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("email", newInviteEmail.trim().toLowerCase())
+          .single();
+        if (profile) {
+          await supabase.from("project_members").insert({
+            project_id: data.id,
+            user_id: profile.id,
+            role: "viewer",
+          });
+          toast.success("Proyecto creado e invitación enviada");
+        } else {
+          toast.success("Proyecto creado. No se encontró usuario con ese email.");
+        }
+      } else {
+        toast.success("Proyecto creado");
+      }
+
+      setShowNewDialog(false);
+      setNewName("");
+      setNewInviteEmail("");
+      navigate(`/project/${data.id}`);
+    } finally {
+      setCreating(false);
+    }
   };
 
   const updateName = async (id: string, name: string) => {
