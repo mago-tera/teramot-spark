@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { CampaignConfig, ScoredLead } from "@/hooks/useWizard";
-import { saveCampaign, saveLeads } from "@/lib/api";
+import { saveCampaign, saveLeads, createApolloSequence } from "@/lib/api";
 import { toast } from "sonner";
 
 interface Props {
