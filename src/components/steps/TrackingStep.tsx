@@ -25,6 +25,8 @@ export function TrackingStep({ config, scoredLeads }: Props) {
   const [loomLinks, setLoomLinks] = useState({ Q1: "", Q2: "", Q3: "", Q4: "" });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [launching, setLaunching] = useState(false);
+  const [launched, setLaunched] = useState(false);
 
   const handleSave = async () => {
     setSaving(true);
@@ -38,6 +40,20 @@ export function TrackingStep({ config, scoredLeads }: Props) {
       toast.error(e.message || "Error guardando campaña");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleLaunch = async () => {
+    setLaunching(true);
+    try {
+      const result = await createApolloSequence(campaignName, scoredLeads);
+      setLaunched(true);
+      toast.success(result.message || "Secuencia creada en Apollo");
+    } catch (e: any) {
+      console.error("Error launching sequence:", e);
+      toast.error(e.message || "Error creando secuencia en Apollo");
+    } finally {
+      setLaunching(false);
     }
   };
 
