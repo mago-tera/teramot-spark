@@ -454,7 +454,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
             <AlertDialogCancel className="border-white/10 text-muted-foreground hover:bg-white/5">Cancelar</AlertDialogCancel>
             <AlertDialogAction
               disabled={!newListName.trim()}
-              onClick={() => { setShowICPForm(true); setConfig({ ...config, listName: newListName.trim() }); }}
+              onClick={() => { setShowICPForm(true); }}
               className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
               Confirmar
