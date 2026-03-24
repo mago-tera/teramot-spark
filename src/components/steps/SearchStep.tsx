@@ -69,7 +69,7 @@ function scoreAndAssign(leads: Lead[]): ScoredLead[] {
   }));
 }
 
-export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads, onComplete }: Props) {
+export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads, onComplete, setIsInsideList }: Props) {
   const { id: paramId, projectId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();

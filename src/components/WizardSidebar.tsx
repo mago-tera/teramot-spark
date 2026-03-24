@@ -11,7 +11,7 @@ interface Props {
   isInsideList: boolean;
 }
 
-export function WizardSidebar({ steps, currentStep, onStepClick }: Props) {
+export function WizardSidebar({ steps, currentStep, onStepClick, isInsideList }: Props) {
   const navigate = useNavigate();
   const { id: campaignId, projectId } = useParams();
 
