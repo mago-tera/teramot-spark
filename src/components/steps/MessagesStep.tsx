@@ -45,6 +45,7 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
   });
 
   const QUARTILE_COLORS = { Q1: "text-cyan-400", Q2: "text-green-400", Q3: "text-amber-400", Q4: "text-rose-400" };
+  const QUARTILE_LABELS = { Q1: "Top Fit", Q2: "Buen Fit", Q3: "Fit Moderado", Q4: "Fit Bajo" };
 
   return (
     <div className="space-y-6">
