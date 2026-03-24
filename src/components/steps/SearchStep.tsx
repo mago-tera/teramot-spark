@@ -353,6 +353,12 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               {selectedList?.profile} · {listLeads.length} leads
             </p>
           </div>
+          <button
+            onClick={onComplete}
+            className="ml-auto flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+          >
+            ✉ Generar Comunicación
+          </button>
         </div>
 
         {listLeads.length > 0 && (
