@@ -16,37 +16,22 @@ serve(async (req) => {
 
     const { profile, geoMix, quantity } = await req.json();
 
-    // Map profile to Apollo person_titles
     const titleMap: Record<string, string[]> = {
       "Data Analyst": ["Data Analyst", "BI Analyst", "Analytics Analyst", "Business Intelligence Analyst"],
-      "Data Leader / CDO / Head of BI": ["Head of Data", "CDO", "Chief Data Officer", "Director de Datos", "Head of Analytics", "Head of BI", "Data Manager", "VP Data"],
+      "Data Leader / CDO / Head of BI": ["Head of Data", "CDO", "Chief Data Officer", "Head of Analytics", "Head of BI", "Data Manager", "VP Data"],
       "Ambos": ["Data Analyst", "BI Analyst", "Head of Data", "CDO", "Chief Data Officer", "Head of Analytics", "Analytics Lead", "Data Manager"],
     };
 
     const personTitles = titleMap[profile] || titleMap["Ambos"];
 
-    // Country mapping for Apollo
-    const countryMap: Record<string, string> = {
-      Argentina: "Argentina",
-      Colombia: "Colombia",
-      Chile: "Chile",
-      México: "Mexico",
-      Brasil: "Brazil",
-      USA: "United States",
-    };
-
     const allLeads: any[] = [];
 
-    // Search per country according to geoMix
     for (const [country, pct] of Object.entries(geoMix)) {
       if ((pct as number) <= 0) continue;
       const qty = Math.round(((pct as number) / 100) * quantity);
       if (qty <= 0) continue;
 
-      const apolloCountry = countryMap[country] || country;
-
-      // Execute Apollo search via Composio
-      const response = await fetch(`${COMPOSIO_BASE}/tools/execute/APOLLO_PEOPLE_API_SEARCH`, {
+      const response = await fetch(`${COMPOSIO_BASE}/tools/execute/APOLLO_PEOPLE_SEARCH`, {
         method: "POST",
         headers: {
           "x-api-key": COMPOSIO_API_KEY,
@@ -55,9 +40,10 @@ serve(async (req) => {
         body: JSON.stringify({
           arguments: {
             person_titles: personTitles,
-            person_locations: [apolloCountry],
+            person_locations: [country],
             per_page: Math.min(qty, 100),
             page: 1,
+            contact_email_status: ["verified", "likely to engage"],
           },
         }),
       });
@@ -65,12 +51,13 @@ serve(async (req) => {
       if (!response.ok) {
         const errText = await response.text();
         console.error(`Apollo search error for ${country}:`, response.status, errText);
-        // Continue with other countries if one fails
         continue;
       }
 
       const result = await response.json();
-      const people = result?.response_data?.people || result?.data?.people || [];
+      console.log(`Apollo response for ${country}:`, JSON.stringify(result).slice(0, 500));
+
+      const people = result?.data?.people || result?.response_data?.people || [];
 
       for (const p of people.slice(0, qty)) {
         allLeads.push({
