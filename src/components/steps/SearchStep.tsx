@@ -7,6 +7,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { ICPForm } from "@/components/steps/ICPForm";
 import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogFooter,
+  AlertDialogCancel,
+  AlertDialogAction,
+} from "@/components/ui/alert-dialog";
+import { Input } from "@/components/ui/input";
 
 interface Props {
   config: CampaignConfig;
@@ -86,6 +96,8 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [listLeads, setListLeads] = useState<ScoredLead[]>([]);
   const [editingListId, setEditingListId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [showNewListDialog, setShowNewListDialog] = useState(false);
+  const [newListName, setNewListName] = useState("");
 
   // Load existing lists
   useEffect(() => {
@@ -266,12 +278,12 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
 
       // Create list record
       const now = new Date();
-      const defaultName = "Cambiale el nombre, organizate!";
+      const listName = newListName.trim() || `Lista ${now.toLocaleDateString("es-AR", { day: "numeric", month: "short" })}`;
       const { data: listData } = await supabase
         .from("lists")
         .insert({
           campaign_id: activeCampaignId,
-          name: defaultName,
+          name: listName,
           profile: searchConfig.profile,
           geo_mix: searchConfig.geoMix,
           quantity: searchConfig.quantity,
@@ -412,7 +424,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         </div>
         {!showICPForm && !searching && (
           <button
-            onClick={() => setShowICPForm(true)}
+            onClick={() => { setNewListName(""); setShowNewListDialog(true); }}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
           >
             <Plus className="w-4 h-4" />
@@ -420,6 +432,36 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
           </button>
         )}
       </div>
+
+      {/* New list name dialog */}
+      <AlertDialog open={showNewListDialog} onOpenChange={setShowNewListDialog}>
+        <AlertDialogContent className="glass-card border-white/10">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-foreground">Nueva lista</AlertDialogTitle>
+          </AlertDialogHeader>
+          <div className="space-y-3 py-2">
+            <label className="text-sm text-muted-foreground">Nombre de la lista</label>
+            <Input
+              value={newListName}
+              onChange={(e) => setNewListName(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter" && newListName.trim()) { setShowNewListDialog(false); setShowICPForm(true); } }}
+              placeholder="Ej: SDRs Fintech Argentina"
+              autoFocus
+              className="glass-input"
+            />
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel className="border-white/10 text-muted-foreground hover:bg-white/5">Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={!newListName.trim()}
+              onClick={() => { setShowICPForm(true); }}
+              className="bg-primary text-primary-foreground hover:bg-primary/90"
+            >
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Inline ICP Form */}
       {showICPForm && (
@@ -526,7 +568,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
             Creá tu primera lista de prospectos para comenzar.
           </p>
           <button
-            onClick={() => setShowICPForm(true)}
+            onClick={() => { setNewListName(""); setShowNewListDialog(true); }}
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors mt-2"
           >
             <Plus className="w-4 h-4" />
