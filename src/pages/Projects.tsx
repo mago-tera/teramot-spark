@@ -36,6 +36,12 @@ export default function Projects() {
   const [sharing, setSharing] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  // New project dialog state
+  const [showNewDialog, setShowNewDialog] = useState(false);
+  const [newName, setNewName] = useState("");
+  const [newInviteEmail, setNewInviteEmail] = useState("");
+  const [creating, setCreating] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     loadProjects();
@@ -69,14 +75,44 @@ export default function Projects() {
   };
 
   const createProject = async () => {
-    const name = "Cambiale el nombre che!";
-    const { data, error } = await supabase
-      .from("projects")
-      .insert({ name, user_id: user!.id })
-      .select()
-      .single();
-    if (error) { toast.error("Error al crear proyecto"); return; }
-    navigate(`/project/${data.id}`);
+    if (!newName.trim()) return;
+    setCreating(true);
+    try {
+      const { data, error } = await supabase
+        .from("projects")
+        .insert({ name: newName.trim(), user_id: user!.id })
+        .select()
+        .single();
+      if (error) { toast.error("Error al crear proyecto"); return; }
+
+      // Invite if email provided
+      if (newInviteEmail.trim()) {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("email", newInviteEmail.trim().toLowerCase())
+          .single();
+        if (profile) {
+          await supabase.from("project_members").insert({
+            project_id: data.id,
+            user_id: profile.id,
+            role: "viewer",
+          });
+          toast.success("Proyecto creado e invitación enviada");
+        } else {
+          toast.success("Proyecto creado. No se encontró usuario con ese email.");
+        }
+      } else {
+        toast.success("Proyecto creado");
+      }
+
+      setShowNewDialog(false);
+      setNewName("");
+      setNewInviteEmail("");
+      navigate(`/project/${data.id}`);
+    } finally {
+      setCreating(false);
+    }
   };
 
   const updateName = async (id: string, name: string) => {
@@ -180,7 +216,7 @@ export default function Projects() {
             <p className="text-sm text-muted-foreground mt-1">Gestiona tus proyectos de prospección.</p>
           </div>
           <button
-            onClick={createProject}
+            onClick={() => setShowNewDialog(true)}
             className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
           >
             <Plus className="w-4 h-4" />
@@ -222,7 +258,7 @@ export default function Projects() {
             </h3>
             {filter === "mine" && (
               <button
-                onClick={createProject}
+                onClick={() => setShowNewDialog(true)}
                 className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors mt-2"
               >
                 <Plus className="w-4 h-4" />
@@ -340,6 +376,53 @@ export default function Projects() {
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={deleteProject} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
               Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* New project dialog */}
+      <AlertDialog open={showNewDialog} onOpenChange={(open) => { if (!open) { setShowNewDialog(false); setNewName(""); setNewInviteEmail(""); } }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Nuevo proyecto</AlertDialogTitle>
+            <AlertDialogDescription>
+              Dale un nombre a tu proyecto y opcionalmente invitá a alguien del equipo.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="space-y-4 py-2">
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">Nombre del proyecto</label>
+              <input
+                type="text"
+                value={newName}
+                onChange={(e) => setNewName(e.target.value)}
+                placeholder="Ej: Expansión LATAM Q2"
+                className="glass-input w-full text-sm py-2 px-3"
+                autoFocus
+                onKeyDown={(e) => { if (e.key === "Enter" && newName.trim()) createProject(); }}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium flex items-center gap-2">
+                <UserPlus className="w-3.5 h-3.5" />
+                Invitar a alguien
+                <span className="text-muted-foreground/50 normal-case tracking-normal font-normal">(opcional)</span>
+              </label>
+              <input
+                type="email"
+                value={newInviteEmail}
+                onChange={(e) => setNewInviteEmail(e.target.value)}
+                placeholder="usuario@teramot.com"
+                className="glass-input w-full text-sm py-2 px-3"
+                onKeyDown={(e) => { if (e.key === "Enter" && newName.trim()) createProject(); }}
+              />
+            </div>
+          </div>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={createProject} disabled={creating || !newName.trim()}>
+              {creating ? "Creando..." : "Crear proyecto"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
