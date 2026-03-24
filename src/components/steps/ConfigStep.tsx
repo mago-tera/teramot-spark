@@ -98,6 +98,7 @@ export function ConfigStep({ config, setConfig, onComplete }: Props) {
             />
           )}
         </div>
+      </div>
 
       {/* Geo Mix */}
       <div className="glass-card p-5 space-y-4">
