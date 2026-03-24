@@ -130,7 +130,9 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       .eq("list_id", selectedListId)
       .then(({ data }) => {
         if (data) {
-          const mapped: ScoredLead[] = data.map((d) => ({
+          const mapped: ScoredLead[] = data
+            .filter((d) => d.first_name && d.last_name && d.title && d.company && d.email && d.linkedin_url)
+            .map((d) => ({
             id: d.id,
             firstName: d.first_name || "",
             lastName: d.last_name || "",
