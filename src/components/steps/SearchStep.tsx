@@ -131,7 +131,6 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       .then(({ data }) => {
         if (data) {
           const mapped: ScoredLead[] = data
-            .filter((d) => d.first_name && d.last_name && d.title && d.company && d.email && d.linkedin_url)
             .map((d) => ({
             id: d.id,
             firstName: d.first_name || "",
@@ -274,11 +273,8 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         page++;
       }
 
-      // Filter out leads missing required fields
-      const completeFinalLeads = allNewLeads
-        .filter((l) => l.firstName && l.lastName && l.title && l.company && l.email && l.linkedinUrl)
-        .slice(0, targetQty);
-      const scored = scoreAndAssign(completeFinalLeads);
+      const finalLeads = allNewLeads.slice(0, targetQty);
+      const scored = scoreAndAssign(finalLeads);
 
       // Create list record
       const now = new Date();

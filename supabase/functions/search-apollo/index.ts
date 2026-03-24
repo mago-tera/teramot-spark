@@ -66,17 +66,6 @@ function extractLastNameFromLinkedin(url: string, firstName: string): string {
   return "";
 }
 
-function isLeadComplete(lead: any): boolean {
-  return !!(
-    lead.firstName &&
-    lead.lastName &&
-    lead.title &&
-    lead.company &&
-    lead.email &&
-    lead.linkedinUrl
-  );
-}
-
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -144,14 +133,6 @@ serve(async (req) => {
           lastName = extractLastNameFromLinkedin(linkedinUrl, firstName);
         }
 
-        // Skip leads missing required fields
-        if (!firstName || !lastName || !p.title || !(p.organization?.name || p.employment_history?.[0]?.organization_name)) {
-          continue;
-        }
-
-        // Skip if no email AND no linkedin
-        if (!email && !linkedinUrl) continue;
-
         // Skip duplicates
         if (email && excludeEmailSet.has(email)) continue;
         if (linkedinUrl && excludeLinkedinSet.has(linkedinUrl)) continue;
@@ -175,7 +156,7 @@ serve(async (req) => {
         countryLeads++;
       }
 
-      console.log(`${country}: kept ${countryLeads} complete leads out of ${people.length}`);
+      console.log(`${country}: kept ${countryLeads} leads out of ${people.length}`);
     }
 
     // Enrich leads that are missing email or linkedin
@@ -199,11 +180,10 @@ serve(async (req) => {
       }
     }
 
-    // Final filter: only return fully complete leads
-    const completeLeads = allLeads.filter(isLeadComplete);
-    console.log(`Final: ${completeLeads.length} complete leads out of ${allLeads.length} total`);
+    const returnedLeads = allLeads.slice(0, quantity);
+    console.log(`Final: ${returnedLeads.length} leads returned out of ${allLeads.length} total`);
 
-    return new Response(JSON.stringify({ leads: completeLeads, total: completeLeads.length }), {
+    return new Response(JSON.stringify({ leads: returnedLeads, total: returnedLeads.length }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
