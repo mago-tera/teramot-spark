@@ -654,6 +654,19 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
 
         {listLeads.length > 0 && (
           <div className="glass-card overflow-hidden">
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.06]">
+              <Search className="w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Buscar por nombre, empresa, cargo, email..."
+                value={leadSearch}
+                onChange={(e) => setLeadSearch(e.target.value)}
+                className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+              />
+              {leadSearch && (
+                <button onClick={() => setLeadSearch("")} className="text-xs text-muted-foreground hover:text-foreground">✕</button>
+              )}
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
