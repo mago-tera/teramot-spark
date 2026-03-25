@@ -96,6 +96,44 @@ export type Database = {
           },
         ]
       }
+      communications: {
+        Row: {
+          campaign_id: string
+          created_at: string
+          email_asunto: string
+          email_cuerpo: string
+          id: string
+          linkedin: string
+          name: string
+        }
+        Insert: {
+          campaign_id: string
+          created_at?: string
+          email_asunto?: string
+          email_cuerpo?: string
+          id?: string
+          linkedin?: string
+          name?: string
+        }
+        Update: {
+          campaign_id?: string
+          created_at?: string
+          email_asunto?: string
+          email_cuerpo?: string
+          id?: string
+          linkedin?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "communications_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       leads: {
         Row: {
           calificacion: string | null
