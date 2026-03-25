@@ -98,7 +98,9 @@ export type Database = {
       }
       leads: {
         Row: {
+          calificacion: string | null
           campaign_id: string | null
+          canal: string | null
           company: string | null
           country: string | null
           created_at: string
@@ -112,12 +114,15 @@ export type Database = {
           list_id: string | null
           messages: Json | null
           quartile: string | null
+          responsable: string | null
           score: number | null
           seniority: string | null
           title: string | null
         }
         Insert: {
+          calificacion?: string | null
           campaign_id?: string | null
+          canal?: string | null
           company?: string | null
           country?: string | null
           created_at?: string
@@ -131,12 +136,15 @@ export type Database = {
           list_id?: string | null
           messages?: Json | null
           quartile?: string | null
+          responsable?: string | null
           score?: number | null
           seniority?: string | null
           title?: string | null
         }
         Update: {
+          calificacion?: string | null
           campaign_id?: string | null
+          canal?: string | null
           company?: string | null
           country?: string | null
           created_at?: string
@@ -150,6 +158,7 @@ export type Database = {
           list_id?: string | null
           messages?: Json | null
           quartile?: string | null
+          responsable?: string | null
           score?: number | null
           seniority?: string | null
           title?: string | null
