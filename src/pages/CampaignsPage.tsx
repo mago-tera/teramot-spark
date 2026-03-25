@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, ChevronRight, Zap, Clock, CheckCircle2, Pencil, Check, ArrowLeft, Trash2 } from "lucide-react";
+import { Plus, ChevronRight, Zap, Clock, CheckCircle2, Pencil, Check, ArrowLeft, Trash2, UserPlus } from "lucide-react";
+import { ShareEntityDialog } from "@/components/ShareEntityDialog";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -57,6 +58,7 @@ export default function CampaignsPage() {
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [newCampaignName, setNewCampaignName] = useState("");
   const [creatingCampaign, setCreatingCampaign] = useState(false);
+  const [shareCampaignId, setShareCampaignId] = useState<string | null>(null);
 
   const isOwner = project?.user_id === user?.id;
 
@@ -243,12 +245,21 @@ export default function CampaignsPage() {
                   </div>
 
                   {isOwner && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setDeleteId(c.id); }}
-                      className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground/40 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setShareCampaignId(c.id); }}
+                        className="p-2 rounded-lg hover:bg-white/10 text-muted-foreground/40 hover:text-foreground"
+                        title="Compartir campaña"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDeleteId(c.id); }}
+                        className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground/40 hover:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   )}
 
                   <div className="text-xs text-muted-foreground/60 shrink-0">
@@ -279,6 +290,18 @@ export default function CampaignsPage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Share campaign dialog */}
+      {shareCampaignId && (
+        <ShareEntityDialog
+          open={!!shareCampaignId}
+          onOpenChange={(open) => !open && setShareCampaignId(null)}
+          entityType="campaña"
+          entityId={shareCampaignId}
+          memberTable="campaign_members"
+          fkColumn="campaign_id"
+        />
+      )}
 
       {/* New campaign dialog */}
       <AlertDialog open={showNewDialog} onOpenChange={(open) => { if (!open) { setShowNewDialog(false); setNewCampaignName(""); } }}>

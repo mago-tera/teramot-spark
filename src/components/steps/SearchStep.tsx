@@ -6,9 +6,10 @@ import { supabase } from "@/integrations/supabase/client";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { ICPForm } from "@/components/steps/ICPForm";
-import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users, Download, Zap } from "lucide-react";
+import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users, Download, Zap, UserPlus } from "lucide-react";
 import { Trash2 } from "lucide-react";
 import { SmartAssignDialog } from "@/components/SmartAssignDialog";
+import { ShareEntityDialog } from "@/components/ShareEntityDialog";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -152,6 +153,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [projectLists, setProjectLists] = useState<(ListItem & { campaignName?: string })[]>([]);
   const [savingField, setSavingField] = useState<Record<string, boolean>>({});
   const [smartAssignField, setSmartAssignField] = useState<"calificacion" | "responsable" | "canal" | null>(null);
+  const [shareListId, setShareListId] = useState<string | null>(null);
 
   const deleteList = async (listId: string) => {
     // Delete leads first, then the list
@@ -979,6 +981,13 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                   {new Date(list.created_at).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}
                 </div>
                 <button
+                  onClick={(e) => { e.stopPropagation(); setShareListId(list.id); }}
+                  className="p-1.5 rounded hover:bg-white/10 text-muted-foreground/40 hover:text-foreground opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                  title="Compartir lista"
+                >
+                  <UserPlus className="w-4 h-4" />
+                </button>
+                <button
                   onClick={(e) => { e.stopPropagation(); setDeletingListId(list.id); }}
                   className="p-1.5 rounded hover:bg-rose-500/10 text-muted-foreground/40 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all shrink-0"
                   title="Eliminar lista"
@@ -1026,6 +1035,18 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
             Crear lista
           </button>
         </div>
+      )}
+
+      {/* Share list dialog */}
+      {shareListId && (
+        <ShareEntityDialog
+          open={!!shareListId}
+          onOpenChange={(open) => !open && setShareListId(null)}
+          entityType="lista"
+          entityId={shareListId}
+          memberTable="list_members"
+          fkColumn="list_id"
+        />
       )}
 
     </div>
