@@ -383,7 +383,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-white/[0.06]">
-                    {["Nombre", "Cargo", "Empresa", "País", "Email", "Score", "Aprobado", "Responsable", "Canal"].map((h) => (
+                    {["Nombre", "Cargo", "Empresa", "País", "Email", "LinkedIn", "Score", "Aprobado", "Responsable", "Canal"].map((h) => (
                       <th key={h} className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -403,7 +403,11 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                           <span className={`px-2 py-0.5 rounded text-[10px] border ${COUNTRY_COLORS[lead.country] || "text-muted-foreground"}`}>{lead.country}</span>
                         </td>
                         <td className="px-3 py-2.5 text-muted-foreground font-mono text-[10px]">{lead.email || "—"}</td>
-                        
+                        <td className="px-3 py-2.5">
+                          {lead.linkedinUrl ? (
+                            <a href={lead.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 text-[10px] underline truncate max-w-[120px] block">Ver perfil</a>
+                          ) : <span className="text-muted-foreground text-[10px]">—</span>}
+                        </td>
                         <td className="px-3 py-2.5">
                           <span className={`px-2 py-0.5 rounded text-[10px] border ${q.bg} ${q.text} ${q.border}`}>{q.label}</span>
                         </td>
