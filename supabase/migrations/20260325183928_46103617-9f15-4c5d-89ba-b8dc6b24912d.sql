@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS trg_prevent_duplicate_lead ON public.leads;
