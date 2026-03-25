@@ -770,7 +770,8 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                         </td>
                       </tr>
                     );
-                  })}
+                  });
+                  })()}
                 </tbody>
               </table>
             </div>
