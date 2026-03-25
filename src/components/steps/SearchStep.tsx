@@ -475,7 +475,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                           <select
                             value={cal || ""}
                             onChange={(e) => updateLeadField(lead.id, "calificacion", e.target.value || null)}
-                            className={`rounded-md px-2 py-1 text-[11px] font-medium border cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${
+                            className={`rounded-md px-2 py-1 text-[11px] font-medium border cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary transition-colors [&>option]:bg-[#1a1a2e] [&>option]:text-white ${
                               cal ? CALIFICACION_STYLES[cal] || "bg-white/[0.04] border-white/[0.08] text-foreground" : "bg-white/[0.04] border-white/[0.08] text-muted-foreground"
                             }`}
                           >
