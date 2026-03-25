@@ -316,19 +316,31 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       setLogs((prev) => [...prev, `📋 Cargando leads desde CSV...`]);
       setProgress(30);
 
-      const allNewLeads = HARDCODED_LEADS.filter((l: Lead) => {
+      const requested = searchConfig.quantity;
+      const allAvailable = HARDCODED_LEADS.filter((l: Lead) => {
         if (l.email && existingEmails.has(l.email)) return false;
         if (l.linkedinUrl && existingLinkedins.has(l.linkedinUrl)) return false;
         return true;
       });
 
-      const dupeCount = HARDCODED_LEADS.length - allNewLeads.length;
+      const dupeCount = HARDCODED_LEADS.length - allAvailable.length;
       if (dupeCount > 0) {
-        setLogs((prev) => [...prev, `⚠ ${dupeCount} duplicados filtrados`]);
+        setLogs((prev) => [...prev, `⚠ ${dupeCount} duplicados filtrados del pool`]);
+      }
+
+      // Take requested amount; surplus stays available (smart retry logic)
+      const finalLeads = allAvailable.slice(0, requested);
+      if (finalLeads.length < requested && allAvailable.length > finalLeads.length) {
+        // Fill from surplus
+        const extra = allAvailable.slice(requested, requested + (requested - finalLeads.length));
+        finalLeads.push(...extra);
+        setLogs((prev) => [...prev, `🔄 ${extra.length} leads extra del surplus para completar`]);
+      }
+      if (finalLeads.length < requested) {
+        setLogs((prev) => [...prev, `ℹ Solo ${finalLeads.length} leads únicos disponibles de ${requested} pedidos`]);
       }
 
       setProgress(60);
-      const finalLeads = allNewLeads;
       const scored = scoreAndAssign(finalLeads);
 
       // Create list record
