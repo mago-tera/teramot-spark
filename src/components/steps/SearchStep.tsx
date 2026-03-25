@@ -786,30 +786,77 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       </div>
 
       {/* New list name dialog */}
-      <AlertDialog open={showNewListDialog} onOpenChange={setShowNewListDialog}>
-        <AlertDialogContent className="glass-card border-white/10">
+      <AlertDialog open={showNewListDialog} onOpenChange={(open) => { setShowNewListDialog(open); if (!open) setSelectedSourceLists([]); }}>
+        <AlertDialogContent className="glass-card border-white/10 max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-foreground">Nueva lista</AlertDialogTitle>
           </AlertDialogHeader>
-          <div className="space-y-3 py-2">
-            <label className="text-sm text-muted-foreground">Nombre de la lista</label>
-            <Input
-              value={newListName}
-              onChange={(e) => setNewListName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && newListName.trim()) { setShowNewListDialog(false); setShowICPForm(true); } }}
-              placeholder="Ej: SDRs Fintech Argentina"
-              autoFocus
-              className="glass-input"
-            />
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="text-sm text-muted-foreground">Nombre de la lista</label>
+              <Input
+                value={newListName}
+                onChange={(e) => setNewListName(e.target.value)}
+                placeholder="Ej: SDRs Fintech Argentina"
+                autoFocus
+                className="glass-input mt-1"
+              />
+            </div>
+
+            {/* Copy from existing lists */}
+            {projectLists.length > 0 && (
+              <div>
+                <label className="text-sm text-muted-foreground flex items-center gap-1.5 mb-2">
+                  <Copy className="w-3.5 h-3.5" /> Copiar leads de listas existentes <span className="text-xs text-muted-foreground/60">(opcional)</span>
+                </label>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto rounded-lg border border-white/[0.06] p-2 bg-white/[0.02]">
+                  {projectLists.map((pl) => (
+                    <label
+                      key={pl.id}
+                      className="flex items-center gap-2.5 py-1.5 px-2 rounded-md hover:bg-white/[0.04] cursor-pointer transition-colors"
+                    >
+                      <Checkbox
+                        checked={selectedSourceLists.includes(pl.id)}
+                        onCheckedChange={(checked) => {
+                          setSelectedSourceLists((prev) =>
+                            checked ? [...prev, pl.id] : prev.filter((id) => id !== pl.id)
+                          );
+                        }}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs text-foreground">{pl.name}</span>
+                        <span className="text-[10px] text-muted-foreground/60 ml-2">
+                          {pl.campaignName} · {pl.lead_count} leads
+                        </span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+                {selectedSourceLists.length > 0 && (
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {selectedSourceLists.length} lista(s) seleccionadas — los duplicados se omitirán automáticamente
+                  </p>
+                )}
+              </div>
+            )}
           </div>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
             <AlertDialogCancel className="border-white/10 text-muted-foreground hover:bg-white/5">Cancelar</AlertDialogCancel>
+            {selectedSourceLists.length > 0 && (
+              <button
+                disabled={!newListName.trim()}
+                onClick={handleCreateListWithCopies}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-accent text-accent-foreground hover:bg-accent/80 transition-colors disabled:opacity-50"
+              >
+                <Copy className="w-3.5 h-3.5" /> Solo copiar
+              </button>
+            )}
             <AlertDialogAction
               disabled={!newListName.trim()}
               onClick={() => { setShowICPForm(true); }}
               className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              Confirmar
+              {selectedSourceLists.length > 0 ? "Copiar + buscar nuevos" : "Buscar leads"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
