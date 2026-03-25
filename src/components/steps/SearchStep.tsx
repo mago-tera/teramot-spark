@@ -322,19 +322,39 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     return <div className="glass-card p-5 animate-pulse h-24" />;
   }
 
+  const RESPONSABLES = [
+    { label: "Bruno", email: "burno@teramot.com" },
+    { label: "Juan", email: "juan@teramot.com" },
+    { label: "Lucio", email: "lucio@teramot.com" },
+    { label: "Gabo", email: "gabriel@teramot.com" },
+    { label: "Valen", email: "valentina@teramot.com" },
+  ];
+  const CALIFICACIONES = ["Top Fit", "Fit", "Not"];
+  const CANALES = ["LinkedIn", "Mail"];
+
+  const CALIFICACION_STYLES: Record<string, string> = {
+    "Top Fit": "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
+    "Fit": "bg-green-500/20 text-green-300 border-green-500/30",
+    "Not": "bg-rose-500/20 text-rose-300 border-rose-500/30",
+  };
+  const CANAL_STYLES: Record<string, string> = {
+    "LinkedIn": "bg-blue-500/20 text-blue-300 border-blue-500/30",
+    "Mail": "bg-violet-500/20 text-violet-300 border-violet-500/30",
+  };
+
+  const updateLeadField = async (leadId: string, field: string, value: string | null) => {
+    setListLeads((prev) =>
+      prev.map((l) => (l.id === leadId ? { ...l, [field]: value } : l))
+    );
+    setSavingField((prev) => ({ ...prev, [leadId + field]: true }));
+    const { error } = await supabase.from("leads").update({ [field]: value }).eq("id", leadId);
+    setSavingField((prev) => ({ ...prev, [leadId + field]: false }));
+    if (error) toast.error("Error al guardar");
+  };
+
   // Drill-down: show leads of selected list
   if (selectedListId) {
     const selectedList = lists.find((l) => l.id === selectedListId);
-
-    if (showApproval) {
-      return (
-        <ApprovalView
-          listId={selectedListId}
-          listName={selectedList?.name || ""}
-          onBack={() => setShowApproval(false)}
-        />
-      );
-    }
 
     return (
       <div className="space-y-6">
@@ -348,13 +368,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               {selectedList?.profile} · {listLeads.length} leads
             </p>
           </div>
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              onClick={() => setShowApproval(true)}
-              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-white/[0.08] text-foreground hover:bg-white/[0.06] transition-colors"
-            >
-              ✅ Aprobaciones
-            </button>
+          <div className="ml-auto">
             <button
               onClick={onComplete}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
@@ -370,42 +384,68 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-white/[0.06]">
-                    {["Nombre", "Apellido", "Cargo", "Empresa", "País", "Email", "LinkedIn"].map((h) => (
-                      <th key={h} className="px-4 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium">{h}</th>
+                    {["Nombre", "Cargo", "Empresa", "País", "Email", "Score", "Cuartil", "Calificación", "Responsable", "Canal"].map((h) => (
+                      <th key={h} className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {listLeads.map((lead, i) => {
+                    const q = QUARTILE_STYLES[lead.quartile] || QUARTILE_STYLES.Q4;
+                    const cal = (lead as any).calificacion as string | null;
+                    const resp = (lead as any).responsable as string | null;
+                    const canal = (lead as any).canal as string | null;
                     return (
                       <tr key={lead.id} className={`border-b border-white/[0.03] ${i % 2 === 0 ? "bg-white/[0.01]" : ""} hover:bg-white/[0.03] transition-colors`}>
-                        <td className="px-4 py-2.5 text-foreground font-medium">{lead.firstName}</td>
-                        <td className="px-4 py-2.5 text-foreground font-medium">{lead.lastName}</td>
-                        <td className="px-4 py-2.5 text-muted-foreground max-w-[180px] truncate">{lead.title}</td>
-                        <td className="px-4 py-2.5 text-muted-foreground">{lead.company}</td>
-                        <td className="px-4 py-2.5">
+                        <td className="px-3 py-2.5 text-foreground font-medium whitespace-nowrap">{lead.firstName} {lead.lastName}</td>
+                        <td className="px-3 py-2.5 text-muted-foreground max-w-[160px] truncate">{lead.title}</td>
+                        <td className="px-3 py-2.5 text-muted-foreground">{lead.company}</td>
+                        <td className="px-3 py-2.5">
                           <span className={`px-2 py-0.5 rounded text-[10px] border ${COUNTRY_COLORS[lead.country] || "text-muted-foreground"}`}>{lead.country}</span>
                         </td>
-                        <td className="px-4 py-2.5 text-muted-foreground font-mono text-[10px]">
-                          {lead.email || <span className="text-muted-foreground/40">—</span>}
+                        <td className="px-3 py-2.5 text-muted-foreground font-mono text-[10px]">{lead.email || "—"}</td>
+                        <td className="px-3 py-2.5 text-foreground font-semibold">{lead.total}</td>
+                        <td className="px-3 py-2.5">
+                          <span className={`px-2 py-0.5 rounded text-[10px] border ${q.bg} ${q.text} ${q.border}`}>{q.label}</span>
                         </td>
-                        <td className="px-4 py-2.5">
-                          {lead.linkedinUrl ? (
-                            <div className="flex items-center gap-1.5 max-w-[200px]">
-                              <a href={lead.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline text-[10px] truncate">
-                                {lead.linkedinUrl.replace(/^https?:\/\/(www\.)?/, '')}
-                              </a>
-                              <button
-                                onClick={() => { navigator.clipboard.writeText(lead.linkedinUrl); toast.success("LinkedIn copiado"); }}
-                                className="shrink-0 p-0.5 rounded hover:bg-white/10 text-muted-foreground hover:text-foreground transition-colors"
-                                title="Copiar URL"
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
-                              </button>
-                            </div>
-                          ) : (
-                            <span className="text-muted-foreground/40 text-[10px]">—</span>
-                          )}
+                        {/* Calificación */}
+                        <td className="px-3 py-2.5">
+                          <select
+                            value={cal || ""}
+                            onChange={(e) => updateLeadField(lead.id, "calificacion", e.target.value || null)}
+                            className={`rounded-md px-2 py-1 text-[11px] font-medium border cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${
+                              cal ? CALIFICACION_STYLES[cal] || "bg-white/[0.04] border-white/[0.08] text-foreground" : "bg-white/[0.04] border-white/[0.08] text-muted-foreground"
+                            }`}
+                          >
+                            <option value="">—</option>
+                            {CALIFICACIONES.map((c) => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                        </td>
+                        {/* Responsable */}
+                        <td className="px-3 py-2.5">
+                          <select
+                            value={resp || ""}
+                            onChange={(e) => updateLeadField(lead.id, "responsable", e.target.value || null)}
+                            className={`rounded-md px-2 py-1 text-[11px] font-medium border cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${
+                              resp ? "bg-amber-500/20 text-amber-300 border-amber-500/30" : "bg-white/[0.04] border-white/[0.08] text-muted-foreground"
+                            }`}
+                          >
+                            <option value="">—</option>
+                            {RESPONSABLES.map((r) => <option key={r.email} value={r.label}>{r.label}</option>)}
+                          </select>
+                        </td>
+                        {/* Canal */}
+                        <td className="px-3 py-2.5">
+                          <select
+                            value={canal || ""}
+                            onChange={(e) => updateLeadField(lead.id, "canal", e.target.value || null)}
+                            className={`rounded-md px-2 py-1 text-[11px] font-medium border cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${
+                              canal ? CANAL_STYLES[canal] || "bg-white/[0.04] border-white/[0.08] text-foreground" : "bg-white/[0.04] border-white/[0.08] text-muted-foreground"
+                            }`}
+                          >
+                            <option value="">—</option>
+                            {CANALES.map((c) => <option key={c} value={c}>{c}</option>)}
+                          </select>
                         </td>
                       </tr>
                     );
