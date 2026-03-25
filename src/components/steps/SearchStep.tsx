@@ -98,6 +98,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [listLeads, setListLeads] = useState<ScoredLead[]>([]);
   const [editingListId, setEditingListId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [showCsvModal, setShowCsvModal] = useState(false);
   const [csvFilterAprobado, setCsvFilterAprobado] = useState("");
   const [csvFilterResponsable, setCsvFilterResponsable] = useState("");
   const [csvFilterCanal, setCsvFilterCanal] = useState("");
