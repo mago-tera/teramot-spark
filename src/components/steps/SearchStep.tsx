@@ -640,81 +640,20 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                     {["Nombre", "Cargo", "Empresa", "País", "Email", "LinkedIn", "Score"].map((h) => (
                       <th key={h} className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">{h}</th>
                     ))}
-                    <th className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
-                        Aprobado
-                        <select
-                          defaultValue=""
-                          onChange={(e) => {
-                            const [q, v] = e.target.value.split("|");
-                            bulkUpdateField("calificacion", v, q === "ALL" ? undefined : q);
-                            e.target.value = "";
-                          }}
-                          className="ml-1 rounded px-1.5 py-0.5 text-[9px] bg-white/[0.06] border border-white/[0.1] text-muted-foreground cursor-pointer focus:outline-none [&>option]:bg-[#1a1a2e] [&>option]:text-white"
-                          title="Asignación inteligente"
-                        >
-                          <option value="" disabled>⚡ Asignar</option>
-                          <option value="ALL|__clear__">— Limpiar todos</option>
-                          {(["Q1", "Q2", "Q3", "Q4"] as const).map((q) => (
-                            CALIFICACIONES.map((c) => (
-                              <option key={`${q}-${c}`} value={`${q}|${c}`}>
-                                {c} → {(QUARTILE_STYLES as any)[q]?.label}
-                              </option>
-                            ))
-                          ))}
-                        </select>
-                      </div>
-                    </th>
-                    <th className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
-                        Responsable
-                        <select
-                          defaultValue=""
-                          onChange={(e) => {
-                            const [q, v] = e.target.value.split("|");
-                            bulkUpdateField("responsable", v, q === "ALL" ? undefined : q);
-                            e.target.value = "";
-                          }}
-                          className="ml-1 rounded px-1.5 py-0.5 text-[9px] bg-white/[0.06] border border-white/[0.1] text-muted-foreground cursor-pointer focus:outline-none [&>option]:bg-[#1a1a2e] [&>option]:text-white"
-                          title="Asignación inteligente"
-                        >
-                          <option value="" disabled>⚡ Asignar</option>
-                          <option value="ALL|__clear__">— Limpiar todos</option>
-                          {(["Q1", "Q2", "Q3", "Q4"] as const).map((q) => (
-                            RESPONSABLES.map((r) => (
-                              <option key={`${q}-${r.label}`} value={`${q}|${r.label}`}>
-                                {r.label} → {(QUARTILE_STYLES as any)[q]?.label}
-                              </option>
-                            ))
-                          ))}
-                        </select>
-                      </div>
-                    </th>
-                    <th className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
-                        Canal
-                        <select
-                          defaultValue=""
-                          onChange={(e) => {
-                            const [q, v] = e.target.value.split("|");
-                            bulkUpdateField("canal", v, q === "ALL" ? undefined : q);
-                            e.target.value = "";
-                          }}
-                          className="ml-1 rounded px-1.5 py-0.5 text-[9px] bg-white/[0.06] border border-white/[0.1] text-muted-foreground cursor-pointer focus:outline-none [&>option]:bg-[#1a1a2e] [&>option]:text-white"
-                          title="Asignación inteligente"
-                        >
-                          <option value="" disabled>⚡ Asignar</option>
-                          <option value="ALL|__clear__">— Limpiar todos</option>
-                          {(["Q1", "Q2", "Q3", "Q4"] as const).map((q) => (
-                            CANALES.map((c) => (
-                              <option key={`${q}-${c}`} value={`${q}|${c}`}>
-                                {c} → {(QUARTILE_STYLES as any)[q]?.label}
-                              </option>
-                            ))
-                          ))}
-                        </select>
-                      </div>
-                    </th>
+                    {(["calificacion", "responsable", "canal"] as const).map((f) => (
+                      <th key={f} className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
+                          {SMART_ASSIGN_LABELS[f]}
+                          <button
+                            onClick={() => setSmartAssignField(f)}
+                            className="ml-1 flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-colors cursor-pointer"
+                            title="Asignación inteligente"
+                          >
+                            <Zap className="w-3 h-3" /> Asignar
+                          </button>
+                        </div>
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
