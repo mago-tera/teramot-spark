@@ -442,9 +442,51 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-white/[0.06]">
-                    {["Nombre", "Cargo", "Empresa", "País", "Email", "LinkedIn", "Score", "Aprobado", "Responsable", "Canal"].map((h) => (
+                    {["Nombre", "Cargo", "Empresa", "País", "Email", "LinkedIn", "Score"].map((h) => (
                       <th key={h} className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">{h}</th>
                     ))}
+                    <th className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        Aprobado
+                        <select
+                          defaultValue=""
+                          onChange={(e) => { bulkUpdateField("calificacion", e.target.value); e.target.value = ""; }}
+                          className="ml-1 rounded px-1.5 py-0.5 text-[9px] bg-white/[0.06] border border-white/[0.1] text-muted-foreground cursor-pointer focus:outline-none [&>option]:bg-[#1a1a2e] [&>option]:text-white"
+                          title="Asignar a todos"
+                        >
+                          <option value="" disabled>⚡ Todos</option>
+                          {CALIFICACIONES.map((c) => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                    </th>
+                    <th className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        Responsable
+                        <select
+                          defaultValue=""
+                          onChange={(e) => { bulkUpdateField("responsable", e.target.value); e.target.value = ""; }}
+                          className="ml-1 rounded px-1.5 py-0.5 text-[9px] bg-white/[0.06] border border-white/[0.1] text-muted-foreground cursor-pointer focus:outline-none [&>option]:bg-[#1a1a2e] [&>option]:text-white"
+                          title="Asignar a todos"
+                        >
+                          <option value="" disabled>⚡ Todos</option>
+                          {RESPONSABLES.map((r) => <option key={r.label} value={r.label}>{r.label}</option>)}
+                        </select>
+                      </div>
+                    </th>
+                    <th className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        Canal
+                        <select
+                          defaultValue=""
+                          onChange={(e) => { bulkUpdateField("canal", e.target.value); e.target.value = ""; }}
+                          className="ml-1 rounded px-1.5 py-0.5 text-[9px] bg-white/[0.06] border border-white/[0.1] text-muted-foreground cursor-pointer focus:outline-none [&>option]:bg-[#1a1a2e] [&>option]:text-white"
+                          title="Asignar a todos"
+                        >
+                          <option value="" disabled>⚡ Todos</option>
+                          {CANALES.map((c) => <option key={c} value={c}>{c}</option>)}
+                        </select>
+                      </div>
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
