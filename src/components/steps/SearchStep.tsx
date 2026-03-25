@@ -143,7 +143,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       .eq("list_id", selectedListId)
       .then(({ data }) => {
         if (data) {
-          const mapped: ScoredLead[] = data
+           const mapped: ScoredLead[] = data
             .map((d) => ({
             id: d.id,
             firstName: d.first_name || "",
@@ -160,6 +160,9 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
             total: d.score || 0,
             quartile: (d.quartile as "Q1" | "Q2" | "Q3" | "Q4") || "Q4",
             messages: d.messages as any,
+            calificacion: d.calificacion || null,
+            responsable: d.responsable || null,
+            canal: d.canal || null,
           }));
           setListLeads(mapped);
           setScoredLeads(mapped);
