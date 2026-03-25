@@ -22,11 +22,36 @@ MENSAJES CLAVE:
 - "The AI for Data Infrastructure"
 - "Converse. Structure. Deploy your data with AI."
 - "From business question to deployed data."
+- Teramot se conecta a tus bases reales, entiende la estructura, propone cómo modelarlas y despliega tablas y pipelines reutilizables.
+- No queda en la conversación. Queda en tu arquitectura.
+- Hoy podés modelar tablas y hacer análisis hablando con Claude o GPT. El real valor está en que esto realmente construye infraestructura en producción.
 
 TONALIDAD DE MARCA:
 - Directo, técnico, sin hype de marketing
 - NO usar: "solución innovadora", "transformación digital", "revolucionario", "cutting-edge"
 - SÍ usar: lenguaje concreto, técnico, orientado a resultados medibles
+- Tono conversacional, cercano pero profesional. Como un colega técnico que te cuenta algo útil.
+
+=== EJEMPLO DE REFERENCIA (email) ===
+Hola [Nombre], cómo estás?
+
+Mi nombre es Lucio, trabajo en el equipo de producto en Teramot y quería compartirte información sobre nuestra tool de BI basada en AI.
+
+Vimos que en la mayoría de los equipos de datos, gran parte del tiempo no está en el análisis en sí, sino en todo lo previo: entender qué datos existen, limpiarlos, modelarlos, validar métricas.
+
+Hoy gracias a nuestra herramienta podés modelar tablas y hacer análisis hablando con Claude o GPT. El real valor agregado esta en que esto realmente construye infraestructura en producción.
+
+Teramot se conecta a tus bases reales, entiende la estructura, propone cómo modelarlas y despliega tablas y pipelines reutilizables.
+
+No queda en la conversación. Queda en tu arquitectura.
+
+Te dejo un Video sobre cómo funciona:
+https://youtu.be/TLCTqBGbQd0?si=Mx6etvhIXoOmQtv1
+
+Si te interesa explorarlo, coordinamos una charla breve. Para eso te dejo un link a mi agenda.
+
+Saludos.
+=== FIN EJEMPLO ===
 `;
 
 serve(async (req) => {
