@@ -981,6 +981,13 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                   {new Date(list.created_at).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}
                 </div>
                 <button
+                  onClick={(e) => { e.stopPropagation(); setShareListId(list.id); }}
+                  className="p-1.5 rounded hover:bg-white/10 text-muted-foreground/40 hover:text-foreground opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                  title="Compartir lista"
+                >
+                  <UserPlus className="w-4 h-4" />
+                </button>
+                <button
                   onClick={(e) => { e.stopPropagation(); setDeletingListId(list.id); }}
                   className="p-1.5 rounded hover:bg-rose-500/10 text-muted-foreground/40 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-all shrink-0"
                   title="Eliminar lista"
