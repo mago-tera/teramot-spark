@@ -860,7 +860,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                 </div>
                 {selectedSourceLists.length > 0 && (
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    {selectedSourceLists.length} lista(s) seleccionadas — los duplicados se omitirán automáticamente
+                    {selectedSourceLists.length} lista(s) seleccionadas para copiar
                   </p>
                 )}
               </div>
