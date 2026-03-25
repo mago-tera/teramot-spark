@@ -539,13 +539,18 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     if (error) toast.error("Error al guardar");
   };
 
-  const bulkUpdateField = async (field: string, value: string) => {
+  const bulkUpdateField = async (field: string, value: string, quartileFilter?: string) => {
     const val = value === "__clear__" ? null : value;
-    const ids = listLeads.map((l) => l.id);
-    setListLeads((prev) => prev.map((l) => ({ ...l, [field]: val })));
+    const filtered = quartileFilter
+      ? listLeads.filter((l) => l.quartile === quartileFilter)
+      : listLeads;
+    const ids = filtered.map((l) => l.id);
+    if (ids.length === 0) return;
+    setListLeads((prev) => prev.map((l) => ids.includes(l.id) ? { ...l, [field]: val } : l));
     const { error } = await supabase.from("leads").update({ [field]: val }).in("id", ids);
+    const quartileLabel = quartileFilter ? (QUARTILE_STYLES as any)[quartileFilter]?.label || quartileFilter : "todos";
     if (error) toast.error("Error al guardar");
-    else toast.success(val ? `Asignado "${val}" a ${ids.length} leads` : `Limpiado en ${ids.length} leads`);
+    else toast.success(val ? `"${val}" → ${ids.length} leads (${quartileLabel})` : `Limpiado en ${ids.length} leads (${quartileLabel})`);
   };
 
   // Drill-down: show leads of selected list
