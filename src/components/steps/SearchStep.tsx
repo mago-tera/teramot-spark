@@ -215,6 +215,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       .then(({ data }) => {
         if (data) {
            const mapped: ScoredLead[] = data
+            .sort((a, b) => (b.score || 0) - (a.score || 0))
             .map((d) => ({
             id: d.id,
             firstName: d.first_name || "",
