@@ -5,7 +5,6 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
-// Brand context extracted from Teramot's Notion one-pagers
 const BRAND_CONTEXT = `
 === CONTEXTO DE MARCA TERAMOT ===
 
@@ -15,39 +14,19 @@ Teramot es la mejor forma de trabajar con datos. Descubre esquemas, corrige prob
 CLAIM PRINCIPAL: "Teramot is the best way to work with data."
 SUBCLAIM: "Built to make data analysts incredibly productive."
 
-ANALOGÍA: Teramot es el Cursor para equipos de datos. Así como Cursor permite que los desarrolladores escriban software mucho más rápido, Teramot permite que los equipos de datos conviertan requerimientos de negocio en sistemas de datos operativos a una velocidad completamente distinta.
+ANALOGÍA: Teramot es el Cursor para equipos de datos.
 
-CATEGORÍA: AI for Business Data — No es una herramienta de analytics ni un chatbot de datos. Es un sistema diseñado para convertir necesidades de negocio en infraestructura de datos en producción.
-
-ATRIBUTOS CLAVE:
-- Inteligente: Analiza la estructura de los datos y asesora cómo modelarlos para responder mejor las preguntas del negocio.
-- Confiable: Trabaja directamente sobre las bases de datos y genera queries transparentes y auditables.
-- Rápida: Automatiza la limpieza, transformación y construcción de infraestructura de datos.
-- Única: Tecnología patentada que permite a LLMs trabajar en forma directa con Bases de Datos reales y complejas.
+CATEGORÍA: AI for Business Data
 
 MENSAJES CLAVE:
 - "The AI for Data Infrastructure"
 - "Converse. Structure. Deploy your data with AI."
-- "Build data infrastructure through conversation."
 - "From business question to deployed data."
-- "Turn questions into data systems."
-
-PAIN POINTS DEL PROSPECTO:
-- Gran parte del tiempo se pierde preparando datos en lugar de analizarlos
-- Cada análisis requiere escribir SQL desde cero
-- Mucho trabajo manual de limpieza y normalización
-- Falta de adopción de IA en procesos de modelado de datos
-- Convertir preguntas ambiguas del negocio en estructuras de datos correctas
-
-DIFERENCIADOR: De "pedir y ejecutar" a "pensar y construir juntos". Un sistema que acompaña el proceso de razonamiento técnico y ejecuta cuando hay claridad.
-
-RESULTADO: Equipos de datos convierten requerimientos de negocio en infraestructura de datos en producción en horas en lugar de semanas. x30 más rápido.
 
 TONALIDAD DE MARCA:
 - Directo, técnico, sin hype de marketing
 - NO usar: "solución innovadora", "transformación digital", "revolucionario", "cutting-edge"
 - SÍ usar: lenguaje concreto, técnico, orientado a resultados medibles
-- Conectar con dolores reales de equipos de datos
 `;
 
 serve(async (req) => {
@@ -59,48 +38,20 @@ serve(async (req) => {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
-    const objectiveContext = objective ? `\nOBJETIVO DEL USUARIO: ${objective}` : "";
-    const communicateContext = whatToCommunicate ? `\nQUÉ QUIERE COMUNICAR: ${whatToCommunicate}` : "";
-
-    const isGeneric = mode === "generic";
+    // Use whatToCommunicate as the main prompt (objective and whatToCommunicate are now the same single prompt)
+    const userPrompt = whatToCommunicate || objective || "";
 
     const systemPrompt = `Sos experto en outreach B2B técnico para Teramot.
 
 ${BRAND_CONTEXT}
-${objectiveContext}
-${communicateContext}
 
 REGLAS DE GENERACIÓN:
-- Tono: directo, técnico, sin hype ni frases genéricas. Seguí la tonalidad de marca.
-${isGeneric
-  ? `- Este es un mensaje GENÉRICO para el grupo "${quartile}" (${quartile === "Q1" ? "Top Fit" : quartile === "Q2" ? "Buen Fit" : quartile === "Q3" ? "Fit Moderado" : "Fit Bajo"}). No personalices por nombre ni empresa específica, usá placeholders como [Nombre] y [Empresa].
-- El tono debe adaptarse al nivel de fit: Q1 = directo y asertivo, Q2 = profesional con valor claro, Q3 = educativo y exploratorio, Q4 = suave y de bajo compromiso.`
-  : `- Personalizá con la industria y cargo del prospecto, conectando con sus pain points reales.`}
-- Usá los mensajes clave y la propuesta de valor de Teramot de forma natural, sin sonar robótico.
-- Conectá con el dolor real de datos sucios, mal modelados, o procesos manuales de infraestructura de datos.
-- Adaptá la intensidad según el cuartil: Q1 (Top Fit) = más agresivo y directo, Q4 (Fit Bajo) = más exploratorio.
-- Canal: ${canal}
-- Si es LinkedIn, máximo 300 caracteres. Sé conciso y directo.
-- Si es email, el asunto debe generar curiosidad sin clickbait.
-- IMPORTANTE: Integrá el objetivo y lo que el usuario quiere comunicar como eje central de cada pieza.`;
-
-    const userPrompt = isGeneric
-      ? `Generá 5 piezas de outreach genéricas para el grupo ${quartile} (${quartile === "Q1" ? "Top Fit" : quartile === "Q2" ? "Buen Fit" : quartile === "Q3" ? "Fit Moderado" : "Fit Bajo"}).
-Perfil típico del grupo: industria ${contact.industry}, cargo tipo ${contact.title}.
-Canal: ${canal}
-
-Usá [Nombre] y [Empresa] como placeholders.
-Devolvé SOLO las 5 piezas.`
-      : `Generá 5 piezas de outreach para:
-Nombre: ${contact.firstName}
-Empresa: ${contact.company}
-Cargo: ${contact.title}
-Industria: ${contact.industry}
-Cuartil: ${contact.quartile}
-Score: ${contact.total}
-Canal: ${canal}
-
-Devolvé SOLO las 5 piezas.`;
+- Tono: directo, técnico, sin hype ni frases genéricas.
+- Este es un mensaje GENÉRICO para toda una lista de prospectos. No personalices por nombre ni empresa. Usá placeholders como [Nombre] y [Empresa] si hace falta.
+- NO hagas referencia a la industria o empresa específica del prospecto. El mensaje tiene que funcionar para todos.
+- LinkedIn: máximo 300 caracteres. Conciso y directo.
+- Email: asunto que genere curiosidad sin clickbait. Cuerpo máximo 150 palabras.
+- El prompt del usuario es el eje central del mensaje.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
@@ -109,27 +60,25 @@ Devolvé SOLO las 5 piezas.`;
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        model: "openai/gpt-5",
+        model: "google/gemini-3-flash-preview",
         messages: [
           { role: "system", content: systemPrompt },
-          { role: "user", content: userPrompt },
+          { role: "user", content: `Generá un mensaje de LinkedIn y un email basado en esto:\n\n${userPrompt}` },
         ],
         tools: [
           {
             type: "function",
             function: {
               name: "generate_outreach",
-              description: "Generate outreach messages for a B2B prospect",
+              description: "Generate outreach messages",
               parameters: {
                 type: "object",
                 properties: {
                   linkedin: { type: "string", description: "LinkedIn message, max 300 chars" },
                   email_asunto: { type: "string", description: "Email subject line" },
                   email_cuerpo: { type: "string", description: "Email body, max 150 words" },
-                  followup_d4: { type: "string", description: "Follow-up day 4, max 80 words" },
-                  cierre_d9: { type: "string", description: "Closing day 9, max 60 words" },
                 },
-                required: ["linkedin", "email_asunto", "email_cuerpo", "followup_d4", "cierre_d9"],
+                required: ["linkedin", "email_asunto", "email_cuerpo"],
                 additionalProperties: false,
               },
             },
@@ -146,7 +95,7 @@ Devolvé SOLO las 5 piezas.`;
         });
       }
       if (response.status === 402) {
-        return new Response(JSON.stringify({ error: "Créditos agotados. Agregá fondos en Settings > Workspace > Usage." }), {
+        return new Response(JSON.stringify({ error: "Créditos agotados." }), {
           status: 402, headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
       }
