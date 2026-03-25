@@ -180,6 +180,30 @@ export type Database = {
           },
         ]
       }
+      list_members: {
+        Row: {
+          created_at: string
+          id: string
+          list_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          list_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          list_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       lists: {
         Row: {
           campaign_id: string
@@ -312,6 +336,10 @@ export type Database = {
       }
       is_campaign_owner: {
         Args: { _campaign_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_list_accessible: {
+        Args: { _list_id: string; _user_id: string }
         Returns: boolean
       }
       is_project_member: {
