@@ -691,7 +691,14 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                   </tr>
                 </thead>
                 <tbody>
-                  {listLeads.map((lead, i) => {
+                  {(() => {
+                    const q = leadSearch.toLowerCase().trim();
+                    const filtered = q
+                      ? listLeads.filter((l) =>
+                          `${l.firstName} ${l.lastName} ${l.title} ${l.company} ${l.email} ${l.country} ${l.industry}`.toLowerCase().includes(q)
+                        )
+                      : listLeads;
+                    return filtered.map((lead, i) => {
                     const q = QUARTILE_STYLES[lead.quartile] || QUARTILE_STYLES.Q4;
                     const cal = (lead as any).calificacion as string | null;
                     const resp = (lead as any).responsable as string | null;
