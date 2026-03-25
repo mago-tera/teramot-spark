@@ -178,6 +178,29 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       });
   }, [campaignId]);
 
+  // Load all project lists for the copy feature
+  useEffect(() => {
+    if (!projectId) return;
+    (async () => {
+      const { data: campaigns } = await supabase
+        .from("campaigns")
+        .select("id, name")
+        .eq("project_id", projectId);
+      if (!campaigns?.length) return;
+      const campaignMap = Object.fromEntries(campaigns.map((c) => [c.id, c.name || "Sin nombre"]));
+      const { data: allLists } = await supabase
+        .from("lists")
+        .select("*")
+        .in("campaign_id", campaigns.map((c) => c.id))
+        .order("created_at", { ascending: false });
+      if (allLists) {
+        setProjectLists(
+          allLists.map((l) => ({ ...l, geo_mix: l.geo_mix as Record<string, number>, campaignName: campaignMap[l.campaign_id] }))
+        );
+      }
+    })();
+  }, [projectId]);
+
   // Load leads for selected list & notify parent
   useEffect(() => {
     setIsInsideList(!!selectedListId);
