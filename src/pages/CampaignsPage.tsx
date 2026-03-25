@@ -245,12 +245,21 @@ export default function CampaignsPage() {
                   </div>
 
                   {isOwner && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); setDeleteId(c.id); }}
-                      className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground/40 hover:text-destructive opacity-0 group-hover:opacity-100 transition-all"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-all">
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setShareCampaignId(c.id); }}
+                        className="p-2 rounded-lg hover:bg-white/10 text-muted-foreground/40 hover:text-foreground"
+                        title="Compartir campaña"
+                      >
+                        <UserPlus className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setDeleteId(c.id); }}
+                        className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground/40 hover:text-destructive"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
                   )}
 
                   <div className="text-xs text-muted-foreground/60 shrink-0">
