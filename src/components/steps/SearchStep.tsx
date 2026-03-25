@@ -153,6 +153,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [projectLists, setProjectLists] = useState<(ListItem & { campaignName?: string })[]>([]);
   const [savingField, setSavingField] = useState<Record<string, boolean>>({});
   const [smartAssignField, setSmartAssignField] = useState<"calificacion" | "responsable" | "canal" | null>(null);
+  const [shareListId, setShareListId] = useState<string | null>(null);
 
   const deleteList = async (listId: string) => {
     // Delete leads first, then the list
