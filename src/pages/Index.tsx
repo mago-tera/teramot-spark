@@ -7,7 +7,7 @@ import { useParams } from "react-router-dom";
 
 const Index = () => {
   const wizard = useWizard();
-  const { campaignId } = useParams<{ campaignId?: string }>();
+  const { id: campaignId } = useParams<{ id?: string }>();
 
   const renderStep = () => {
     switch (wizard.currentStep) {
