@@ -640,7 +640,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               onClick={() => setShowCsvModal(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
             >
-              <Download className="w-3.5 h-3.5" /> Bajar CSV
+              <Download className="w-3.5 h-3.5" /> Bajar CSV / Excel
             </button>
             <button
               onClick={onComplete}
