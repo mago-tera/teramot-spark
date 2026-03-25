@@ -98,6 +98,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [listLeads, setListLeads] = useState<ScoredLead[]>([]);
   const [editingListId, setEditingListId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [showCsvModal, setShowCsvModal] = useState(false);
   const [csvFilterAprobado, setCsvFilterAprobado] = useState("");
   const [csvFilterResponsable, setCsvFilterResponsable] = useState("");
   const [csvFilterCanal, setCsvFilterCanal] = useState("");
@@ -411,35 +412,8 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
             </p>
           </div>
           <div className="ml-auto flex items-center gap-2 flex-wrap">
-            {/* CSV Filters */}
-            <select
-              value={csvFilterAprobado}
-              onChange={(e) => setCsvFilterAprobado(e.target.value)}
-              className="rounded-md px-2 py-1.5 text-[11px] font-medium border bg-white/[0.04] border-white/[0.08] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-            >
-              <option value="">Aprobado: Todos</option>
-              <option value="SI">SI</option>
-              <option value="NO">NO</option>
-            </select>
-            <select
-              value={csvFilterResponsable}
-              onChange={(e) => setCsvFilterResponsable(e.target.value)}
-              className="rounded-md px-2 py-1.5 text-[11px] font-medium border bg-white/[0.04] border-white/[0.08] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-            >
-              <option value="">Responsable: Todos</option>
-              {RESPONSABLES.map((r) => <option key={r.label} value={r.label}>{r.label}</option>)}
-            </select>
-            <select
-              value={csvFilterCanal}
-              onChange={(e) => setCsvFilterCanal(e.target.value)}
-              className="rounded-md px-2 py-1.5 text-[11px] font-medium border bg-white/[0.04] border-white/[0.08] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
-            >
-              <option value="">Canal: Todos</option>
-              <option value="LinkedIn">LinkedIn</option>
-              <option value="Mail">Mail</option>
-            </select>
             <button
-              onClick={() => downloadFilteredCSV()}
+              onClick={() => setShowCsvModal(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
             >
               <Download className="w-3.5 h-3.5" /> Bajar CSV
@@ -501,7 +475,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                           <select
                             value={cal || ""}
                             onChange={(e) => updateLeadField(lead.id, "calificacion", e.target.value || null)}
-                            className={`rounded-md px-2 py-1 text-[11px] font-medium border cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${
+                            className={`rounded-md px-2 py-1 text-[11px] font-medium border cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary transition-colors [&>option]:bg-[#1a1a2e] [&>option]:text-white ${
                               cal ? CALIFICACION_STYLES[cal] || "bg-white/[0.04] border-white/[0.08] text-foreground" : "bg-white/[0.04] border-white/[0.08] text-muted-foreground"
                             }`}
                           >
@@ -514,7 +488,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                           <select
                             value={resp || ""}
                             onChange={(e) => updateLeadField(lead.id, "responsable", e.target.value || null)}
-                            className={`rounded-md px-2 py-1 text-[11px] font-medium border cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${
+                            className={`rounded-md px-2 py-1 text-[11px] font-medium border cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary transition-colors [&>option]:bg-[#1a1a2e] [&>option]:text-white ${
                               resp ? "bg-amber-500/20 text-amber-300 border-amber-500/30" : "bg-white/[0.04] border-white/[0.08] text-muted-foreground"
                             }`}
                           >
@@ -527,7 +501,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                           <select
                             value={canal || ""}
                             onChange={(e) => updateLeadField(lead.id, "canal", e.target.value || null)}
-                            className={`rounded-md px-2 py-1 text-[11px] font-medium border cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${
+                            className={`rounded-md px-2 py-1 text-[11px] font-medium border cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary transition-colors [&>option]:bg-[#1a1a2e] [&>option]:text-white ${
                               canal ? CANAL_STYLES[canal] || "bg-white/[0.04] border-white/[0.08] text-foreground" : "bg-white/[0.04] border-white/[0.08] text-muted-foreground"
                             }`}
                           >
@@ -540,6 +514,66 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                   })}
                 </tbody>
               </table>
+            </div>
+          </div>
+        )}
+
+        {/* CSV Modal */}
+        {showCsvModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowCsvModal(false)}>
+            <div className="bg-[hsl(var(--card))] border border-white/[0.1] rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-lg font-semibold text-foreground">Filtros para CSV</h3>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Aprobado</label>
+                  <select
+                    value={csvFilterAprobado}
+                    onChange={(e) => setCsvFilterAprobado(e.target.value)}
+                    className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white"
+                  >
+                    <option value="">Todos</option>
+                    <option value="SI">SI</option>
+                    <option value="NO">NO</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Responsable</label>
+                  <select
+                    value={csvFilterResponsable}
+                    onChange={(e) => setCsvFilterResponsable(e.target.value)}
+                    className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white"
+                  >
+                    <option value="">Todos</option>
+                    {RESPONSABLES.map((r) => <option key={r.label} value={r.label}>{r.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Canal</label>
+                  <select
+                    value={csvFilterCanal}
+                    onChange={(e) => setCsvFilterCanal(e.target.value)}
+                    className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white"
+                  >
+                    <option value="">Todos</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="Mail">Mail</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => setShowCsvModal(false)}
+                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium border border-white/[0.1] text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => { downloadFilteredCSV(); setShowCsvModal(false); }}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
+                >
+                  <Download className="w-4 h-4" /> Descargar
+                </button>
+              </div>
             </div>
           </div>
         )}
