@@ -405,7 +405,16 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                         <td className="px-3 py-2.5 text-muted-foreground font-mono text-[10px]">{lead.email || "—"}</td>
                         <td className="px-3 py-2.5">
                           {lead.linkedinUrl ? (
-                            <a href={lead.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 text-[10px] underline truncate max-w-[120px] block">Ver perfil</a>
+                            <div className="flex items-center gap-1.5 max-w-[200px]">
+                              <a href={lead.linkedinUrl} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 text-[10px] font-mono truncate underline">{lead.linkedinUrl}</a>
+                              <button
+                                onClick={() => { navigator.clipboard.writeText(lead.linkedinUrl); toast.success("URL copiada"); }}
+                                className="shrink-0 p-0.5 rounded hover:bg-white/[0.08] text-muted-foreground hover:text-foreground transition-colors"
+                                title="Copiar URL"
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+                              </button>
+                            </div>
                           ) : <span className="text-muted-foreground text-[10px]">—</span>}
                         </td>
                         <td className="px-3 py-2.5">
