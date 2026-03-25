@@ -736,7 +736,18 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
           </div>
         )}
 
-        {/* CSV Modal */}
+        {smartAssignField && (
+          <SmartAssignDialog
+            open={!!smartAssignField}
+            onOpenChange={(open) => !open && setSmartAssignField(null)}
+            field={smartAssignField}
+            fieldLabel={SMART_ASSIGN_LABELS[smartAssignField]}
+            options={SMART_ASSIGN_OPTIONS[smartAssignField]}
+            leadCountByQuartile={leadCountByQuartile}
+            onApply={(rules) => smartApplyRules(smartAssignField, rules)}
+          />
+        )}
+
         {showCsvModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowCsvModal(false)}>
             <div className="bg-[hsl(var(--card))] border border-white/[0.1] rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
