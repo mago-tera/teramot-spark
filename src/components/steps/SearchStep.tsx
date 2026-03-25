@@ -101,6 +101,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [showNewListDialog, setShowNewListDialog] = useState(false);
   const [newListName, setNewListName] = useState("");
   const [deletingListId, setDeletingListId] = useState<string | null>(null);
+  const [showApproval, setShowApproval] = useState(false);
 
   const deleteList = async (listId: string) => {
     // Delete leads first, then the list
