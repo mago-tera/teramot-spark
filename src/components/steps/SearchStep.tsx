@@ -329,7 +329,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     { label: "Gabo", email: "gabriel@teramot.com" },
     { label: "Valen", email: "valentina@teramot.com" },
   ];
-  const CALIFICACIONES = ["Top Fit", "Fit", "Not"];
+  const CALIFICACIONES = ["SI", "NO"];
   const CANALES = ["LinkedIn", "Mail"];
 
   const CALIFICACION_STYLES: Record<string, string> = {
