@@ -423,12 +423,6 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
           )}
         </div>
 
-        <button
-          onClick={onComplete}
-          className="px-6 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-        >
-          Continuar al tracking →
-        </button>
       </div>
     );
   }
