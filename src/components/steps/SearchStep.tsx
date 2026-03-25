@@ -301,12 +301,12 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       setProgress(100);
       setLogs((prev) => [
         ...prev,
-        `✓ ${scored.length} leads nuevos encontrados${scored.length < targetQty ? ` (de ${targetQty} solicitados)` : ""}`,
+        `✓ ${scored.length} leads nuevos cargados`,
       ]);
       toast.success(`${scored.length} leads nuevos agregados`);
     } catch (e: any) {
-      console.error("Apollo search error:", e);
-      toast.error(e.message || "Error buscando en Apollo");
+      console.error("Search error:", e);
+      toast.error(e.message || "Error cargando leads");
       setLogs((prev) => [...prev, `✗ Error: ${e.message}`]);
     } finally {
       setSearching(false);
