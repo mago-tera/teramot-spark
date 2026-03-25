@@ -473,16 +473,29 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         await supabase.from("leads").insert(rows);
       }
 
+      // Also copy from selected source lists if any
+      let copiedCount = 0;
+      if (listId && selectedSourceLists.length > 0) {
+        setLogs((prev) => [...prev, `📋 Copiando leads de ${selectedSourceLists.length} lista(s)...`]);
+        copiedCount = await copyLeadsFromLists(selectedSourceLists, activeCampaignId!, listId);
+        setSelectedSourceLists([]);
+      }
+
+      const totalCount = scored.length + copiedCount;
+      if (listId) {
+        await supabase.from("lists").update({ lead_count: totalCount }).eq("id", listId);
+      }
+
       if (listData) {
-        setLists((prev) => [{ ...listData, geo_mix: listData.geo_mix as Record<string, number> } as ListItem, ...prev]);
+        setLists((prev) => [{ ...listData, lead_count: totalCount, geo_mix: listData.geo_mix as Record<string, number> } as ListItem, ...prev]);
       }
 
       setProgress(100);
-      setLogs((prev) => [
-        ...prev,
-        `✓ ${scored.length} leads nuevos cargados`,
-      ]);
-      toast.success(`${scored.length} leads nuevos agregados`);
+      const parts = [];
+      if (scored.length > 0) parts.push(`${scored.length} nuevos`);
+      if (copiedCount > 0) parts.push(`${copiedCount} copiados`);
+      setLogs((prev) => [...prev, `✓ ${parts.join(" + ")} leads cargados`]);
+      toast.success(`${totalCount} leads agregados a la lista`);
     } catch (e: any) {
       console.error("Search error:", e);
       toast.error(e.message || "Error cargando leads");
