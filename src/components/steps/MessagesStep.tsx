@@ -1,7 +1,7 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { ScoredLead, GeneratedMessages } from "@/hooks/useWizard";
-import { Copy, RefreshCw, UserRound, ArrowLeft, MessageSquare } from "lucide-react";
-import { generateGroupMessages, generateAIMessages } from "@/lib/api";
+import { Copy, RefreshCw, UserRound, ArrowLeft, MessageSquare, Save, Pencil } from "lucide-react";
+import { generateGroupMessages, generateAIMessages, updateLeadMessages, updateBulkLeadMessages } from "@/lib/api";
 import { toast } from "sonner";
 
 interface Props {
@@ -11,6 +11,126 @@ interface Props {
 }
 
 type Mode = "objective" | "group" | "personalized";
+
+const MESSAGE_FIELDS: { key: keyof GeneratedMessages; label: string; maxChars?: number }[] = [
+  { key: "linkedin", label: "LinkedIn (máx 300 chars)", maxChars: 300 },
+  { key: "email_asunto", label: "Asunto email" },
+  { key: "email_cuerpo", label: "Cuerpo email" },
+  { key: "followup_d4", label: "Follow-up día 4" },
+  { key: "cierre_d9", label: "Cierre día 9" },
+];
+
+function MessageEditor({
+  messages,
+  messageKey,
+  onSave,
+}: {
+  messages: GeneratedMessages;
+  messageKey: string;
+  onSave: (updated: GeneratedMessages) => void;
+}) {
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  const startEdit = (key: string, value: string) => {
+    setEditing(key);
+    setDraft(value);
+  };
+
+  const saveEdit = async (key: string) => {
+    setSaving(true);
+    const updated = { ...messages, [key]: draft };
+    await onSave(updated);
+    setEditing(null);
+    setSaving(false);
+  };
+
+  const cancelEdit = () => {
+    setEditing(null);
+    setDraft("");
+  };
+
+  const copyText = (text: string, key: string) => {
+    navigator.clipboard.writeText(text);
+    setCopied(key);
+    toast.success("Copiado al portapapeles");
+    setTimeout(() => setCopied(null), 1500);
+  };
+
+  return (
+    <div className="space-y-3">
+      {MESSAGE_FIELDS.map((field) => {
+        const value = messages[field.key];
+        const fullKey = `${messageKey}-${field.key}`;
+        const isEditing = editing === field.key;
+
+        return (
+          <div key={field.key} className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{field.label}</span>
+              <div className="flex items-center gap-1">
+                {field.maxChars && (
+                  <span className={`text-[10px] font-mono ${(isEditing ? draft : value).length > field.maxChars ? "text-destructive" : "text-muted-foreground"}`}>
+                    {(isEditing ? draft : value).length}/{field.maxChars}
+                  </span>
+                )}
+                {!isEditing && (
+                  <>
+                    <button
+                      onClick={() => startEdit(field.key, value)}
+                      className="p-1 rounded hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors"
+                      title="Editar"
+                    >
+                      <Pencil className="w-3 h-3" />
+                    </button>
+                    <button
+                      onClick={() => copyText(value, fullKey)}
+                      className="p-1 rounded hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <Copy className="w-3 h-3" />
+                    </button>
+                  </>
+                )}
+              </div>
+            </div>
+            {isEditing ? (
+              <div className="space-y-2">
+                <textarea
+                  value={draft}
+                  onChange={(e) => setDraft(e.target.value)}
+                  className="glass-input w-full min-h-[80px] text-xs resize-y"
+                  autoFocus
+                />
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => saveEdit(field.key)}
+                    disabled={saving}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-lg text-[11px] bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                  >
+                    <Save className="w-3 h-3" />
+                    {saving ? "Guardando..." : "Guardar"}
+                  </button>
+                  <button
+                    onClick={cancelEdit}
+                    className="px-3 py-1 rounded-lg text-[11px] border border-white/10 text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/[0.06] text-xs text-foreground whitespace-pre-wrap leading-relaxed">
+                {value}
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
 
 export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props) {
   const [mode, setMode] = useState<Mode>("objective");
@@ -26,7 +146,6 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
   // Personalized mode state
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [generating, setGenerating] = useState<string | null>(null);
-  const [copied, setCopied] = useState<string | null>(null);
 
   const selectedLead = scoredLeads.find((l) => l.id === selectedId);
   const sortedLeads = [...scoredLeads].sort((a, b) => {
@@ -36,12 +155,33 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
 
   const canProceed = objective.trim().length > 0 && whatToCommunicate.trim().length > 0;
 
+  const persistLeadMessages = useCallback(async (leadId: string, messages: GeneratedMessages) => {
+    try {
+      await updateLeadMessages(leadId, messages as unknown as Record<string, string>);
+    } catch (e) {
+      console.error("Error persisting messages:", e);
+    }
+  }, []);
+
+  const persistBulkMessages = useCallback(async (leadIds: string[], messages: GeneratedMessages) => {
+    try {
+      await updateBulkLeadMessages(leadIds, messages as unknown as Record<string, string>);
+    } catch (e) {
+      console.error("Error persisting bulk messages:", e);
+    }
+  }, []);
+
   const generateForGroup = async () => {
     setGeneratingGroup(true);
     try {
       const representative = sortedLeads[0];
       const messages = await generateGroupMessages(representative, "Q2", canal, objective, whatToCommunicate);
       setGroupMessages(messages);
+      // Persist group messages to all leads
+      const allIds = scoredLeads.map((l) => l.id);
+      setScoredLeads(scoredLeads.map((l) => ({ ...l, messages })));
+      await persistBulkMessages(allIds, messages);
+      toast.success("Mensajes generados y guardados");
     } catch (e: any) {
       console.error("Error generating group messages:", e);
       toast.error(e.message || "Error generando mensajes");
@@ -56,6 +196,8 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
       const lead = scoredLeads.find((l) => l.id === leadId)!;
       const messages = await generateAIMessages(lead, canal, objective, whatToCommunicate);
       setScoredLeads(scoredLeads.map((l) => (l.id === leadId ? { ...l, messages } : l)));
+      await persistLeadMessages(leadId, messages);
+      toast.success("Mensajes generados y guardados");
     } catch (e: any) {
       console.error("Error generating messages:", e);
       toast.error(e.message || "Error generando mensajes");
@@ -64,11 +206,18 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
     }
   };
 
-  const copyText = (text: string, key: string) => {
-    navigator.clipboard.writeText(text);
-    setCopied(key);
-    toast.success("Copiado al portapapeles");
-    setTimeout(() => setCopied(null), 1500);
+  const handleSaveGroupMessages = async (updated: GeneratedMessages) => {
+    setGroupMessages(updated);
+    const allIds = scoredLeads.map((l) => l.id);
+    setScoredLeads(scoredLeads.map((l) => ({ ...l, messages: updated })));
+    await persistBulkMessages(allIds, updated);
+    toast.success("Mensaje actualizado");
+  };
+
+  const handleSaveLeadMessages = async (leadId: string, updated: GeneratedMessages) => {
+    setScoredLeads(scoredLeads.map((l) => (l.id === leadId ? { ...l, messages: updated } : l)));
+    await persistLeadMessages(leadId, updated);
+    toast.success("Mensaje actualizado");
   };
 
   // ─── STEP 1: Objective ───
@@ -82,7 +231,6 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
           </p>
         </div>
 
-        {/* Mode selection first */}
         <div className="grid grid-cols-2 gap-4">
           <button
             onClick={() => setSelectedMode("group")}
@@ -127,7 +275,6 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
           </button>
         </div>
 
-        {/* Objective and message fields */}
         {selectedMode && (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -182,7 +329,7 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
     );
   }
 
-  // ─── GROUP MODE: single message for all ───
+  // ─── GROUP MODE ───
   if (mode === "group") {
     return (
       <div className="space-y-6">
@@ -251,33 +398,12 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
           </div>
 
           {groupMessages && (
-            <div className="p-4 space-y-3">
-              {[
-                { key: "linkedin", label: "LinkedIn (máx 300 chars)", value: groupMessages.linkedin, maxChars: 300 },
-                { key: "email_asunto", label: "Asunto email", value: groupMessages.email_asunto },
-                { key: "email_cuerpo", label: "Cuerpo email", value: groupMessages.email_cuerpo },
-                { key: "followup_d4", label: "Follow-up día 4", value: groupMessages.followup_d4 },
-                { key: "cierre_d9", label: "Cierre día 9", value: groupMessages.cierre_d9 },
-              ].map((msg) => (
-                <div key={msg.key} className="space-y-1">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] uppercase tracking-wider text-muted-foreground">{msg.label}</span>
-                    <div className="flex items-center gap-1">
-                      {msg.maxChars && (
-                        <span className={`text-[10px] font-mono ${msg.value.length > msg.maxChars ? "text-destructive" : "text-muted-foreground"}`}>
-                          {msg.value.length}/{msg.maxChars}
-                        </span>
-                      )}
-                      <button onClick={() => copyText(msg.value, `group-${msg.key}`)} className="p-1 rounded hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors">
-                        <Copy className="w-3 h-3" />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/[0.06] text-xs text-foreground whitespace-pre-wrap leading-relaxed">
-                    {msg.value}
-                  </div>
-                </div>
-              ))}
+            <div className="p-4">
+              <MessageEditor
+                messages={groupMessages}
+                messageKey="group"
+                onSave={handleSaveGroupMessages}
+              />
             </div>
           )}
         </div>
@@ -330,7 +456,7 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
           ))}
         </div>
 
-        {/* Message preview */}
+        {/* Message preview / editor */}
         <div className="flex-1 glass-card overflow-y-auto">
           {selectedLead ? (
             <div className="p-5 space-y-4">
@@ -376,32 +502,11 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {[
-                    { key: "linkedin", label: "LinkedIn (máx 300 chars)", value: selectedLead.messages.linkedin, maxChars: 300 },
-                    { key: "email_asunto", label: "Asunto email", value: selectedLead.messages.email_asunto },
-                    { key: "email_cuerpo", label: "Cuerpo email", value: selectedLead.messages.email_cuerpo },
-                    { key: "followup_d4", label: "Follow-up día 4", value: selectedLead.messages.followup_d4 },
-                    { key: "cierre_d9", label: "Cierre día 9", value: selectedLead.messages.cierre_d9 },
-                  ].map((msg) => (
-                    <div key={msg.key} className="space-y-1.5">
-                      <div className="flex items-center justify-between">
-                        <span className="text-[11px] uppercase tracking-wider text-muted-foreground">{msg.label}</span>
-                        <div className="flex items-center gap-1">
-                          {msg.maxChars && (
-                            <span className={`text-[10px] font-mono ${msg.value.length > msg.maxChars ? "text-destructive" : "text-muted-foreground"}`}>
-                              {msg.value.length}/{msg.maxChars}
-                            </span>
-                          )}
-                          <button onClick={() => copyText(msg.value, msg.key)} className="p-1 rounded hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors">
-                            <Copy className="w-3 h-3" />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="p-3 rounded-lg bg-white/[0.02] border border-white/[0.06] text-xs text-foreground whitespace-pre-wrap leading-relaxed">
-                        {msg.value}
-                      </div>
-                    </div>
-                  ))}
+                  <MessageEditor
+                    messages={selectedLead.messages}
+                    messageKey={selectedLead.id}
+                    onSave={(updated) => handleSaveLeadMessages(selectedLead.id, updated)}
+                  />
 
                   <button
                     onClick={() => {

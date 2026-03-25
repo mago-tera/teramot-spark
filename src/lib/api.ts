@@ -77,6 +77,16 @@ export async function searchApollo(config: CampaignConfig, page = 1, excludeEmai
   return data.leads;
 }
 
+export async function updateLeadMessages(leadId: string, messages: Record<string, string>) {
+  const { error } = await supabase.from("leads").update({ messages }).eq("id", leadId);
+  if (error) throw error;
+}
+
+export async function updateBulkLeadMessages(leadIds: string[], messages: Record<string, string>) {
+  const { error } = await supabase.from("leads").update({ messages }).in("id", leadIds);
+  if (error) throw error;
+}
+
 export async function createApolloSequence(campaignName: string, leads: ScoredLead[]) {
   const leadsWithMessages = leads.filter(l => l.messages && l.email);
 
