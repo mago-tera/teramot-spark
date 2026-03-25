@@ -333,9 +333,8 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const CANALES = ["LinkedIn", "Mail"];
 
   const CALIFICACION_STYLES: Record<string, string> = {
-    "Top Fit": "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
-    "Fit": "bg-green-500/20 text-green-300 border-green-500/30",
-    "Not": "bg-rose-500/20 text-rose-300 border-rose-500/30",
+    "SI": "bg-green-500/20 text-green-300 border-green-500/30",
+    "NO": "bg-rose-500/20 text-rose-300 border-rose-500/30",
   };
   const CANAL_STYLES: Record<string, string> = {
     "LinkedIn": "bg-blue-500/20 text-blue-300 border-blue-500/30",
