@@ -215,6 +215,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       .then(({ data }) => {
         if (data) {
            const mapped: ScoredLead[] = data
+            .sort((a, b) => (b.score || 0) - (a.score || 0))
             .map((d) => ({
             id: d.id,
             firstName: d.first_name || "",
@@ -538,13 +539,18 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     if (error) toast.error("Error al guardar");
   };
 
-  const bulkUpdateField = async (field: string, value: string) => {
+  const bulkUpdateField = async (field: string, value: string, quartileFilter?: string) => {
     const val = value === "__clear__" ? null : value;
-    const ids = listLeads.map((l) => l.id);
-    setListLeads((prev) => prev.map((l) => ({ ...l, [field]: val })));
+    const filtered = quartileFilter
+      ? listLeads.filter((l) => l.quartile === quartileFilter)
+      : listLeads;
+    const ids = filtered.map((l) => l.id);
+    if (ids.length === 0) return;
+    setListLeads((prev) => prev.map((l) => ids.includes(l.id) ? { ...l, [field]: val } : l));
     const { error } = await supabase.from("leads").update({ [field]: val }).in("id", ids);
+    const quartileLabel = quartileFilter ? (QUARTILE_STYLES as any)[quartileFilter]?.label || quartileFilter : "todos";
     if (error) toast.error("Error al guardar");
-    else toast.success(val ? `Asignado "${val}" a ${ids.length} leads` : `Limpiado en ${ids.length} leads`);
+    else toast.success(val ? `"${val}" → ${ids.length} leads (${quartileLabel})` : `Limpiado en ${ids.length} leads (${quartileLabel})`);
   };
 
   // Drill-down: show leads of selected list
@@ -593,13 +599,23 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                         Aprobado
                         <select
                           defaultValue=""
-                          onChange={(e) => { bulkUpdateField("calificacion", e.target.value); e.target.value = ""; }}
+                          onChange={(e) => {
+                            const [q, v] = e.target.value.split("|");
+                            bulkUpdateField("calificacion", v, q === "ALL" ? undefined : q);
+                            e.target.value = "";
+                          }}
                           className="ml-1 rounded px-1.5 py-0.5 text-[9px] bg-white/[0.06] border border-white/[0.1] text-muted-foreground cursor-pointer focus:outline-none [&>option]:bg-[#1a1a2e] [&>option]:text-white"
-                          title="Asignar a todos"
+                          title="Asignación inteligente"
                         >
-                          <option value="" disabled>⚡ Todos</option>
-                          <option value="__clear__">—</option>
-                          {CALIFICACIONES.map((c) => <option key={c} value={c}>{c}</option>)}
+                          <option value="" disabled>⚡ Asignar</option>
+                          <option value="ALL|__clear__">— Limpiar todos</option>
+                          {(["Q1", "Q2", "Q3", "Q4"] as const).map((q) => (
+                            CALIFICACIONES.map((c) => (
+                              <option key={`${q}-${c}`} value={`${q}|${c}`}>
+                                {c} → {(QUARTILE_STYLES as any)[q]?.label}
+                              </option>
+                            ))
+                          ))}
                         </select>
                       </div>
                     </th>
@@ -608,13 +624,23 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                         Responsable
                         <select
                           defaultValue=""
-                          onChange={(e) => { bulkUpdateField("responsable", e.target.value); e.target.value = ""; }}
+                          onChange={(e) => {
+                            const [q, v] = e.target.value.split("|");
+                            bulkUpdateField("responsable", v, q === "ALL" ? undefined : q);
+                            e.target.value = "";
+                          }}
                           className="ml-1 rounded px-1.5 py-0.5 text-[9px] bg-white/[0.06] border border-white/[0.1] text-muted-foreground cursor-pointer focus:outline-none [&>option]:bg-[#1a1a2e] [&>option]:text-white"
-                          title="Asignar a todos"
+                          title="Asignación inteligente"
                         >
-                          <option value="" disabled>⚡ Todos</option>
-                          <option value="__clear__">—</option>
-                          {RESPONSABLES.map((r) => <option key={r.label} value={r.label}>{r.label}</option>)}
+                          <option value="" disabled>⚡ Asignar</option>
+                          <option value="ALL|__clear__">— Limpiar todos</option>
+                          {(["Q1", "Q2", "Q3", "Q4"] as const).map((q) => (
+                            RESPONSABLES.map((r) => (
+                              <option key={`${q}-${r.label}`} value={`${q}|${r.label}`}>
+                                {r.label} → {(QUARTILE_STYLES as any)[q]?.label}
+                              </option>
+                            ))
+                          ))}
                         </select>
                       </div>
                     </th>
@@ -623,13 +649,23 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                         Canal
                         <select
                           defaultValue=""
-                          onChange={(e) => { bulkUpdateField("canal", e.target.value); e.target.value = ""; }}
+                          onChange={(e) => {
+                            const [q, v] = e.target.value.split("|");
+                            bulkUpdateField("canal", v, q === "ALL" ? undefined : q);
+                            e.target.value = "";
+                          }}
                           className="ml-1 rounded px-1.5 py-0.5 text-[9px] bg-white/[0.06] border border-white/[0.1] text-muted-foreground cursor-pointer focus:outline-none [&>option]:bg-[#1a1a2e] [&>option]:text-white"
-                          title="Asignar a todos"
+                          title="Asignación inteligente"
                         >
-                          <option value="" disabled>⚡ Todos</option>
-                          <option value="__clear__">—</option>
-                          {CANALES.map((c) => <option key={c} value={c}>{c}</option>)}
+                          <option value="" disabled>⚡ Asignar</option>
+                          <option value="ALL|__clear__">— Limpiar todos</option>
+                          {(["Q1", "Q2", "Q3", "Q4"] as const).map((q) => (
+                            CANALES.map((c) => (
+                              <option key={`${q}-${c}`} value={`${q}|${c}`}>
+                                {c} → {(QUARTILE_STYLES as any)[q]?.label}
+                              </option>
+                            ))
+                          ))}
                         </select>
                       </div>
                     </th>
