@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { ICPForm } from "@/components/steps/ICPForm";
-import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users } from "lucide-react";
+import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users, Download } from "lucide-react";
 import { Trash2 } from "lucide-react";
 import {
   AlertDialog,
@@ -98,6 +98,49 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [listLeads, setListLeads] = useState<ScoredLead[]>([]);
   const [editingListId, setEditingListId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [csvFilterAprobado, setCsvFilterAprobado] = useState("");
+  const [csvFilterResponsable, setCsvFilterResponsable] = useState("");
+  const [csvFilterCanal, setCsvFilterCanal] = useState("");
+
+  const downloadFilteredCSV = () => {
+    let filtered = listLeads.filter((l) => {
+      const cal = (l as any).calificacion as string | null;
+      const resp = (l as any).responsable as string | null;
+      const canal = (l as any).canal as string | null;
+      if (csvFilterAprobado && cal !== csvFilterAprobado) return false;
+      if (csvFilterResponsable && resp !== csvFilterResponsable) return false;
+      if (csvFilterCanal && canal !== csvFilterCanal) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      toast.error("No hay leads con esos filtros");
+      return;
+    }
+
+    const canalFilter = csvFilterCanal || null;
+    const headers = canalFilter === "LinkedIn"
+      ? ["Nombre", "Apellido", "LinkedIn"]
+      : canalFilter === "Mail"
+        ? ["Nombre", "Apellido", "Email"]
+        : ["Nombre", "Apellido", "Email", "LinkedIn"];
+
+    const rows = filtered.map((l) => {
+      if (canalFilter === "LinkedIn") return [l.firstName, l.lastName, l.linkedinUrl || ""];
+      if (canalFilter === "Mail") return [l.firstName, l.lastName, l.email || ""];
+      return [l.firstName, l.lastName, l.email || "", l.linkedinUrl || ""];
+    });
+
+    const csv = [headers, ...rows].map((r) => r.map((v) => `"${(v || "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `leads_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`CSV descargado con ${filtered.length} leads`);
+  };
   const [showNewListDialog, setShowNewListDialog] = useState(false);
   const [newListName, setNewListName] = useState("");
   const [deletingListId, setDeletingListId] = useState<string | null>(null);
@@ -367,7 +410,40 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               {selectedList?.profile} · {listLeads.length} leads
             </p>
           </div>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2 flex-wrap">
+            {/* CSV Filters */}
+            <select
+              value={csvFilterAprobado}
+              onChange={(e) => setCsvFilterAprobado(e.target.value)}
+              className="rounded-md px-2 py-1.5 text-[11px] font-medium border bg-white/[0.04] border-white/[0.08] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="">Aprobado: Todos</option>
+              <option value="SI">SI</option>
+              <option value="NO">NO</option>
+            </select>
+            <select
+              value={csvFilterResponsable}
+              onChange={(e) => setCsvFilterResponsable(e.target.value)}
+              className="rounded-md px-2 py-1.5 text-[11px] font-medium border bg-white/[0.04] border-white/[0.08] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="">Responsable: Todos</option>
+              {RESPONSABLES.map((r) => <option key={r.label} value={r.label}>{r.label}</option>)}
+            </select>
+            <select
+              value={csvFilterCanal}
+              onChange={(e) => setCsvFilterCanal(e.target.value)}
+              className="rounded-md px-2 py-1.5 text-[11px] font-medium border bg-white/[0.04] border-white/[0.08] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="">Canal: Todos</option>
+              <option value="LinkedIn">LinkedIn</option>
+              <option value="Mail">Mail</option>
+            </select>
+            <button
+              onClick={() => downloadFilteredCSV()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" /> Bajar CSV
+            </button>
             <button
               onClick={onComplete}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
