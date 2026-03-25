@@ -6,8 +6,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { ICPForm } from "@/components/steps/ICPForm";
-import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users, Download } from "lucide-react";
+import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users, Download, Zap } from "lucide-react";
 import { Trash2 } from "lucide-react";
+import { SmartAssignDialog } from "@/components/SmartAssignDialog";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -150,6 +151,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   // All lists across all campaigns in this project (for copy feature)
   const [projectLists, setProjectLists] = useState<(ListItem & { campaignName?: string })[]>([]);
   const [savingField, setSavingField] = useState<Record<string, boolean>>({});
+  const [smartAssignField, setSmartAssignField] = useState<"calificacion" | "responsable" | "canal" | null>(null);
 
   const deleteList = async (listId: string) => {
     // Delete leads first, then the list
@@ -553,6 +555,50 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     else toast.success(val ? `"${val}" → ${ids.length} leads (${quartileLabel})` : `Limpiado en ${ids.length} leads (${quartileLabel})`);
   };
 
+  const leadCountByQuartile: Record<string, number> = {};
+  for (const l of listLeads) {
+    leadCountByQuartile[l.quartile] = (leadCountByQuartile[l.quartile] || 0) + 1;
+  }
+
+  const smartApplyRules = async (
+    field: string,
+    rules: { value: string; quartile: string; percentage: number }[]
+  ) => {
+    // Handle clear all
+    if (rules.length === 1 && rules[0].value === "__clear__" && rules[0].quartile === "ALL") {
+      await bulkUpdateField(field, "__clear__");
+      return;
+    }
+
+    for (const rule of rules) {
+      const quartileLeads = listLeads.filter((l) => l.quartile === rule.quartile);
+      const count = Math.round((rule.percentage / 100) * quartileLeads.length);
+      // Pick leads that don't have this field set yet first, then overflow
+      const unset = quartileLeads.filter((l) => !(l as any)[field]);
+      const alreadySet = quartileLeads.filter((l) => (l as any)[field]);
+      const ordered = [...unset, ...alreadySet];
+      const selected = ordered.slice(0, count);
+      const ids = selected.map((l) => l.id);
+      if (ids.length === 0) continue;
+
+      setListLeads((prev) => prev.map((l) => ids.includes(l.id) ? { ...l, [field]: rule.value } : l));
+      await supabase.from("leads").update({ [field]: rule.value }).in("id", ids);
+    }
+    toast.success(`Asignación aplicada a ${rules.reduce((s, r) => s + Math.round((r.percentage / 100) * (leadCountByQuartile[r.quartile] || 0)), 0)} leads`);
+  };
+
+  const SMART_ASSIGN_OPTIONS: Record<string, { label: string; value: string }[]> = {
+    calificacion: CALIFICACIONES.map((c) => ({ label: c, value: c })),
+    responsable: RESPONSABLES.map((r) => ({ label: r.label, value: r.label })),
+    canal: CANALES.map((c) => ({ label: c, value: c })),
+  };
+
+  const SMART_ASSIGN_LABELS: Record<string, string> = {
+    calificacion: "Aprobado",
+    responsable: "Responsable",
+    canal: "Canal",
+  };
+
   // Drill-down: show leads of selected list
   if (selectedListId) {
     const selectedList = lists.find((l) => l.id === selectedListId);
@@ -594,81 +640,20 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                     {["Nombre", "Cargo", "Empresa", "País", "Email", "LinkedIn", "Score"].map((h) => (
                       <th key={h} className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">{h}</th>
                     ))}
-                    <th className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
-                        Aprobado
-                        <select
-                          defaultValue=""
-                          onChange={(e) => {
-                            const [q, v] = e.target.value.split("|");
-                            bulkUpdateField("calificacion", v, q === "ALL" ? undefined : q);
-                            e.target.value = "";
-                          }}
-                          className="ml-1 rounded px-1.5 py-0.5 text-[9px] bg-white/[0.06] border border-white/[0.1] text-muted-foreground cursor-pointer focus:outline-none [&>option]:bg-[#1a1a2e] [&>option]:text-white"
-                          title="Asignación inteligente"
-                        >
-                          <option value="" disabled>⚡ Asignar</option>
-                          <option value="ALL|__clear__">— Limpiar todos</option>
-                          {(["Q1", "Q2", "Q3", "Q4"] as const).map((q) => (
-                            CALIFICACIONES.map((c) => (
-                              <option key={`${q}-${c}`} value={`${q}|${c}`}>
-                                {c} → {(QUARTILE_STYLES as any)[q]?.label}
-                              </option>
-                            ))
-                          ))}
-                        </select>
-                      </div>
-                    </th>
-                    <th className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
-                        Responsable
-                        <select
-                          defaultValue=""
-                          onChange={(e) => {
-                            const [q, v] = e.target.value.split("|");
-                            bulkUpdateField("responsable", v, q === "ALL" ? undefined : q);
-                            e.target.value = "";
-                          }}
-                          className="ml-1 rounded px-1.5 py-0.5 text-[9px] bg-white/[0.06] border border-white/[0.1] text-muted-foreground cursor-pointer focus:outline-none [&>option]:bg-[#1a1a2e] [&>option]:text-white"
-                          title="Asignación inteligente"
-                        >
-                          <option value="" disabled>⚡ Asignar</option>
-                          <option value="ALL|__clear__">— Limpiar todos</option>
-                          {(["Q1", "Q2", "Q3", "Q4"] as const).map((q) => (
-                            RESPONSABLES.map((r) => (
-                              <option key={`${q}-${r.label}`} value={`${q}|${r.label}`}>
-                                {r.label} → {(QUARTILE_STYLES as any)[q]?.label}
-                              </option>
-                            ))
-                          ))}
-                        </select>
-                      </div>
-                    </th>
-                    <th className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">
-                      <div className="flex items-center gap-1.5">
-                        Canal
-                        <select
-                          defaultValue=""
-                          onChange={(e) => {
-                            const [q, v] = e.target.value.split("|");
-                            bulkUpdateField("canal", v, q === "ALL" ? undefined : q);
-                            e.target.value = "";
-                          }}
-                          className="ml-1 rounded px-1.5 py-0.5 text-[9px] bg-white/[0.06] border border-white/[0.1] text-muted-foreground cursor-pointer focus:outline-none [&>option]:bg-[#1a1a2e] [&>option]:text-white"
-                          title="Asignación inteligente"
-                        >
-                          <option value="" disabled>⚡ Asignar</option>
-                          <option value="ALL|__clear__">— Limpiar todos</option>
-                          {(["Q1", "Q2", "Q3", "Q4"] as const).map((q) => (
-                            CANALES.map((c) => (
-                              <option key={`${q}-${c}`} value={`${q}|${c}`}>
-                                {c} → {(QUARTILE_STYLES as any)[q]?.label}
-                              </option>
-                            ))
-                          ))}
-                        </select>
-                      </div>
-                    </th>
+                    {(["calificacion", "responsable", "canal"] as const).map((f) => (
+                      <th key={f} className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">
+                        <div className="flex items-center gap-1.5">
+                          {SMART_ASSIGN_LABELS[f]}
+                          <button
+                            onClick={() => setSmartAssignField(f)}
+                            className="ml-1 flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-colors cursor-pointer"
+                            title="Asignación inteligente"
+                          >
+                            <Zap className="w-3 h-3" /> Asignar
+                          </button>
+                        </div>
+                      </th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody>
@@ -751,7 +736,18 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
           </div>
         )}
 
-        {/* CSV Modal */}
+        {smartAssignField && (
+          <SmartAssignDialog
+            open={!!smartAssignField}
+            onOpenChange={(open) => !open && setSmartAssignField(null)}
+            field={smartAssignField}
+            fieldLabel={SMART_ASSIGN_LABELS[smartAssignField]}
+            options={SMART_ASSIGN_OPTIONS[smartAssignField]}
+            leadCountByQuartile={leadCountByQuartile}
+            onApply={(rules) => smartApplyRules(smartAssignField, rules)}
+          />
+        )}
+
         {showCsvModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowCsvModal(false)}>
             <div className="bg-[hsl(var(--card))] border border-white/[0.1] rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
