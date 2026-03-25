@@ -1,7 +1,8 @@
 import { useState, useCallback } from "react";
-import { ScoredLead, GeneratedMessages } from "@/hooks/useWizard";
-import { Copy, RefreshCw, UserRound, ArrowLeft, MessageSquare, Save, Pencil } from "lucide-react";
-import { generateGroupMessages, generateAIMessages, updateLeadMessages, updateBulkLeadMessages } from "@/lib/api";
+import { ScoredLead } from "@/hooks/useWizard";
+import { Copy, RefreshCw, MessageSquare, Save, Pencil, Sparkles, ArrowLeft } from "lucide-react";
+import { generateGroupMessages, updateBulkLeadMessages } from "@/lib/api";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface Props {
@@ -10,33 +11,40 @@ interface Props {
   onComplete: () => void;
 }
 
-type Mode = "objective" | "group" | "personalized";
+interface SimpleMessages {
+  linkedin: string;
+  email_asunto: string;
+  email_cuerpo: string;
+}
 
-const MESSAGE_FIELDS: { key: keyof GeneratedMessages; label: string; maxChars?: number }[] = [
+const MESSAGE_FIELDS: { key: keyof SimpleMessages; label: string; maxChars?: number }[] = [
   { key: "linkedin", label: "LinkedIn (máx 300 chars)", maxChars: 300 },
   { key: "email_asunto", label: "Asunto email" },
   { key: "email_cuerpo", label: "Cuerpo email" },
-  { key: "followup_d4", label: "Follow-up día 4" },
-  { key: "cierre_d9", label: "Cierre día 9" },
 ];
 
 function MessageEditor({
   messages,
-  messageKey,
   onSave,
+  onAIEdit,
+  aiEditing,
 }: {
-  messages: GeneratedMessages;
-  messageKey: string;
-  onSave: (updated: GeneratedMessages) => void;
+  messages: SimpleMessages;
+  onSave: (updated: SimpleMessages) => void;
+  onAIEdit: (key: keyof SimpleMessages, instruction: string) => void;
+  aiEditing: string | null;
 }) {
   const [editing, setEditing] = useState<string | null>(null);
   const [draft, setDraft] = useState("");
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState<string | null>(null);
+  const [aiInstruction, setAiInstruction] = useState("");
+  const [showAiInput, setShowAiInput] = useState<string | null>(null);
 
   const startEdit = (key: string, value: string) => {
     setEditing(key);
     setDraft(value);
+    setShowAiInput(null);
   };
 
   const saveEdit = async (key: string) => {
@@ -47,11 +55,6 @@ function MessageEditor({
     setSaving(false);
   };
 
-  const cancelEdit = () => {
-    setEditing(null);
-    setDraft("");
-  };
-
   const copyText = (text: string, key: string) => {
     navigator.clipboard.writeText(text);
     setCopied(key);
@@ -60,11 +63,11 @@ function MessageEditor({
   };
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {MESSAGE_FIELDS.map((field) => {
         const value = messages[field.key];
-        const fullKey = `${messageKey}-${field.key}`;
         const isEditing = editing === field.key;
+        const isAiEditing = aiEditing === field.key;
 
         return (
           <div key={field.key} className="space-y-1.5">
@@ -79,14 +82,24 @@ function MessageEditor({
                 {!isEditing && (
                   <>
                     <button
+                      onClick={() => {
+                        setShowAiInput(showAiInput === field.key ? null : field.key);
+                        setAiInstruction("");
+                      }}
+                      className="p-1 rounded hover:bg-white/[0.06] text-muted-foreground hover:text-primary transition-colors"
+                      title="Editar con IA"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                    </button>
+                    <button
                       onClick={() => startEdit(field.key, value)}
                       className="p-1 rounded hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors"
-                      title="Editar"
+                      title="Editar manual"
                     >
                       <Pencil className="w-3 h-3" />
                     </button>
                     <button
-                      onClick={() => copyText(value, fullKey)}
+                      onClick={() => copyText(value, field.key)}
                       className="p-1 rounded hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors"
                     >
                       <Copy className="w-3 h-3" />
@@ -95,6 +108,40 @@ function MessageEditor({
                 )}
               </div>
             </div>
+
+            {/* AI edit input */}
+            {showAiInput === field.key && !isEditing && (
+              <div className="flex gap-2">
+                <input
+                  value={aiInstruction}
+                  onChange={(e) => setAiInstruction(e.target.value)}
+                  placeholder="Ej: Hacelo más corto, cambiá el tono a informal..."
+                  className="glass-input flex-1 text-xs py-1.5"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && aiInstruction.trim()) {
+                      onAIEdit(field.key, aiInstruction);
+                      setShowAiInput(null);
+                      setAiInstruction("");
+                    }
+                  }}
+                  autoFocus
+                />
+                <button
+                  onClick={() => {
+                    if (aiInstruction.trim()) {
+                      onAIEdit(field.key, aiInstruction);
+                      setShowAiInput(null);
+                      setAiInstruction("");
+                    }
+                  }}
+                  disabled={!aiInstruction.trim() || !!isAiEditing}
+                  className="px-3 py-1.5 rounded-lg text-[11px] bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  {isAiEditing ? "..." : "Aplicar"}
+                </button>
+              </div>
+            )}
+
             {isEditing ? (
               <div className="space-y-2">
                 <textarea
@@ -113,7 +160,7 @@ function MessageEditor({
                     {saving ? "Guardando..." : "Guardar"}
                   </button>
                   <button
-                    onClick={cancelEdit}
+                    onClick={() => setEditing(null)}
                     className="px-3 py-1 rounded-lg text-[11px] border border-white/10 text-muted-foreground hover:text-foreground transition-colors"
                   >
                     Cancelar
@@ -121,7 +168,7 @@ function MessageEditor({
                 </div>
               </div>
             ) : (
-              <div className="p-2.5 rounded-lg bg-white/[0.02] border border-white/[0.06] text-xs text-foreground whitespace-pre-wrap leading-relaxed">
+              <div className={`p-2.5 rounded-lg bg-white/[0.02] border border-white/[0.06] text-xs text-foreground whitespace-pre-wrap leading-relaxed ${isAiEditing ? "opacity-50 animate-pulse" : ""}`}>
                 {value}
               </div>
             )}
@@ -136,414 +183,170 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
   const leadsWithMessages = scoredLeads.filter((l) => l.messages);
   const hasExistingMessages = leadsWithMessages.length > 0;
 
-  // Check if all leads share the same messages (group mode)
-  const allSameMessages = hasExistingMessages && leadsWithMessages.length > 1 &&
-    leadsWithMessages.every((l) => JSON.stringify(l.messages) === JSON.stringify(leadsWithMessages[0].messages));
-
-  const initialMode: Mode = hasExistingMessages
-    ? (allSameMessages ? "group" : "personalized")
-    : "objective";
-
-  const [mode, setMode] = useState<Mode>(initialMode);
-  const [objective, setObjective] = useState("");
-  const [whatToCommunicate, setWhatToCommunicate] = useState("");
-  const [selectedMode, setSelectedMode] = useState<"group" | "personalized" | null>(null);
-
-  // Group mode state
-  const [canal, setCanal] = useState<"linkedin" | "email">("linkedin");
-  const [generatingGroup, setGeneratingGroup] = useState(false);
-  const [groupMessages, setGroupMessages] = useState<GeneratedMessages | null>(
-    allSameMessages ? leadsWithMessages[0].messages! : null
+  const [prompt, setPrompt] = useState("");
+  const [generating, setGenerating] = useState(false);
+  const [aiEditing, setAiEditing] = useState<string | null>(null);
+  const [messages, setMessages] = useState<SimpleMessages | null>(
+    hasExistingMessages && leadsWithMessages[0].messages
+      ? {
+          linkedin: (leadsWithMessages[0].messages as any).linkedin || "",
+          email_asunto: (leadsWithMessages[0].messages as any).email_asunto || "",
+          email_cuerpo: (leadsWithMessages[0].messages as any).email_cuerpo || "",
+        }
+      : null
   );
 
-  // Personalized mode state
-  const [selectedId, setSelectedId] = useState<string | null>(
-    hasExistingMessages && !allSameMessages ? leadsWithMessages[0]?.id : null
-  );
-  const [generating, setGenerating] = useState<string | null>(null);
-
-  const selectedLead = scoredLeads.find((l) => l.id === selectedId);
-  const sortedLeads = [...scoredLeads].sort((a, b) => {
-    const order = { Q1: 0, Q2: 1, Q3: 2, Q4: 3 };
-    return order[a.quartile] - order[b.quartile];
-  });
-
-  const canProceed = objective.trim().length > 0 && whatToCommunicate.trim().length > 0;
-
-  const persistLeadMessages = useCallback(async (leadId: string, messages: GeneratedMessages) => {
+  const persistBulkMessages = useCallback(async (leadIds: string[], msgs: SimpleMessages) => {
     try {
-      await updateLeadMessages(leadId, messages as unknown as Record<string, string>);
-    } catch (e) {
-      console.error("Error persisting messages:", e);
-    }
-  }, []);
-
-  const persistBulkMessages = useCallback(async (leadIds: string[], messages: GeneratedMessages) => {
-    try {
-      await updateBulkLeadMessages(leadIds, messages as unknown as Record<string, string>);
+      await updateBulkLeadMessages(leadIds, msgs as unknown as Record<string, string>);
     } catch (e) {
       console.error("Error persisting bulk messages:", e);
     }
   }, []);
 
-  const generateForGroup = async () => {
-    setGeneratingGroup(true);
-    try {
-      const representative = sortedLeads[0];
-      const messages = await generateGroupMessages(representative, "Q2", canal, objective, whatToCommunicate);
-      setGroupMessages(messages);
-      // Persist group messages to all leads
-      const allIds = scoredLeads.map((l) => l.id);
-      setScoredLeads(scoredLeads.map((l) => ({ ...l, messages })));
-      await persistBulkMessages(allIds, messages);
-      toast.success("Mensajes generados y guardados");
-    } catch (e: any) {
-      console.error("Error generating group messages:", e);
-      toast.error(e.message || "Error generando mensajes");
-    } finally {
-      setGeneratingGroup(false);
+  const generateMessages = async () => {
+    if (!prompt.trim()) {
+      toast.error("Escribí un prompt para generar la comunicación");
+      return;
     }
-  };
-
-  const generateForLead = async (leadId: string) => {
-    setGenerating(leadId);
+    setGenerating(true);
     try {
-      const lead = scoredLeads.find((l) => l.id === leadId)!;
-      const messages = await generateAIMessages(lead, canal, objective, whatToCommunicate);
-      setScoredLeads(scoredLeads.map((l) => (l.id === leadId ? { ...l, messages } : l)));
-      await persistLeadMessages(leadId, messages);
-      toast.success("Mensajes generados y guardados");
+      const representative = scoredLeads[0];
+      const result = await generateGroupMessages(representative, "Q2", "email", prompt, prompt);
+      const simpleMessages: SimpleMessages = {
+        linkedin: result.linkedin || "",
+        email_asunto: result.email_asunto || "",
+        email_cuerpo: result.email_cuerpo || "",
+      };
+      setMessages(simpleMessages);
+      const allIds = scoredLeads.map((l) => l.id);
+      setScoredLeads(scoredLeads.map((l) => ({ ...l, messages: { ...simpleMessages, followup_d4: "", cierre_d9: "" } })));
+      await persistBulkMessages(allIds, simpleMessages);
+      toast.success("Comunicación generada y guardada");
     } catch (e: any) {
       console.error("Error generating messages:", e);
       toast.error(e.message || "Error generando mensajes");
     } finally {
-      setGenerating(null);
+      setGenerating(false);
     }
   };
 
-  const handleSaveGroupMessages = async (updated: GeneratedMessages) => {
-    setGroupMessages(updated);
+  const handleSaveMessages = async (updated: SimpleMessages) => {
+    setMessages(updated);
     const allIds = scoredLeads.map((l) => l.id);
-    setScoredLeads(scoredLeads.map((l) => ({ ...l, messages: updated })));
+    setScoredLeads(scoredLeads.map((l) => ({ ...l, messages: { ...updated, followup_d4: "", cierre_d9: "" } })));
     await persistBulkMessages(allIds, updated);
     toast.success("Mensaje actualizado");
   };
 
-  const handleSaveLeadMessages = async (leadId: string, updated: GeneratedMessages) => {
-    setScoredLeads(scoredLeads.map((l) => (l.id === leadId ? { ...l, messages: updated } : l)));
-    await persistLeadMessages(leadId, updated);
-    toast.success("Mensaje actualizado");
+  const handleAIEdit = async (key: keyof SimpleMessages, instruction: string) => {
+    if (!messages) return;
+    setAiEditing(key);
+    try {
+      const { data, error } = await supabase.functions.invoke("edit-message", {
+        body: { currentText: messages[key], instruction, field: key },
+      });
+      if (error) throw error;
+      if (data.error) throw new Error(data.error);
+      const updated = { ...messages, [key]: data.text };
+      await handleSaveMessages(updated);
+      toast.success("Texto actualizado con IA");
+    } catch (e: any) {
+      console.error("AI edit error:", e);
+      toast.error(e.message || "Error editando con IA");
+    } finally {
+      setAiEditing(null);
+    }
   };
 
-  // ─── STEP 1: Objective ───
-  if (mode === "objective") {
+  // ─── No messages yet: show prompt ───
+  if (!messages) {
     return (
       <div className="space-y-8 max-w-2xl mx-auto pt-8">
         <div className="text-center space-y-2">
           <h2 className="text-2xl font-semibold text-foreground">Generar Comunicación</h2>
           <p className="text-sm text-muted-foreground">
-            Elegí el tipo de comunicación y definí tu mensaje.
+            Escribí qué querés comunicar y generamos un mensaje de LinkedIn y un email para toda la lista.
           </p>
         </div>
 
-        <div className="grid grid-cols-2 gap-4">
-          <button
-            onClick={() => setSelectedMode("group")}
-            className={`glass-card p-6 text-left space-y-3 transition-all group border ${
-              selectedMode === "group" ? "border-primary/40 bg-primary/5" : "border-white/[0.06] hover:border-primary/20"
-            }`}
-          >
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-              <MessageSquare className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-foreground">Comunicación grupal</h3>
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                Un mensaje único para todas las listas. 
-                Ideal para campañas masivas con un mensaje unificado.
-              </p>
-            </div>
-            <p className="text-[11px] text-muted-foreground/70 pt-1">
-              {scoredLeads.length} leads
-            </p>
-          </button>
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
+              ¿Qué querés comunicar?
+            </label>
+            <textarea
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Ej: Quiero agendar demos de 15 min mostrando cómo Teramot reduce el tiempo de construcción de infraestructura de datos de semanas a horas..."
+              className="glass-input w-full min-h-[120px] text-sm resize-none"
+            />
+          </div>
 
           <button
-            onClick={() => setSelectedMode("personalized")}
-            className={`glass-card p-6 text-left space-y-3 transition-all group border ${
-              selectedMode === "personalized" ? "border-primary/40 bg-primary/5" : "border-white/[0.06] hover:border-primary/20"
-            }`}
+            onClick={generateMessages}
+            disabled={generating || !prompt.trim()}
+            className="w-full px-6 py-3 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20 disabled:opacity-50 flex items-center justify-center gap-2"
           >
-            <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center">
-              <UserRound className="w-6 h-6 text-primary" />
-            </div>
-            <div>
-              <h3 className="text-sm font-semibold text-foreground">Personalizado por lead</h3>
-              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                Mensajes únicos para cada prospecto, 
-                adaptados a su cargo, empresa e industria.
-              </p>
-            </div>
-            <p className="text-[11px] text-muted-foreground/70 pt-1">
-              {scoredLeads.length} leads disponibles
-            </p>
-          </button>
-        </div>
-
-        {selectedMode && (
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                ¿Cuál es tu objetivo con este outreach?
-              </label>
-              <textarea
-                value={objective}
-                onChange={(e) => setObjective(e.target.value)}
-                placeholder="Ej: Agendar una demo de 15 minutos con decision makers de equipos de datos..."
-                className="glass-input w-full min-h-[80px] text-sm resize-none"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label className="text-xs uppercase tracking-wider text-muted-foreground font-medium">
-                ¿Qué querés comunicar?
-              </label>
-              <textarea
-                value={whatToCommunicate}
-                onChange={(e) => setWhatToCommunicate(e.target.value)}
-                placeholder="Ej: Mostrar cómo Teramot reduce el tiempo de construcción de infraestructura de datos de semanas a horas..."
-                className="glass-input w-full min-h-[80px] text-sm resize-none"
-              />
-            </div>
-
-            {canProceed && (
-              <button
-                onClick={() => {
-                  if (selectedMode === "group") setMode("group");
-                  else {
-                    setMode("personalized");
-                    setSelectedId(sortedLeads[0]?.id || null);
-                  }
-                }}
-                className="w-full px-6 py-3 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-              >
-                Continuar →
-              </button>
-            )}
-          </div>
-        )}
-
-        {!canProceed && (
-          <div className="text-center pt-4">
-            <p className="text-xs text-muted-foreground/60">
-              Completá ambos campos para continuar con la generación
-            </p>
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  // ─── GROUP MODE ───
-  if (mode === "group") {
-    return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
-          <button onClick={() => setMode("objective")} className="p-2 rounded-lg hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-          </button>
-          <div>
-            <h2 className="text-xl font-semibold text-foreground">Comunicación grupal</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Un mensaje para toda la lista · {scoredLeads.length} leads
-            </p>
-          </div>
-          <div className="ml-auto flex rounded-lg border border-white/10 overflow-hidden">
-            {(["linkedin", "email"] as const).map((c) => (
-              <button
-                key={c}
-                onClick={() => setCanal(c)}
-                className={`px-3 py-1.5 text-[11px] capitalize transition-colors ${
-                  canal === c ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
-                }`}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="glass-card overflow-hidden">
-          <div className="p-4 flex items-center justify-between border-b border-white/[0.06]">
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-semibold text-foreground">Mensaje para toda la lista</span>
-              <span className="text-xs text-muted-foreground">{scoredLeads.length} leads</span>
-            </div>
-            {!groupMessages ? (
-              <button
-                onClick={generateForGroup}
-                disabled={generatingGroup}
-                className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-xs bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
-              >
-                {generatingGroup ? (
-                  <>
-                    <span className="flex gap-1">
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground pulse-dot" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground pulse-dot" />
-                      <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground pulse-dot" />
-                    </span>
-                    Generando...
-                  </>
-                ) : (
-                  <>
-                    <MessageSquare className="w-3 h-3" />
-                    Generar mensajes
-                  </>
-                )}
-              </button>
+            {generating ? (
+              <>
+                <span className="flex gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground animate-pulse" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground animate-pulse [animation-delay:150ms]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-primary-foreground animate-pulse [animation-delay:300ms]" />
+                </span>
+                Generando comunicación...
+              </>
             ) : (
-              <button
-                onClick={() => { setGroupMessages(null); generateForGroup(); }}
-                disabled={generatingGroup}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors"
-              >
-                <RefreshCw className="w-3 h-3" /> Regenerar
-              </button>
+              <>
+                <MessageSquare className="w-4 h-4" />
+                Generar comunicación
+              </>
             )}
-          </div>
+          </button>
 
-          {groupMessages && (
-            <div className="p-4">
-              <MessageEditor
-                messages={groupMessages}
-                messageKey="group"
-                onSave={handleSaveGroupMessages}
-              />
-            </div>
-          )}
+          <p className="text-center text-[11px] text-muted-foreground/60">
+            {scoredLeads.length} leads en la lista · Se genera un mensaje único para todos
+          </p>
         </div>
-
       </div>
     );
   }
 
-  // ─── PERSONALIZED MODE ───
+  // ─── Messages exist: show editor ───
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 max-w-2xl mx-auto pt-8">
       <div className="flex items-center gap-3">
-        <button onClick={() => setMode("objective")} className="p-2 rounded-lg hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors">
+        <button
+          onClick={() => setMessages(null)}
+          className="p-2 rounded-lg hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors"
+        >
           <ArrowLeft className="w-4 h-4" />
         </button>
         <div>
-          <h2 className="text-xl font-semibold text-foreground">Comunicación personalizada</h2>
+          <h2 className="text-xl font-semibold text-foreground">Comunicación</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Objetivo: {objective.slice(0, 80)}{objective.length > 80 ? "..." : ""}
+            Mensaje para toda la lista · {scoredLeads.length} leads
           </p>
         </div>
+        <button
+          onClick={() => {
+            setMessages(null);
+          }}
+          className="ml-auto flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors"
+        >
+          <RefreshCw className="w-3 h-3" /> Nuevo mensaje
+        </button>
       </div>
 
-      <div className="flex gap-4 h-[600px]">
-        {/* Lead list */}
-        <div className="w-72 shrink-0 glass-card overflow-y-auto">
-          <div className="p-3 border-b border-white/[0.06]">
-            <p className="text-[11px] uppercase tracking-wider text-muted-foreground">Leads ({sortedLeads.length})</p>
-          </div>
-          {sortedLeads.slice(0, 30).map((lead) => (
-            <button
-              key={lead.id}
-              onClick={() => setSelectedId(lead.id)}
-              className={`w-full text-left px-3 py-2.5 border-b border-white/[0.03] transition-colors ${
-                selectedId === lead.id ? "bg-primary/10" : "hover:bg-white/[0.03]"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-foreground truncate">{lead.firstName} {lead.lastName}</span>
-                {lead.messages && <span className="ml-auto text-[10px] text-success">✓</span>}
-              </div>
-              <p className="text-[10px] text-muted-foreground truncate mt-0.5">{lead.title} @ {lead.company}</p>
-            </button>
-          ))}
-        </div>
-
-        {/* Message preview / editor */}
-        <div className="flex-1 glass-card overflow-y-auto">
-          {selectedLead ? (
-            <div className="p-5 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-sm font-medium text-foreground">{selectedLead.firstName} {selectedLead.lastName}</h3>
-                  <p className="text-xs text-muted-foreground">{selectedLead.title} @ {selectedLead.company}</p>
-                </div>
-                <div className="flex rounded-lg border border-white/10 overflow-hidden">
-                  {(["linkedin", "email"] as const).map((c) => (
-                    <button
-                      key={c}
-                      onClick={() => setCanal(c)}
-                      className={`px-3 py-1.5 text-[11px] capitalize transition-colors ${
-                        canal === c ? "bg-primary/15 text-primary" : "text-muted-foreground hover:text-foreground"
-                      }`}
-                    >
-                      {c}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {!selectedLead.messages ? (
-                <div className="flex flex-col items-center justify-center py-16 space-y-4">
-                  {generating === selectedLead.id ? (
-                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <span className="flex gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary pulse-dot" />
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary pulse-dot" />
-                        <span className="w-1.5 h-1.5 rounded-full bg-primary pulse-dot" />
-                      </span>
-                      Generando mensajes con IA...
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => generateForLead(selectedLead.id)}
-                      className="px-5 py-2 rounded-lg text-sm bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
-                    >
-                      ✨ Generar mensajes
-                    </button>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  <MessageEditor
-                    messages={selectedLead.messages}
-                    messageKey={selectedLead.id}
-                    onSave={(updated) => handleSaveLeadMessages(selectedLead.id, updated)}
-                  />
-
-                  <button
-                    onClick={() => {
-                      setScoredLeads(scoredLeads.map((l) => (l.id === selectedLead.id ? { ...l, messages: undefined } : l)));
-                      generateForLead(selectedLead.id);
-                    }}
-                    disabled={generating === selectedLead.id}
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg text-xs border border-white/10 text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors"
-                  >
-                    <RefreshCw className="w-3 h-3" /> Regenerar
-                  </button>
-                </div>
-              )}
-            </div>
-          ) : (
-            <div className="flex items-center justify-center h-full text-sm text-muted-foreground">
-              Seleccioná un lead para ver sus mensajes
-            </div>
-          )}
-        </div>
+      <div className="glass-card p-5">
+        <MessageEditor
+          messages={messages}
+          onSave={handleSaveMessages}
+          onAIEdit={handleAIEdit}
+          aiEditing={aiEditing}
+        />
       </div>
-
-      <button
-        onClick={onComplete}
-        className="px-6 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-      >
-        Continuar al tracking →
-      </button>
     </div>
   );
 }
