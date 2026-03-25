@@ -255,26 +255,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     const { data: sourceLeads } = await supabase.from("leads").select("*").in("list_id", sourceListIds);
     if (!sourceLeads?.length) return 0;
 
-    let existingEmails = new Set<string>();
-    let existingLinkedins = new Set<string>();
-    if (projectId) {
-      const { data: pCampaigns } = await supabase.from("campaigns").select("id").eq("project_id", projectId);
-      const cIds = (pCampaigns || []).map((c) => c.id);
-      if (cIds.length > 0) {
-        const { data } = await supabase.from("leads").select("email, linkedin_url").in("campaign_id", cIds);
-        existingEmails = new Set((data || []).map((l) => l.email).filter(Boolean) as string[]);
-        existingLinkedins = new Set((data || []).map((l) => l.linkedin_url).filter(Boolean) as string[]);
-      }
-    }
-
-    const uniqueLeads = sourceLeads.filter((l) => {
-      if (l.email && existingEmails.has(l.email)) return false;
-      if (l.linkedin_url && existingLinkedins.has(l.linkedin_url)) return false;
-      return true;
-    });
-    if (!uniqueLeads.length) return 0;
-
-    const rows = uniqueLeads.map((l) => ({
+    const rows = sourceLeads.map((l) => ({
       campaign_id: targetCampaignId, list_id: targetListId,
       first_name: l.first_name, last_name: l.last_name, title: l.title,
       company: l.company, industry: l.industry, country: l.country,
