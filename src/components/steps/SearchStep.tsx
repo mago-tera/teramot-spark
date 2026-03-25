@@ -395,13 +395,13 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     if (error) toast.error("Error al guardar");
   };
 
-  const bulkUpdateField = async (field: string, value: string | null) => {
-    if (!value) return;
+  const bulkUpdateField = async (field: string, value: string) => {
+    const val = value === "__clear__" ? null : value;
     const ids = listLeads.map((l) => l.id);
-    setListLeads((prev) => prev.map((l) => ({ ...l, [field]: value })));
-    const { error } = await supabase.from("leads").update({ [field]: value }).in("id", ids);
+    setListLeads((prev) => prev.map((l) => ({ ...l, [field]: val })));
+    const { error } = await supabase.from("leads").update({ [field]: val }).in("id", ids);
     if (error) toast.error("Error al guardar");
-    else toast.success(`Asignado "${value}" a ${ids.length} leads`);
+    else toast.success(val ? `Asignado "${val}" a ${ids.length} leads` : `Limpiado en ${ids.length} leads`);
   };
 
   // Drill-down: show leads of selected list
