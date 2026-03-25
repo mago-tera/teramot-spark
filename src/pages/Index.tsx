@@ -2,17 +2,19 @@ import { useWizard } from "@/hooks/useWizard";
 import { WizardSidebar } from "@/components/WizardSidebar";
 import { SearchStep } from "@/components/steps/SearchStep";
 import { MessagesStep } from "@/components/steps/MessagesStep";
+import { useParams } from "react-router-dom";
 
 
 const Index = () => {
   const wizard = useWizard();
+  const { campaignId } = useParams<{ campaignId?: string }>();
 
   const renderStep = () => {
     switch (wizard.currentStep) {
       case 0:
         return <SearchStep config={wizard.config} setConfig={wizard.setConfig} leads={wizard.leads} setLeads={wizard.setLeads} setScoredLeads={wizard.setScoredLeads} onComplete={() => wizard.completeStep(0)} setIsInsideList={wizard.setIsInsideList} />;
       case 1:
-        return <MessagesStep scoredLeads={wizard.scoredLeads} setScoredLeads={wizard.setScoredLeads} onComplete={() => wizard.completeStep(1)} />;
+        return <MessagesStep campaignId={campaignId || null} />;
       default:
         return null;
     }
