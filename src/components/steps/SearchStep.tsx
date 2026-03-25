@@ -771,7 +771,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         {showCsvModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowCsvModal(false)}>
             <div className="bg-[hsl(var(--card))] border border-white/[0.1] rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-lg font-semibold text-foreground">Filtros para CSV</h3>
+              <h3 className="text-lg font-semibold text-foreground">Filtros para descarga</h3>
               <div className="space-y-3">
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Aprobado</label>
