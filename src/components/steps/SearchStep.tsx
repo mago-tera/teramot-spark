@@ -18,8 +18,8 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
-
-
+import { Copy } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 interface Props {
   config: CampaignConfig;
   setConfig: (c: CampaignConfig) => void;
@@ -145,6 +145,10 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [showNewListDialog, setShowNewListDialog] = useState(false);
   const [newListName, setNewListName] = useState("");
   const [deletingListId, setDeletingListId] = useState<string | null>(null);
+  const [selectedSourceLists, setSelectedSourceLists] = useState<string[]>([]);
+  const [copyingFromLists, setCopyingFromLists] = useState(false);
+  // All lists across all campaigns in this project (for copy feature)
+  const [projectLists, setProjectLists] = useState<(ListItem & { campaignName?: string })[]>([]);
   const [savingField, setSavingField] = useState<Record<string, boolean>>({});
 
   const deleteList = async (listId: string) => {
@@ -173,6 +177,29 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         setLoading(false);
       });
   }, [campaignId]);
+
+  // Load all project lists for the copy feature
+  useEffect(() => {
+    if (!projectId) return;
+    (async () => {
+      const { data: campaigns } = await supabase
+        .from("campaigns")
+        .select("id, name")
+        .eq("project_id", projectId);
+      if (!campaigns?.length) return;
+      const campaignMap = Object.fromEntries(campaigns.map((c) => [c.id, c.name || "Sin nombre"]));
+      const { data: allLists } = await supabase
+        .from("lists")
+        .select("*")
+        .in("campaign_id", campaigns.map((c) => c.id))
+        .order("created_at", { ascending: false });
+      if (allLists) {
+        setProjectLists(
+          allLists.map((l) => ({ ...l, geo_mix: l.geo_mix as Record<string, number>, campaignName: campaignMap[l.campaign_id] }))
+        );
+      }
+    })();
+  }, [projectId]);
 
   // Load leads for selected list & notify parent
   useEffect(() => {
@@ -218,6 +245,97 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     await supabase.from("lists").update({ name: newName }).eq("id", listId);
     setLists((prev) => prev.map((l) => (l.id === listId ? { ...l, name: newName } : l)));
     setEditingListId(null);
+  };
+
+  const copyLeadsFromLists = async (sourceListIds: string[], targetCampaignId: string, targetListId: string) => {
+    if (!sourceListIds.length) return 0;
+    const { data: sourceLeads } = await supabase.from("leads").select("*").in("list_id", sourceListIds);
+    if (!sourceLeads?.length) return 0;
+
+    let existingEmails = new Set<string>();
+    let existingLinkedins = new Set<string>();
+    if (projectId) {
+      const { data: pCampaigns } = await supabase.from("campaigns").select("id").eq("project_id", projectId);
+      const cIds = (pCampaigns || []).map((c) => c.id);
+      if (cIds.length > 0) {
+        const { data } = await supabase.from("leads").select("email, linkedin_url").in("campaign_id", cIds);
+        existingEmails = new Set((data || []).map((l) => l.email).filter(Boolean) as string[]);
+        existingLinkedins = new Set((data || []).map((l) => l.linkedin_url).filter(Boolean) as string[]);
+      }
+    }
+
+    const uniqueLeads = sourceLeads.filter((l) => {
+      if (l.email && existingEmails.has(l.email)) return false;
+      if (l.linkedin_url && existingLinkedins.has(l.linkedin_url)) return false;
+      return true;
+    });
+    if (!uniqueLeads.length) return 0;
+
+    const rows = uniqueLeads.map((l) => ({
+      campaign_id: targetCampaignId, list_id: targetListId,
+      first_name: l.first_name, last_name: l.last_name, title: l.title,
+      company: l.company, industry: l.industry, country: l.country,
+      seniority: l.seniority, email: l.email, linkedin_url: l.linkedin_url,
+      headcount: l.headcount, score: l.score, quartile: l.quartile,
+    }));
+
+    let inserted = 0;
+    for (const row of rows) {
+      const { error } = await supabase.from("leads").insert(row);
+      if (!error) inserted++;
+    }
+    return inserted;
+  };
+
+  const handleCreateListWithCopies = async () => {
+    if (!selectedSourceLists.length || !newListName.trim()) return;
+    setCopyingFromLists(true);
+    setShowNewListDialog(false);
+    setSearching(true);
+    setLogs([]);
+    setProgress(10);
+
+    try {
+      let activeCampaignId = campaignId;
+      if (!activeCampaignId) {
+        const { data: newCampaign, error: campErr } = await supabase.from("campaigns").insert({
+          name: `Campaña ${new Date().toLocaleDateString("es-AR", { day: "numeric", month: "short" })}`,
+          profile: "Copia", geo_mix: {}, quantity: 0, frequency: "once",
+          status: "configuracion", user_id: user?.id, project_id: projectId || null,
+        }).select().single();
+        if (campErr || !newCampaign) throw new Error("No se pudo crear la campaña");
+        activeCampaignId = newCampaign.id;
+        setCampaignId(activeCampaignId);
+        navigate(`/project/${projectId}/campaign/${activeCampaignId}`, { replace: true });
+      }
+
+      setLogs((prev) => [...prev, `📋 Copiando leads de ${selectedSourceLists.length} lista(s)...`]);
+      setProgress(30);
+
+      const { data: listData } = await supabase.from("lists").insert({
+        campaign_id: activeCampaignId, name: newListName.trim(),
+        profile: "Copia", geo_mix: {}, quantity: 0, frequency: "once", lead_count: 0,
+      }).select().single();
+
+      if (!listData) throw new Error("No se pudo crear la lista");
+
+      setProgress(50);
+      const copied = await copyLeadsFromLists(selectedSourceLists, activeCampaignId, listData.id);
+      await supabase.from("lists").update({ lead_count: copied }).eq("id", listData.id);
+
+      setLists((prev) => [{ ...listData, lead_count: copied, geo_mix: {} as Record<string, number> } as ListItem, ...prev]);
+      setProgress(100);
+      setLogs((prev) => [...prev, `✓ ${copied} leads copiados (duplicados omitidos)`]);
+      toast.success(`${copied} leads copiados a la nueva lista`);
+    } catch (e: any) {
+      console.error("Copy error:", e);
+      toast.error(e.message || "Error copiando leads");
+      setLogs((prev) => [...prev, `✗ Error: ${e.message}`]);
+    } finally {
+      setSearching(false);
+      setCopyingFromLists(false);
+      setSelectedSourceLists([]);
+    }
   };
 
   const startSearch = async (searchConfig: CampaignConfig) => {
@@ -289,19 +407,31 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       setLogs((prev) => [...prev, `📋 Cargando leads desde CSV...`]);
       setProgress(30);
 
-      const allNewLeads = HARDCODED_LEADS.filter((l: Lead) => {
+      const requested = searchConfig.quantity;
+      const allAvailable = HARDCODED_LEADS.filter((l: Lead) => {
         if (l.email && existingEmails.has(l.email)) return false;
         if (l.linkedinUrl && existingLinkedins.has(l.linkedinUrl)) return false;
         return true;
       });
 
-      const dupeCount = HARDCODED_LEADS.length - allNewLeads.length;
+      const dupeCount = HARDCODED_LEADS.length - allAvailable.length;
       if (dupeCount > 0) {
-        setLogs((prev) => [...prev, `⚠ ${dupeCount} duplicados filtrados`]);
+        setLogs((prev) => [...prev, `⚠ ${dupeCount} duplicados filtrados del pool`]);
+      }
+
+      // Take requested amount; surplus stays available (smart retry logic)
+      const finalLeads = allAvailable.slice(0, requested);
+      if (finalLeads.length < requested && allAvailable.length > finalLeads.length) {
+        // Fill from surplus
+        const extra = allAvailable.slice(requested, requested + (requested - finalLeads.length));
+        finalLeads.push(...extra);
+        setLogs((prev) => [...prev, `🔄 ${extra.length} leads extra del surplus para completar`]);
+      }
+      if (finalLeads.length < requested) {
+        setLogs((prev) => [...prev, `ℹ Solo ${finalLeads.length} leads únicos disponibles de ${requested} pedidos`]);
       }
 
       setProgress(60);
-      const finalLeads = allNewLeads;
       const scored = scoreAndAssign(finalLeads);
 
       // Create list record
@@ -343,16 +473,29 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         await supabase.from("leads").insert(rows);
       }
 
+      // Also copy from selected source lists if any
+      let copiedCount = 0;
+      if (listId && selectedSourceLists.length > 0) {
+        setLogs((prev) => [...prev, `📋 Copiando leads de ${selectedSourceLists.length} lista(s)...`]);
+        copiedCount = await copyLeadsFromLists(selectedSourceLists, activeCampaignId!, listId);
+        setSelectedSourceLists([]);
+      }
+
+      const totalCount = scored.length + copiedCount;
+      if (listId) {
+        await supabase.from("lists").update({ lead_count: totalCount }).eq("id", listId);
+      }
+
       if (listData) {
-        setLists((prev) => [{ ...listData, geo_mix: listData.geo_mix as Record<string, number> } as ListItem, ...prev]);
+        setLists((prev) => [{ ...listData, lead_count: totalCount, geo_mix: listData.geo_mix as Record<string, number> } as ListItem, ...prev]);
       }
 
       setProgress(100);
-      setLogs((prev) => [
-        ...prev,
-        `✓ ${scored.length} leads nuevos cargados`,
-      ]);
-      toast.success(`${scored.length} leads nuevos agregados`);
+      const parts = [];
+      if (scored.length > 0) parts.push(`${scored.length} nuevos`);
+      if (copiedCount > 0) parts.push(`${copiedCount} copiados`);
+      setLogs((prev) => [...prev, `✓ ${parts.join(" + ")} leads cargados`]);
+      toast.success(`${totalCount} leads agregados a la lista`);
     } catch (e: any) {
       console.error("Search error:", e);
       toast.error(e.message || "Error cargando leads");
@@ -656,30 +799,77 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       </div>
 
       {/* New list name dialog */}
-      <AlertDialog open={showNewListDialog} onOpenChange={setShowNewListDialog}>
-        <AlertDialogContent className="glass-card border-white/10">
+      <AlertDialog open={showNewListDialog} onOpenChange={(open) => { setShowNewListDialog(open); if (!open) setSelectedSourceLists([]); }}>
+        <AlertDialogContent className="glass-card border-white/10 max-w-lg">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-foreground">Nueva lista</AlertDialogTitle>
           </AlertDialogHeader>
-          <div className="space-y-3 py-2">
-            <label className="text-sm text-muted-foreground">Nombre de la lista</label>
-            <Input
-              value={newListName}
-              onChange={(e) => setNewListName(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter" && newListName.trim()) { setShowNewListDialog(false); setShowICPForm(true); } }}
-              placeholder="Ej: SDRs Fintech Argentina"
-              autoFocus
-              className="glass-input"
-            />
+          <div className="space-y-4 py-2">
+            <div>
+              <label className="text-sm text-muted-foreground">Nombre de la lista</label>
+              <Input
+                value={newListName}
+                onChange={(e) => setNewListName(e.target.value)}
+                placeholder="Ej: SDRs Fintech Argentina"
+                autoFocus
+                className="glass-input mt-1"
+              />
+            </div>
+
+            {/* Copy from existing lists */}
+            {projectLists.length > 0 && (
+              <div>
+                <label className="text-sm text-muted-foreground flex items-center gap-1.5 mb-2">
+                  <Copy className="w-3.5 h-3.5" /> Copiar leads de listas existentes <span className="text-xs text-muted-foreground/60">(opcional)</span>
+                </label>
+                <div className="space-y-1.5 max-h-40 overflow-y-auto rounded-lg border border-white/[0.06] p-2 bg-white/[0.02]">
+                  {projectLists.map((pl) => (
+                    <label
+                      key={pl.id}
+                      className="flex items-center gap-2.5 py-1.5 px-2 rounded-md hover:bg-white/[0.04] cursor-pointer transition-colors"
+                    >
+                      <Checkbox
+                        checked={selectedSourceLists.includes(pl.id)}
+                        onCheckedChange={(checked) => {
+                          setSelectedSourceLists((prev) =>
+                            checked ? [...prev, pl.id] : prev.filter((id) => id !== pl.id)
+                          );
+                        }}
+                      />
+                      <div className="min-w-0 flex-1">
+                        <span className="text-xs text-foreground">{pl.name}</span>
+                        <span className="text-[10px] text-muted-foreground/60 ml-2">
+                          {pl.campaignName} · {pl.lead_count} leads
+                        </span>
+                      </div>
+                    </label>
+                  ))}
+                </div>
+                {selectedSourceLists.length > 0 && (
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {selectedSourceLists.length} lista(s) seleccionadas — los duplicados se omitirán automáticamente
+                  </p>
+                )}
+              </div>
+            )}
           </div>
-          <AlertDialogFooter>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2">
             <AlertDialogCancel className="border-white/10 text-muted-foreground hover:bg-white/5">Cancelar</AlertDialogCancel>
+            {selectedSourceLists.length > 0 && (
+              <button
+                disabled={!newListName.trim()}
+                onClick={handleCreateListWithCopies}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-accent text-accent-foreground hover:bg-accent/80 transition-colors disabled:opacity-50"
+              >
+                <Copy className="w-3.5 h-3.5" /> Solo copiar
+              </button>
+            )}
             <AlertDialogAction
               disabled={!newListName.trim()}
               onClick={() => { setShowICPForm(true); }}
               className="bg-primary text-primary-foreground hover:bg-primary/90"
             >
-              Confirmar
+              {selectedSourceLists.length > 0 ? "Copiar + buscar nuevos" : "Buscar leads"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
