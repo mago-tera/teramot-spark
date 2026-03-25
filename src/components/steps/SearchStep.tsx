@@ -18,7 +18,7 @@ import {
   AlertDialogAction,
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
-import { ApprovalView } from "@/components/steps/ApprovalView";
+
 
 interface Props {
   config: CampaignConfig;
