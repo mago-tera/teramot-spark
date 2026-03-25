@@ -54,7 +54,6 @@ export interface GeneratedMessages {
 const INITIAL_STEPS: StepInfo[] = [
   { id: 0, label: "Listas", icon: "📋", status: "active" },
   { id: 1, label: "Generar Comunicación", icon: "✉", status: "pending" },
-  { id: 2, label: "Tracking", icon: "📈", status: "pending" },
 ];
 
 export function useWizard() {

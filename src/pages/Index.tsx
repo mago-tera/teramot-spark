@@ -2,7 +2,7 @@ import { useWizard } from "@/hooks/useWizard";
 import { WizardSidebar } from "@/components/WizardSidebar";
 import { SearchStep } from "@/components/steps/SearchStep";
 import { MessagesStep } from "@/components/steps/MessagesStep";
-import { TrackingStep } from "@/components/steps/TrackingStep";
+
 
 const Index = () => {
   const wizard = useWizard();
@@ -13,8 +13,6 @@ const Index = () => {
         return <SearchStep config={wizard.config} setConfig={wizard.setConfig} leads={wizard.leads} setLeads={wizard.setLeads} setScoredLeads={wizard.setScoredLeads} onComplete={() => wizard.completeStep(0)} setIsInsideList={wizard.setIsInsideList} />;
       case 1:
         return <MessagesStep scoredLeads={wizard.scoredLeads} setScoredLeads={wizard.setScoredLeads} onComplete={() => wizard.completeStep(1)} />;
-      case 2:
-        return <TrackingStep config={wizard.config} scoredLeads={wizard.scoredLeads} />;
       default:
         return null;
     }
