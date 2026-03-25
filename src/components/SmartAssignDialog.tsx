@@ -141,7 +141,7 @@ export function SmartAssignDialog({
                             max={100}
                             value={rule.percentage}
                             onChange={(e) => updateRule(rule.id, "percentage", e.target.value)}
-                            className="w-[65px] h-8 text-xs pr-5 bg-white/[0.06] border-white/[0.1]"
+                            className="w-[80px] h-8 text-xs pr-6 bg-white/[0.06] border-white/[0.1]"
                           />
                           <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground">%</span>
                         </div>
