@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { ICPForm } from "@/components/steps/ICPForm";
-import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users, Download, Zap, UserPlus, FileSpreadsheet } from "lucide-react";
+import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users, Download, Zap, UserPlus, FileSpreadsheet, Search } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Trash2 } from "lucide-react";
 import { SmartAssignDialog } from "@/components/SmartAssignDialog";
@@ -191,6 +191,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [savingField, setSavingField] = useState<Record<string, boolean>>({});
   const [smartAssignField, setSmartAssignField] = useState<"calificacion" | "responsable" | "canal" | null>(null);
   const [shareListId, setShareListId] = useState<string | null>(null);
+  const [leadSearch, setLeadSearch] = useState("");
 
   const deleteList = async (listId: string) => {
     // Delete leads first, then the list
@@ -653,6 +654,19 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
 
         {listLeads.length > 0 && (
           <div className="glass-card overflow-hidden">
+            <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.06]">
+              <Search className="w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Buscar por nombre, empresa, cargo, email..."
+                value={leadSearch}
+                onChange={(e) => setLeadSearch(e.target.value)}
+                className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
+              />
+              {leadSearch && (
+                <button onClick={() => setLeadSearch("")} className="text-xs text-muted-foreground hover:text-foreground">✕</button>
+              )}
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full text-xs">
                 <thead>
@@ -677,7 +691,14 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                   </tr>
                 </thead>
                 <tbody>
-                  {listLeads.map((lead, i) => {
+                  {(() => {
+                    const q = leadSearch.toLowerCase().trim();
+                    const filtered = q
+                      ? listLeads.filter((l) =>
+                          `${l.firstName} ${l.lastName} ${l.title} ${l.company} ${l.email} ${l.country} ${l.industry}`.toLowerCase().includes(q)
+                        )
+                      : listLeads;
+                    return filtered.map((lead, i) => {
                     const q = QUARTILE_STYLES[lead.quartile] || QUARTILE_STYLES.Q4;
                     const cal = (lead as any).calificacion as string | null;
                     const resp = (lead as any).responsable as string | null;
@@ -749,7 +770,8 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                         </td>
                       </tr>
                     );
-                  })}
+                  });
+                  })()}
                 </tbody>
               </table>
             </div>
