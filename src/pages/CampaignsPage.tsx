@@ -291,6 +291,18 @@ export default function CampaignsPage() {
         </AlertDialogContent>
       </AlertDialog>
 
+      {/* Share campaign dialog */}
+      {shareCampaignId && (
+        <ShareEntityDialog
+          open={!!shareCampaignId}
+          onOpenChange={(open) => !open && setShareCampaignId(null)}
+          entityType="campaña"
+          entityId={shareCampaignId}
+          memberTable="campaign_members"
+          fkColumn="campaign_id"
+        />
+      )}
+
       {/* New campaign dialog */}
       <AlertDialog open={showNewDialog} onOpenChange={(open) => { if (!open) { setShowNewDialog(false); setNewCampaignName(""); } }}>
         <AlertDialogContent>
