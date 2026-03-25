@@ -98,6 +98,49 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [listLeads, setListLeads] = useState<ScoredLead[]>([]);
   const [editingListId, setEditingListId] = useState<string | null>(null);
   const [editingName, setEditingName] = useState("");
+  const [csvFilterAprobado, setCsvFilterAprobado] = useState("");
+  const [csvFilterResponsable, setCsvFilterResponsable] = useState("");
+  const [csvFilterCanal, setCsvFilterCanal] = useState("");
+
+  const downloadFilteredCSV = () => {
+    let filtered = listLeads.filter((l) => {
+      const cal = (l as any).calificacion as string | null;
+      const resp = (l as any).responsable as string | null;
+      const canal = (l as any).canal as string | null;
+      if (csvFilterAprobado && cal !== csvFilterAprobado) return false;
+      if (csvFilterResponsable && resp !== csvFilterResponsable) return false;
+      if (csvFilterCanal && canal !== csvFilterCanal) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      toast.error("No hay leads con esos filtros");
+      return;
+    }
+
+    const canalFilter = csvFilterCanal || null;
+    const headers = canalFilter === "LinkedIn"
+      ? ["Nombre", "Apellido", "LinkedIn"]
+      : canalFilter === "Mail"
+        ? ["Nombre", "Apellido", "Email"]
+        : ["Nombre", "Apellido", "Email", "LinkedIn"];
+
+    const rows = filtered.map((l) => {
+      if (canalFilter === "LinkedIn") return [l.firstName, l.lastName, l.linkedinUrl || ""];
+      if (canalFilter === "Mail") return [l.firstName, l.lastName, l.email || ""];
+      return [l.firstName, l.lastName, l.email || "", l.linkedinUrl || ""];
+    });
+
+    const csv = [headers, ...rows].map((r) => r.map((v) => `"${(v || "").replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `leads_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`CSV descargado con ${filtered.length} leads`);
+  };
   const [showNewListDialog, setShowNewListDialog] = useState(false);
   const [newListName, setNewListName] = useState("");
   const [deletingListId, setDeletingListId] = useState<string | null>(null);
