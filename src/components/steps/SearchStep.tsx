@@ -236,55 +236,23 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       const existingEmails = new Set(existingLeadsData.map((l) => l.email).filter(Boolean));
       const existingLinkedins = new Set(existingLeadsData.map((l) => l.linkedin_url).filter(Boolean));
 
-      const targetQty = searchConfig.quantity;
-      let allNewLeads: Lead[] = [];
-      let page = 1;
-      const maxRetries = 5;
+      // Use hardcoded leads instead of Apollo (MVP)
+      setLogs((prev) => [...prev, `📋 Cargando leads desde CSV...`]);
+      setProgress(30);
 
-      while (allNewLeads.length < targetQty && page <= maxRetries) {
-        setLogs((prev) => [
-          ...prev,
-          `🔄 Búsqueda ${page}${page > 1 ? ` (faltan ${targetQty - allNewLeads.length} leads)` : ""}...`,
-        ]);
-        setProgress(10 + Math.min(70, (allNewLeads.length / targetQty) * 70));
+      const allNewLeads = HARDCODED_LEADS.filter((l: Lead) => {
+        if (l.email && existingEmails.has(l.email)) return false;
+        if (l.linkedinUrl && existingLinkedins.has(l.linkedinUrl)) return false;
+        return true;
+      });
 
-        const apolloLeads = await searchApollo(
-          searchConfig,
-          page,
-          Array.from(existingEmails),
-          Array.from(existingLinkedins),
-        );
-
-        // Filter duplicates against existing + already collected
-        const newBatch = apolloLeads.filter((l: Lead) => {
-          if (l.email && existingEmails.has(l.email)) return false;
-          if (l.linkedinUrl && existingLinkedins.has(l.linkedinUrl)) return false;
-          return true;
-        });
-
-        // Add to dedup sets
-        for (const l of newBatch) {
-          if (l.email) existingEmails.add(l.email);
-          if (l.linkedinUrl) existingLinkedins.add(l.linkedinUrl);
-        }
-
-        allNewLeads = [...allNewLeads, ...newBatch];
-
-        const dupeCount = apolloLeads.length - newBatch.length;
-        if (dupeCount > 0) {
-          setLogs((prev) => [...prev, `⚠ ${dupeCount} duplicados filtrados en página ${page}`]);
-        }
-
-        // If Apollo returned 0 results, no point continuing
-        if (apolloLeads.length === 0) {
-          setLogs((prev) => [...prev, `⚠ Apollo no devolvió más resultados`]);
-          break;
-        }
-
-        page++;
+      const dupeCount = HARDCODED_LEADS.length - allNewLeads.length;
+      if (dupeCount > 0) {
+        setLogs((prev) => [...prev, `⚠ ${dupeCount} duplicados filtrados`]);
       }
 
-      const finalLeads = allNewLeads.slice(0, targetQty);
+      setProgress(60);
+      const finalLeads = allNewLeads;
       const scored = scoreAndAssign(finalLeads);
 
       // Create list record
