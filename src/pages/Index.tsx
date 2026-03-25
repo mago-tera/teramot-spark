@@ -2,7 +2,7 @@ import { useWizard } from "@/hooks/useWizard";
 import { WizardSidebar } from "@/components/WizardSidebar";
 import { SearchStep } from "@/components/steps/SearchStep";
 import { MessagesStep } from "@/components/steps/MessagesStep";
-import { TrackingStep } from "@/components/steps/TrackingStep";
+
 
 const Index = () => {
   const wizard = useWizard();
