@@ -6,7 +6,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { ICPForm } from "@/components/steps/ICPForm";
-import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users, Download, Zap, UserPlus } from "lucide-react";
+import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users, Download, Zap, UserPlus, FileSpreadsheet } from "lucide-react";
+import * as XLSX from "xlsx";
 import { Trash2 } from "lucide-react";
 import { SmartAssignDialog } from "@/components/SmartAssignDialog";
 import { ShareEntityDialog } from "@/components/ShareEntityDialog";
@@ -143,6 +144,42 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     a.click();
     URL.revokeObjectURL(url);
     toast.success(`CSV descargado con ${filtered.length} leads`);
+  };
+
+  const downloadFilteredExcel = () => {
+    let filtered = listLeads.filter((l) => {
+      const cal = (l as any).calificacion as string | null;
+      const resp = (l as any).responsable as string | null;
+      const canal = (l as any).canal as string | null;
+      if (csvFilterAprobado && cal !== csvFilterAprobado) return false;
+      if (csvFilterResponsable && resp !== csvFilterResponsable) return false;
+      if (csvFilterCanal && canal !== csvFilterCanal) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      toast.error("No hay leads con esos filtros");
+      return;
+    }
+
+    const canalFilter = csvFilterCanal || null;
+    const headers = canalFilter === "LinkedIn"
+      ? ["Nombre", "Apellido", "LinkedIn"]
+      : canalFilter === "Mail"
+        ? ["Nombre", "Apellido", "Email"]
+        : ["Nombre", "Apellido", "Email", "LinkedIn"];
+
+    const rows = filtered.map((l) => {
+      if (canalFilter === "LinkedIn") return [l.firstName, l.lastName, l.linkedinUrl || ""];
+      if (canalFilter === "Mail") return [l.firstName, l.lastName, l.email || ""];
+      return [l.firstName, l.lastName, l.email || "", l.linkedinUrl || ""];
+    });
+
+    const ws = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Leads");
+    XLSX.writeFile(wb, `leads_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    toast.success(`Excel descargado con ${filtered.length} leads`);
   };
   const [showNewListDialog, setShowNewListDialog] = useState(false);
   const [newListName, setNewListName] = useState("");
@@ -603,7 +640,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               onClick={() => setShowCsvModal(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
             >
-              <Download className="w-3.5 h-3.5" /> Bajar CSV
+              <Download className="w-3.5 h-3.5" /> Bajar CSV / Excel
             </button>
             <button
               onClick={onComplete}
@@ -734,7 +771,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         {showCsvModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowCsvModal(false)}>
             <div className="bg-[hsl(var(--card))] border border-white/[0.1] rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-lg font-semibold text-foreground">Filtros para CSV</h3>
+              <h3 className="text-lg font-semibold text-foreground">Filtros para descarga</h3>
               <div className="space-y-3">
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Aprobado</label>
@@ -783,7 +820,13 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                   onClick={() => { downloadFilteredCSV(); setShowCsvModal(false); }}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
-                  <Download className="w-4 h-4" /> Descargar
+                  <Download className="w-4 h-4" /> CSV
+                </button>
+                <button
+                  onClick={() => { downloadFilteredExcel(); setShowCsvModal(false); }}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                >
+                  <FileSpreadsheet className="w-4 h-4" /> Excel
                 </button>
               </div>
             </div>
