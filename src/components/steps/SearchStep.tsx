@@ -820,7 +820,13 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                   onClick={() => { downloadFilteredCSV(); setShowCsvModal(false); }}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
-                  <Download className="w-4 h-4" /> Descargar
+                  <Download className="w-4 h-4" /> CSV
+                </button>
+                <button
+                  onClick={() => { downloadFilteredExcel(); setShowCsvModal(false); }}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
+                >
+                  <FileSpreadsheet className="w-4 h-4" /> Excel
                 </button>
               </div>
             </div>
