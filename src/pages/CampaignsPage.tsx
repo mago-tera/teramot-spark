@@ -58,6 +58,7 @@ export default function CampaignsPage() {
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [newCampaignName, setNewCampaignName] = useState("");
   const [creatingCampaign, setCreatingCampaign] = useState(false);
+  const [shareCampaignId, setShareCampaignId] = useState<string | null>(null);
 
   const isOwner = project?.user_id === user?.id;
 
