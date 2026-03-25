@@ -367,7 +367,40 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               {selectedList?.profile} · {listLeads.length} leads
             </p>
           </div>
-          <div className="ml-auto">
+          <div className="ml-auto flex items-center gap-2 flex-wrap">
+            {/* CSV Filters */}
+            <select
+              value={csvFilterAprobado}
+              onChange={(e) => setCsvFilterAprobado(e.target.value)}
+              className="rounded-md px-2 py-1.5 text-[11px] font-medium border bg-white/[0.04] border-white/[0.08] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="">Aprobado: Todos</option>
+              <option value="SI">SI</option>
+              <option value="NO">NO</option>
+            </select>
+            <select
+              value={csvFilterResponsable}
+              onChange={(e) => setCsvFilterResponsable(e.target.value)}
+              className="rounded-md px-2 py-1.5 text-[11px] font-medium border bg-white/[0.04] border-white/[0.08] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="">Responsable: Todos</option>
+              {RESPONSABLES.map((r) => <option key={r.label} value={r.label}>{r.label}</option>)}
+            </select>
+            <select
+              value={csvFilterCanal}
+              onChange={(e) => setCsvFilterCanal(e.target.value)}
+              className="rounded-md px-2 py-1.5 text-[11px] font-medium border bg-white/[0.04] border-white/[0.08] text-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+            >
+              <option value="">Canal: Todos</option>
+              <option value="LinkedIn">LinkedIn</option>
+              <option value="Mail">Mail</option>
+            </select>
+            <button
+              onClick={() => downloadFilteredCSV()}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
+            >
+              <Download className="w-3.5 h-3.5" /> Bajar CSV
+            </button>
             <button
               onClick={onComplete}
               className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
