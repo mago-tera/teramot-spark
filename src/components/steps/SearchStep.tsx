@@ -555,6 +555,50 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     else toast.success(val ? `"${val}" → ${ids.length} leads (${quartileLabel})` : `Limpiado en ${ids.length} leads (${quartileLabel})`);
   };
 
+  const leadCountByQuartile: Record<string, number> = {};
+  for (const l of listLeads) {
+    leadCountByQuartile[l.quartile] = (leadCountByQuartile[l.quartile] || 0) + 1;
+  }
+
+  const smartApplyRules = async (
+    field: string,
+    rules: { value: string; quartile: string; percentage: number }[]
+  ) => {
+    // Handle clear all
+    if (rules.length === 1 && rules[0].value === "__clear__" && rules[0].quartile === "ALL") {
+      await bulkUpdateField(field, "__clear__");
+      return;
+    }
+
+    for (const rule of rules) {
+      const quartileLeads = listLeads.filter((l) => l.quartile === rule.quartile);
+      const count = Math.round((rule.percentage / 100) * quartileLeads.length);
+      // Pick leads that don't have this field set yet first, then overflow
+      const unset = quartileLeads.filter((l) => !(l as any)[field]);
+      const alreadySet = quartileLeads.filter((l) => (l as any)[field]);
+      const ordered = [...unset, ...alreadySet];
+      const selected = ordered.slice(0, count);
+      const ids = selected.map((l) => l.id);
+      if (ids.length === 0) continue;
+
+      setListLeads((prev) => prev.map((l) => ids.includes(l.id) ? { ...l, [field]: rule.value } : l));
+      await supabase.from("leads").update({ [field]: rule.value }).in("id", ids);
+    }
+    toast.success(`Asignación aplicada a ${rules.reduce((s, r) => s + Math.round((r.percentage / 100) * (leadCountByQuartile[r.quartile] || 0)), 0)} leads`);
+  };
+
+  const SMART_ASSIGN_OPTIONS: Record<string, { label: string; value: string }[]> = {
+    calificacion: CALIFICACIONES.map((c) => ({ label: c, value: c })),
+    responsable: RESPONSABLES.map((r) => ({ label: r.label, value: r.label })),
+    canal: CANALES.map((c) => ({ label: c, value: c })),
+  };
+
+  const SMART_ASSIGN_LABELS: Record<string, string> = {
+    calificacion: "Aprobado",
+    responsable: "Responsable",
+    canal: "Canal",
+  };
+
   // Drill-down: show leads of selected list
   if (selectedListId) {
     const selectedList = lists.find((l) => l.id === selectedListId);
