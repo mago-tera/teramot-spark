@@ -48,29 +48,16 @@ export default function Projects() {
   }, [user]);
 
   const loadProjects = async () => {
-    const { data: own } = await supabase
+    // RLS now handles all access levels (project_members, campaign_members, list_members)
+    const { data: all } = await supabase
       .from("projects")
       .select("*")
-      .eq("user_id", user!.id)
       .order("created_at", { ascending: false });
-    setProjects((own as Project[]) || []);
 
-    const { data: memberships } = await supabase
-      .from("project_members")
-      .select("project_id")
-      .eq("user_id", user!.id);
-
-    if (memberships && memberships.length > 0) {
-      const ids = memberships.map((m) => m.project_id);
-      const { data: shared } = await supabase
-        .from("projects")
-        .select("*")
-        .in("id", ids)
-        .order("created_at", { ascending: false });
-      setSharedProjects((shared as Project[]) || []);
-    } else {
-      setSharedProjects([]);
-    }
+    const own = (all || []).filter((p) => p.user_id === user!.id);
+    const shared = (all || []).filter((p) => p.user_id !== user!.id);
+    setProjects(own as Project[]);
+    setSharedProjects(shared as Project[]);
     setLoading(false);
   };
 
