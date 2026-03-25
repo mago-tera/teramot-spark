@@ -455,6 +455,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                           title="Asignar a todos"
                         >
                           <option value="" disabled>⚡ Todos</option>
+                          <option value="__clear__">—</option>
                           {CALIFICACIONES.map((c) => <option key={c} value={c}>{c}</option>)}
                         </select>
                       </div>
