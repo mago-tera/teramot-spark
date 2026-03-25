@@ -309,7 +309,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
 
       setLists((prev) => [{ ...listData, lead_count: copied, geo_mix: {} as Record<string, number> } as ListItem, ...prev]);
       setProgress(100);
-      setLogs((prev) => [...prev, `✓ ${copied} leads copiados (duplicados omitidos)`]);
+      setLogs((prev) => [...prev, `✓ ${copied} leads copiados`]);
       toast.success(`${copied} leads copiados a la nueva lista`);
     } catch (e: any) {
       console.error("Copy error:", e);
