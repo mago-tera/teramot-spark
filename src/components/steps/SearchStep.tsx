@@ -403,7 +403,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                           <span className={`px-2 py-0.5 rounded text-[10px] border ${COUNTRY_COLORS[lead.country] || "text-muted-foreground"}`}>{lead.country}</span>
                         </td>
                         <td className="px-3 py-2.5 text-muted-foreground font-mono text-[10px]">{lead.email || "—"}</td>
-                        <td className="px-3 py-2.5 text-foreground font-semibold">{lead.total}</td>
+                        
                         <td className="px-3 py-2.5">
                           <span className={`px-2 py-0.5 rounded text-[10px] border ${q.bg} ${q.text} ${q.border}`}>{q.label}</span>
                         </td>
