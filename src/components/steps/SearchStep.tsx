@@ -19,6 +19,70 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 
+  const copyLeadsFromLists = async (sourceListIds: string[], targetCampaignId: string, targetListId: string) => {
+    if (!sourceListIds.length) return 0;
+
+    // Fetch leads from source lists
+    const { data: sourceLeads } = await supabase
+      .from("leads")
+      .select("*")
+      .in("list_id", sourceListIds);
+
+    if (!sourceLeads?.length) return 0;
+
+    // Get existing project leads for dedup
+    let existingEmails = new Set<string>();
+    let existingLinkedins = new Set<string>();
+    if (projectId) {
+      const { data: projectCampaigns } = await supabase
+        .from("campaigns")
+        .select("id")
+        .eq("project_id", projectId);
+      const campaignIds = (projectCampaigns || []).map((c) => c.id);
+      if (campaignIds.length > 0) {
+        const { data } = await supabase
+          .from("leads")
+          .select("email, linkedin_url")
+          .in("campaign_id", campaignIds);
+        existingEmails = new Set((data || []).map((l) => l.email).filter(Boolean) as string[]);
+        existingLinkedins = new Set((data || []).map((l) => l.linkedin_url).filter(Boolean) as string[]);
+      }
+    }
+
+    // Filter out dupes
+    const uniqueLeads = sourceLeads.filter((l) => {
+      if (l.email && existingEmails.has(l.email)) return false;
+      if (l.linkedin_url && existingLinkedins.has(l.linkedin_url)) return false;
+      return true;
+    });
+
+    if (!uniqueLeads.length) return 0;
+
+    const rows = uniqueLeads.map((l) => ({
+      campaign_id: targetCampaignId,
+      list_id: targetListId,
+      first_name: l.first_name,
+      last_name: l.last_name,
+      title: l.title,
+      company: l.company,
+      industry: l.industry,
+      country: l.country,
+      seniority: l.seniority,
+      email: l.email,
+      linkedin_url: l.linkedin_url,
+      headcount: l.headcount,
+      score: l.score,
+      quartile: l.quartile,
+    }));
+
+    // Insert one by one to skip dupes caught by trigger
+    let inserted = 0;
+    for (const row of rows) {
+      const { error } = await supabase.from("leads").insert(row);
+      if (!error) inserted++;
+    }
+    return inserted;
+  };
 
 interface Props {
   config: CampaignConfig;
