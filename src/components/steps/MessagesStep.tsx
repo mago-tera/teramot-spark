@@ -133,7 +133,18 @@ function MessageEditor({
 }
 
 export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props) {
-  const [mode, setMode] = useState<Mode>("objective");
+  const leadsWithMessages = scoredLeads.filter((l) => l.messages);
+  const hasExistingMessages = leadsWithMessages.length > 0;
+
+  // Check if all leads share the same messages (group mode)
+  const allSameMessages = hasExistingMessages && leadsWithMessages.length > 1 &&
+    leadsWithMessages.every((l) => JSON.stringify(l.messages) === JSON.stringify(leadsWithMessages[0].messages));
+
+  const initialMode: Mode = hasExistingMessages
+    ? (allSameMessages ? "group" : "personalized")
+    : "objective";
+
+  const [mode, setMode] = useState<Mode>(initialMode);
   const [objective, setObjective] = useState("");
   const [whatToCommunicate, setWhatToCommunicate] = useState("");
   const [selectedMode, setSelectedMode] = useState<"group" | "personalized" | null>(null);
@@ -141,10 +152,14 @@ export function MessagesStep({ scoredLeads, setScoredLeads, onComplete }: Props)
   // Group mode state
   const [canal, setCanal] = useState<"linkedin" | "email">("linkedin");
   const [generatingGroup, setGeneratingGroup] = useState(false);
-  const [groupMessages, setGroupMessages] = useState<GeneratedMessages | null>(null);
+  const [groupMessages, setGroupMessages] = useState<GeneratedMessages | null>(
+    allSameMessages ? leadsWithMessages[0].messages! : null
+  );
 
   // Personalized mode state
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(
+    hasExistingMessages && !allSameMessages ? leadsWithMessages[0]?.id : null
+  );
   const [generating, setGenerating] = useState<string | null>(null);
 
   const selectedLead = scoredLeads.find((l) => l.id === selectedId);
