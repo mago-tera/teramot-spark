@@ -329,13 +329,12 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     { label: "Gabo", email: "gabriel@teramot.com" },
     { label: "Valen", email: "valentina@teramot.com" },
   ];
-  const CALIFICACIONES = ["Top Fit", "Fit", "Not"];
+  const CALIFICACIONES = ["SI", "NO"];
   const CANALES = ["LinkedIn", "Mail"];
 
   const CALIFICACION_STYLES: Record<string, string> = {
-    "Top Fit": "bg-cyan-500/20 text-cyan-300 border-cyan-500/30",
-    "Fit": "bg-green-500/20 text-green-300 border-green-500/30",
-    "Not": "bg-rose-500/20 text-rose-300 border-rose-500/30",
+    "SI": "bg-green-500/20 text-green-300 border-green-500/30",
+    "NO": "bg-rose-500/20 text-rose-300 border-rose-500/30",
   };
   const CANAL_STYLES: Record<string, string> = {
     "LinkedIn": "bg-blue-500/20 text-blue-300 border-blue-500/30",
@@ -384,7 +383,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-white/[0.06]">
-                    {["Nombre", "Cargo", "Empresa", "País", "Email", "Score", "Cuartil", "Calificación", "Responsable", "Canal"].map((h) => (
+                    {["Nombre", "Cargo", "Empresa", "País", "Email", "Puntos", "Score", "Aprobado", "Responsable", "Canal"].map((h) => (
                       <th key={h} className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">{h}</th>
                     ))}
                   </tr>
@@ -408,7 +407,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                         <td className="px-3 py-2.5">
                           <span className={`px-2 py-0.5 rounded text-[10px] border ${q.bg} ${q.text} ${q.border}`}>{q.label}</span>
                         </td>
-                        {/* Calificación */}
+                        {/* Aprobado */}
                         <td className="px-3 py-2.5">
                           <select
                             value={cal || ""}
