@@ -322,6 +322,17 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   // Drill-down: show leads of selected list
   if (selectedListId) {
     const selectedList = lists.find((l) => l.id === selectedListId);
+
+    if (showApproval) {
+      return (
+        <ApprovalView
+          listId={selectedListId}
+          listName={selectedList?.name || ""}
+          onBack={() => setShowApproval(false)}
+        />
+      );
+    }
+
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
@@ -334,12 +345,20 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               {selectedList?.profile} · {listLeads.length} leads
             </p>
           </div>
-          <button
-            onClick={onComplete}
-            className="ml-auto flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-          >
-            ✉ Generar Comunicación
-          </button>
+          <div className="ml-auto flex items-center gap-2">
+            <button
+              onClick={() => setShowApproval(true)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border border-white/[0.08] text-foreground hover:bg-white/[0.06] transition-colors"
+            >
+              ✅ Aprobaciones
+            </button>
+            <button
+              onClick={onComplete}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
+            >
+              ✉ Generar Comunicación
+            </button>
+          </div>
         </div>
 
         {listLeads.length > 0 && (
