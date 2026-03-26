@@ -928,10 +928,15 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                       responsable: shareFilterResponsable || null,
                       canal: shareFilterCanal || null,
                     };
-                    await supabase.from("lists").update({ filtros_compartidos: filters, copy_sugerido: shareCopySugerido }).eq("id", selectedListId);
+                    await supabase.from("lists").update({ 
+                      filtros_compartidos: filters, 
+                      copy_sugerido: shareCopySugerido,
+                      shared: true 
+                    } as any).eq("id", selectedListId);
                     setShowShareFilterModal(false);
-                    setShareListId(selectedListId);
-                    toast.success("Filtros guardados");
+                    const link = `${window.location.origin}/shared/list/${selectedListId}`;
+                    await navigator.clipboard.writeText(link);
+                    toast.success("Link copiado al portapapeles: " + link);
                   }}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
                   <UserPlus className="w-4 h-4" /> Continuar
