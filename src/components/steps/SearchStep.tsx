@@ -11,6 +11,7 @@ import * as XLSX from "xlsx";
 import { Trash2 } from "lucide-react";
 import { SmartAssignDialog } from "@/components/SmartAssignDialog";
 import { ShareEntityDialog } from "@/components/ShareEntityDialog";
+import { ShareListWithCopyDialog } from "@/components/ShareListWithCopyDialog";
 import {
   AlertDialog,
   AlertDialogContent,
