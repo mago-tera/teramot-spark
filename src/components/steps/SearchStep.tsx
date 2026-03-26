@@ -777,6 +777,17 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                             {CANALES.map((c) => <option key={c} value={c}>{c}</option>)}
                           </select>
                         </td>
+                        {/* Metrics */}
+                        {(["enviado", "respondido", "conversion"] as const).map((metric) => (
+                          <td key={metric} className="px-3 py-2.5 text-center">
+                            <input
+                              type="checkbox"
+                              checked={!!(lead as any)[metric]}
+                              onChange={(e) => updateLeadField(lead.id, metric, e.target.checked as any)}
+                              className="w-4 h-4 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary"
+                            />
+                          </td>
+                        ))}
                       </tr>
                     );
                   });
