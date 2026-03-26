@@ -114,9 +114,6 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] font-mono text-muted-foreground truncate mt-1">
-                    {window.location.origin}/shared/list/{list.id}
-                  </p>
                   {/* Mini metrics */}
                   <div className="flex gap-3 mt-1.5">
                     <span className="text-[10px] text-muted-foreground">
