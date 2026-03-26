@@ -51,7 +51,6 @@ export function WizardSidebar({ steps, currentStep, onStepClick, isInsideList }:
           const isComplete = step.status === "complete";
           const isPending = step.status === "pending";
 
-          if (isPending && step.id >= 2) return null;
           if (step.id === 1 && !isInsideList && currentStep !== 1) return null;
 
           return (
