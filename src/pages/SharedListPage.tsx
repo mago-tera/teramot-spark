@@ -100,7 +100,7 @@ export default function SharedListPage() {
       }
       setLoading(false);
     })();
-  }, [user, authLoading, listId]);
+  }, [listId]);
 
   const toggleField = async (leadId: string, field: "enviado" | "respondido" | "conversion") => {
     const lead = leads.find((l) => l.id === leadId);
