@@ -9,6 +9,7 @@ import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users, Download, Zap, Use
 import * as XLSX from "xlsx";
 import { Trash2 } from "lucide-react";
 import { SmartAssignDialog } from "@/components/SmartAssignDialog";
+import { ListTracking } from "@/components/steps/ListTracking";
 
 import {
   AlertDialog,
@@ -671,7 +672,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
             >
-              <UserPlus className="w-3.5 h-3.5" /> Compartir
+              <UserPlus className="w-3.5 h-3.5" /> Crear Outreach
             </button>
             <button
               onClick={onComplete}
@@ -813,7 +814,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
           <div className="glass-card p-4 space-y-3">
             <div className="flex items-center gap-2">
               <Link2 className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-medium text-foreground">Lista compartida</h3>
+              <h3 className="text-sm font-medium text-foreground">Outreach activo</h3>
             </div>
             <div className="flex items-center gap-3 p-3 rounded-lg border border-white/[0.06] bg-white/[0.02]">
               <div className="flex-1 min-w-0">
@@ -858,6 +859,12 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
             </div>
           </div>
         )}
+
+        {/* List-level tracking */}
+        {selectedList?.shared && selectedListId && (
+          <ListTracking listId={selectedListId} listName={selectedList.name || "Outreach"} />
+        )}
+
 
         {smartAssignField && (
           <SmartAssignDialog
@@ -940,11 +947,11 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         {showShareFilterModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowShareFilterModal(false)}>
             <div className="bg-[hsl(var(--card))] border border-white/[0.1] rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-lg font-semibold text-foreground">Compartir vista</h3>
-              <p className="text-xs text-muted-foreground">Nombrá la vista y seleccioná qué leads verá el usuario.</p>
+              <h3 className="text-lg font-semibold text-foreground">Crear Outreach</h3>
+              <p className="text-xs text-muted-foreground">Nombrá el outreach y seleccioná qué leads verá tu equipo.</p>
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Nombre de la vista</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">Nombre del Outreach</label>
                   <input
                     value={shareViewName}
                     onChange={(e) => setShareViewName(e.target.value)}
@@ -997,7 +1004,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                 <button
                   onClick={async () => {
                     if (!shareViewName.trim()) {
-                      toast.error("Poné un nombre a la vista");
+                      toast.error("Poné un nombre al outreach");
                       return;
                     }
                     const filters = {
@@ -1014,10 +1021,10 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                     setShowShareFilterModal(false);
                     const link = `${window.location.origin}/shared/list/${selectedListId}`;
                     await navigator.clipboard.writeText(link);
-                    toast.success("Link copiado al portapapeles: " + link);
+                    toast.success("Outreach creado. Link copiado: " + link);
                   }}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-                  <Copy className="w-4 h-4" /> Copiar link
+                  <Copy className="w-4 h-4" /> Crear Outreach
                 </button>
               </div>
             </div>
@@ -1217,7 +1224,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                 <button
                   onClick={(e) => { e.stopPropagation(); setSelectedListId(list.id); setShareFilterAprobado(""); setShareFilterResponsable(""); setShareFilterCanal(""); setShareCopySugerido(""); setShareViewName(list.name || ""); setShowShareFilterModal(true); }}
                   className="p-1.5 rounded hover:bg-white/10 text-muted-foreground/40 hover:text-foreground opacity-0 group-hover:opacity-100 transition-all shrink-0"
-                  title="Compartir lista"
+                  title="Crear Outreach"
                 >
                   <UserPlus className="w-4 h-4" />
                 </button>
