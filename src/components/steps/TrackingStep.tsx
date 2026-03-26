@@ -154,15 +154,6 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
         </div>
       )}
 
-      {/* Campaign name */}
-      <div className="glass-card p-5 space-y-3">
-        <label className="text-xs text-muted-foreground">Nombre de campaña</label>
-        <input
-          value={campaignName}
-          onChange={(e) => setCampaignName(e.target.value)}
-          className="glass-input w-full font-mono text-sm"
-        />
-      </div>
 
       {/* Loom links */}
       <div className="glass-card p-5 space-y-4">
