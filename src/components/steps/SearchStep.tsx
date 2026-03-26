@@ -197,6 +197,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [shareFilterResponsable, setShareFilterResponsable] = useState("");
   const [shareFilterCanal, setShareFilterCanal] = useState("");
   const [shareCopySugerido, setShareCopySugerido] = useState("");
+  const [shareViewName, setShareViewName] = useState("");
   const [leadSearch, setLeadSearch] = useState("");
 
   const deleteList = async (listId: string) => {
