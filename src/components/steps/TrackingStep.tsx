@@ -308,33 +308,6 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
         </div>
       )}
 
-      <div className="flex gap-3">
-        <button
-          onClick={handleSave}
-          disabled={saving || saved}
-          className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
-            saved
-              ? "bg-success/20 text-success border border-success/30"
-              : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg shadow-primary/20"
-          }`}
-        >
-          {saving ? "Guardando..." : saved ? "✓ Campaña guardada" : "💾 Guardar campaña"}
-        </button>
-
-        {saved && (
-          <button
-            onClick={handleLaunch}
-            disabled={launching || launched}
-            className={`px-6 py-2.5 rounded-lg text-sm font-medium transition-all ${
-              launched
-                ? "bg-success/20 text-success border border-success/30"
-                : "bg-warning/90 text-black hover:bg-warning transition-colors shadow-lg shadow-warning/20"
-            }`}
-          >
-            {launching ? "Creando secuencia..." : launched ? "✓ Secuencia creada en Apollo" : "🚀 Lanzar en Apollo"}
-          </button>
-        )}
-      </div>
     </div>
   );
 }
