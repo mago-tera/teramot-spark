@@ -1124,13 +1124,11 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
 
       {/* Share list dialog */}
       {shareListId && (
-        <ShareEntityDialog
+        <ShareListWithCopyDialog
           open={!!shareListId}
           onOpenChange={(open) => !open && setShareListId(null)}
-          entityType="lista"
-          entityId={shareListId}
-          memberTable="list_members"
-          fkColumn="list_id"
+          listId={shareListId}
+          listName={lists.find((l) => l.id === shareListId)?.name || "Lista"}
         />
       )}
 
