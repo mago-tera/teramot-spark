@@ -1004,7 +1004,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                 <button
                   onClick={async () => {
                     if (!shareViewName.trim()) {
-                      toast.error("Poné un nombre a la vista");
+                      toast.error("Poné un nombre al outreach");
                       return;
                     }
                     const filters = {
