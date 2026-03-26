@@ -52,7 +52,7 @@ export default function Login() {
         </button>
 
         <p className="text-[11px] text-muted-foreground/60">
-          Solo cuentas @teramot.com
+          Iniciá sesión con tu cuenta de Google
         </p>
       </div>
     </div>
