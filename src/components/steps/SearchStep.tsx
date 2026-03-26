@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { CampaignConfig, Lead, ScoredLead } from "@/hooks/useWizard";
-import { HARDCODED_LEADS } from "@/data/hardcoded-leads";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useParams, useNavigate } from "react-router-dom";
@@ -434,32 +433,42 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       const existingEmails = new Set(existingLeadsData.map((l) => l.email).filter(Boolean));
       const existingLinkedins = new Set(existingLeadsData.map((l) => l.linkedin_url).filter(Boolean));
 
-      // Use hardcoded leads instead of Apollo (MVP)
-      setLogs((prev) => [...prev, `📋 Cargando leads desde CSV...`]);
+      // Search leads via Apollo API
+      setLogs((prev) => [...prev, `🔍 Buscando leads en Apollo...`]);
       setProgress(30);
 
-      const requested = searchConfig.quantity;
-      const allAvailable = HARDCODED_LEADS.filter((l: Lead) => {
-        if (l.email && existingEmails.has(l.email)) return false;
-        if (l.linkedinUrl && existingLinkedins.has(l.linkedinUrl)) return false;
-        return true;
+      const { data: apolloResult, error: apolloErr } = await supabase.functions.invoke("search-apollo", {
+        body: {
+          profile: searchConfig.profile,
+          geoMix: searchConfig.geoMix,
+          quantity: searchConfig.quantity,
+          page: 1,
+          excludeEmails: Array.from(existingEmails),
+          excludeLinkedins: Array.from(existingLinkedins),
+        },
       });
 
-      const dupeCount = HARDCODED_LEADS.length - allAvailable.length;
-      if (dupeCount > 0) {
-        setLogs((prev) => [...prev, `⚠ ${dupeCount} duplicados filtrados del pool`]);
-      }
+      if (apolloErr) throw new Error(apolloErr.message || "Error buscando en Apollo");
+      if (apolloResult?.error) throw new Error(apolloResult.error);
 
-      // Take requested amount; surplus stays available (smart retry logic)
-      const finalLeads = allAvailable.slice(0, requested);
-      if (finalLeads.length < requested && allAvailable.length > finalLeads.length) {
-        // Fill from surplus
-        const extra = allAvailable.slice(requested, requested + (requested - finalLeads.length));
-        finalLeads.push(...extra);
-        setLogs((prev) => [...prev, `🔄 ${extra.length} leads extra del surplus para completar`]);
-      }
-      if (finalLeads.length < requested) {
-        setLogs((prev) => [...prev, `ℹ Solo ${finalLeads.length} leads únicos disponibles de ${requested} pedidos`]);
+      const apolloLeads: Lead[] = (apolloResult?.leads || []).map((l: any) => ({
+        id: l.id || crypto.randomUUID(),
+        firstName: l.firstName || "",
+        lastName: l.lastName || "",
+        title: l.title || "",
+        company: l.company || "",
+        industry: l.industry || "",
+        country: l.country || "",
+        seniority: l.seniority || "",
+        email: l.email || "",
+        linkedinUrl: l.linkedinUrl || "",
+        headcount: l.headcount || 0,
+      }));
+
+      const finalLeads = apolloLeads;
+      setLogs((prev) => [...prev, `✅ ${finalLeads.length} leads encontrados en Apollo`]);
+      if (finalLeads.length < searchConfig.quantity) {
+        setLogs((prev) => [...prev, `ℹ Solo ${finalLeads.length} leads únicos disponibles de ${searchConfig.quantity} pedidos`]);
       }
 
       setProgress(60);
