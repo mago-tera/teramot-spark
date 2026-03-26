@@ -280,6 +280,9 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
             calificacion: d.calificacion || null,
             responsable: d.responsable || null,
             canal: d.canal || null,
+            enviado: (d as any).enviado || false,
+            respondido: (d as any).respondido || false,
+            conversion: (d as any).conversion || false,
           }));
           setListLeads(mapped);
           setScoredLeads(mapped);
