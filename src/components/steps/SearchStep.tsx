@@ -658,6 +658,14 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
           </div>
         </div>
 
+        {/* Copy sugerido banner */}
+        {selectedList?.copy_sugerido && (
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-1">
+            <p className="text-xs font-medium text-primary">📋 Copy sugerido</p>
+            <p className="text-sm text-foreground whitespace-pre-wrap">{selectedList.copy_sugerido}</p>
+          </div>
+        )}
+
         {listLeads.length > 0 && (
           <div className="glass-card overflow-hidden">
             <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.06]">
