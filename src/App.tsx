@@ -9,6 +9,7 @@ import CampaignsPage from "./pages/CampaignsPage";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import SharedListPage from "./pages/SharedListPage";
 
 const queryClient = new QueryClient();
 
@@ -41,6 +42,7 @@ const App = () => (
           <Route path="/project/:projectId" element={<AuthGuard><CampaignsPage /></AuthGuard>} />
           <Route path="/project/:projectId/campaign/new" element={<AuthGuard><Index /></AuthGuard>} />
           <Route path="/project/:projectId/campaign/:id" element={<AuthGuard><Index /></AuthGuard>} />
+          <Route path="/shared/list/:listId" element={<AuthGuard><SharedListPage /></AuthGuard>} />
           {/* Legacy routes redirect */}
           <Route path="/campaign/*" element={<Navigate to="/" replace />} />
           <Route path="*" element={<NotFound />} />
