@@ -10,7 +10,7 @@ import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users, Download, Zap, Use
 import * as XLSX from "xlsx";
 import { Trash2 } from "lucide-react";
 import { SmartAssignDialog } from "@/components/SmartAssignDialog";
-import { ShareEntityDialog } from "@/components/ShareEntityDialog";
+
 import {
   AlertDialog,
   AlertDialogContent,
