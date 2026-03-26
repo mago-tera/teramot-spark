@@ -191,6 +191,10 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [savingField, setSavingField] = useState<Record<string, boolean>>({});
   const [smartAssignField, setSmartAssignField] = useState<"calificacion" | "responsable" | "canal" | null>(null);
   const [shareListId, setShareListId] = useState<string | null>(null);
+  const [showShareFilterModal, setShowShareFilterModal] = useState(false);
+  const [shareFilterAprobado, setShareFilterAprobado] = useState("");
+  const [shareFilterResponsable, setShareFilterResponsable] = useState("");
+  const [shareFilterCanal, setShareFilterCanal] = useState("");
   const [leadSearch, setLeadSearch] = useState("");
 
   const deleteList = async (listId: string) => {
@@ -644,15 +648,11 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               <Download className="w-3.5 h-3.5" /> Bajar CSV / Excel
             </button>
             <button
-              onClick={async () => {
-                // Save current filters to the list before sharing
-                const filters = {
-                  calificacion: csvFilterAprobado || null,
-                  responsable: csvFilterResponsable || null,
-                  canal: csvFilterCanal || null,
-                };
-                await supabase.from("lists").update({ filtros_compartidos: filters }).eq("id", selectedListId);
-                setShareListId(selectedListId);
+              onClick={() => {
+                setShareFilterAprobado("");
+                setShareFilterResponsable("");
+                setShareFilterCanal("");
+                setShowShareFilterModal(true);
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
             >
@@ -864,6 +864,65 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-emerald-600 text-white hover:bg-emerald-700 transition-colors"
                 >
                   <FileSpreadsheet className="w-4 h-4" /> Excel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Share filter modal */}
+        {showShareFilterModal && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowShareFilterModal(false)}>
+            <div className="bg-[hsl(var(--card))] border border-white/[0.1] rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-lg font-semibold text-foreground">Filtros para compartir</h3>
+              <p className="text-xs text-muted-foreground">Seleccioná qué leads verá el usuario con quien compartas.</p>
+              <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Aprobado</label>
+                  <select value={shareFilterAprobado} onChange={(e) => setShareFilterAprobado(e.target.value)}
+                    className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white">
+                    <option value="">Todos</option>
+                    <option value="SI">SI</option>
+                    <option value="NO">NO</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Responsable</label>
+                  <select value={shareFilterResponsable} onChange={(e) => setShareFilterResponsable(e.target.value)}
+                    className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white">
+                    <option value="">Todos</option>
+                    {RESPONSABLES.map((r) => <option key={r.label} value={r.label}>{r.label}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Canal</label>
+                  <select value={shareFilterCanal} onChange={(e) => setShareFilterCanal(e.target.value)}
+                    className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white">
+                    <option value="">Todos</option>
+                    <option value="LinkedIn">LinkedIn</option>
+                    <option value="Mail">Mail</option>
+                  </select>
+                </div>
+              </div>
+              <div className="flex gap-2 pt-2">
+                <button onClick={() => setShowShareFilterModal(false)}
+                  className="flex-1 px-4 py-2 rounded-lg text-sm font-medium border border-white/[0.1] text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors">
+                  Cancelar
+                </button>
+                <button
+                  onClick={async () => {
+                    const filters = {
+                      calificacion: shareFilterAprobado || null,
+                      responsable: shareFilterResponsable || null,
+                      canal: shareFilterCanal || null,
+                    };
+                    await supabase.from("lists").update({ filtros_compartidos: filters }).eq("id", selectedListId);
+                    setShowShareFilterModal(false);
+                    setShareListId(selectedListId);
+                    toast.success("Filtros guardados");
+                  }}
+                  className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+                  <UserPlus className="w-4 h-4" /> Continuar
                 </button>
               </div>
             </div>
