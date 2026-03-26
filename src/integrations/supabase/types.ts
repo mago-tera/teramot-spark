@@ -256,6 +256,7 @@ export type Database = {
           campaign_id: string
           conversiones: number
           copy_sugerido: string
+          copy_sugerido_subject: string
           created_at: string
           enviados: number
           filtros_compartidos: Json
@@ -273,6 +274,7 @@ export type Database = {
           campaign_id: string
           conversiones?: number
           copy_sugerido?: string
+          copy_sugerido_subject?: string
           created_at?: string
           enviados?: number
           filtros_compartidos?: Json
@@ -290,6 +292,7 @@ export type Database = {
           campaign_id?: string
           conversiones?: number
           copy_sugerido?: string
+          copy_sugerido_subject?: string
           created_at?: string
           enviados?: number
           filtros_compartidos?: Json
