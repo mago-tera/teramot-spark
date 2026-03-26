@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { CheckCircle2, Circle, Search } from "lucide-react";
 
@@ -53,7 +52,6 @@ const COUNTRY_COLORS: Record<string, string> = {
 
 export default function SharedListPage() {
   const { listId } = useParams();
-  const { user, loading: authLoading } = useAuth();
   const [listInfo, setListInfo] = useState<ListInfo | null>(null);
   const [leads, setLeads] = useState<SharedLead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -61,7 +59,7 @@ export default function SharedListPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (authLoading || !user || !listId) return;
+    if (!listId) return;
 
     (async () => {
       // Load list info
@@ -102,7 +100,7 @@ export default function SharedListPage() {
       }
       setLoading(false);
     })();
-  }, [user, authLoading, listId]);
+  }, [listId]);
 
   const toggleField = async (leadId: string, field: "enviado" | "respondido" | "conversion") => {
     const lead = leads.find((l) => l.id === leadId);
@@ -116,7 +114,7 @@ export default function SharedListPage() {
     }
   };
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "hsl(240 15% 6%)" }}>
         <div className="animate-pulse text-muted-foreground">Cargando...</div>
