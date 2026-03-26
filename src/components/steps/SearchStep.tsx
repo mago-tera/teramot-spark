@@ -927,7 +927,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                       responsable: shareFilterResponsable || null,
                       canal: shareFilterCanal || null,
                     };
-                    await supabase.from("lists").update({ filtros_compartidos: filters }).eq("id", selectedListId);
+                    await supabase.from("lists").update({ filtros_compartidos: filters, copy_sugerido: shareCopySugerido }).eq("id", selectedListId);
                     setShowShareFilterModal(false);
                     setShareListId(selectedListId);
                     toast.success("Filtros guardados");
