@@ -940,9 +940,18 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         {showShareFilterModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowShareFilterModal(false)}>
             <div className="bg-[hsl(var(--card))] border border-white/[0.1] rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-lg font-semibold text-foreground">Filtros para compartir</h3>
-              <p className="text-xs text-muted-foreground">Seleccioná qué leads verá el usuario con quien compartas.</p>
+              <h3 className="text-lg font-semibold text-foreground">Compartir vista</h3>
+              <p className="text-xs text-muted-foreground">Nombrá la vista y seleccioná qué leads verá el usuario.</p>
               <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Nombre de la vista</label>
+                  <input
+                    value={shareViewName}
+                    onChange={(e) => setShareViewName(e.target.value)}
+                    placeholder="Ej: Leads LinkedIn - Bruno"
+                    className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Aprobado</label>
                   <select value={shareFilterAprobado} onChange={(e) => setShareFilterAprobado(e.target.value)}
