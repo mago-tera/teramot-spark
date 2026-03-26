@@ -238,7 +238,7 @@ export default function SharedListPage() {
                         ) : <span className="text-muted-foreground text-[10px]">—</span>}
                       </td>
                       <td className="px-3 py-2.5">
-                        <span className={`px-2 py-0.5 rounded text-[10px] border ${q.bg} ${q.text} ${q.border}`}>{q.label}</span>
+                        <span className={`inline-block px-3 py-1 rounded text-xs font-medium border whitespace-nowrap ${q.bg} ${q.text} ${q.border}`}>{q.label}</span>
                       </td>
                       {/* Enviado */}
                       <td className="px-3 py-2.5 text-center">
