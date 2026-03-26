@@ -677,8 +677,11 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-white/[0.06]">
-                    {["Nombre", "Cargo", "Empresa", "País", "Email", "LinkedIn", "Score"].map((h) => (
+                     {["Nombre", "Cargo", "Empresa", "País", "Email", "LinkedIn", "Score"].map((h) => (
                       <th key={h} className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">{h}</th>
+                    ))}
+                    {["Enviado", "Respondido", "Conversión"].map((h) => (
+                      <th key={h} className="px-3 py-3 text-center text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">{h}</th>
                     ))}
                     {(["calificacion", "responsable", "canal"] as const).map((f) => (
                       <th key={f} className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">
