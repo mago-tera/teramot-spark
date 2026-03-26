@@ -946,17 +946,6 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
           </div>
         )}
 
-        {shareListId && (
-          <ShareEntityDialog
-            open={!!shareListId}
-            onOpenChange={(open) => !open && setShareListId(null)}
-            entityType="lista"
-            entityId={shareListId}
-            memberTable="list_members"
-            fkColumn="list_id"
-          />
-        )}
-
       </div>
     );
   }
