@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle2, Circle, Search } from "lucide-react";
+import { CheckCircle2, Circle, Search, Copy, Check } from "lucide-react";
 
 interface SharedLead {
   id: string;
@@ -27,6 +27,7 @@ interface ListInfo {
   id: string;
   name: string;
   copy_sugerido: string;
+  copy_sugerido_subject: string;
   filtros_compartidos: {
     calificacion?: string | null;
     responsable?: string | null;
@@ -57,15 +58,18 @@ export default function SharedListPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [copiedLinkedin, setCopiedLinkedin] = useState<string | null>(null);
+  const [subject, setSubject] = useState("");
+  const [editingSubject, setEditingSubject] = useState(false);
 
   useEffect(() => {
     if (!listId) return;
 
     (async () => {
-      // Load list info
       const { data: list, error: listErr } = await supabase
         .from("lists")
-        .select("id, name, copy_sugerido, filtros_compartidos")
+        .select("id, name, copy_sugerido, copy_sugerido_subject, filtros_compartidos")
         .eq("id", listId)
         .single();
 
@@ -77,10 +81,11 @@ export default function SharedListPage() {
 
       setListInfo({
         ...list,
+        copy_sugerido_subject: (list as any).copy_sugerido_subject || "",
         filtros_compartidos: (list.filtros_compartidos as any) || {},
       });
+      setSubject((list as any).copy_sugerido_subject || "");
 
-      // Load leads
       const { data: leadsData } = await supabase
         .from("leads")
         .select("*")
@@ -88,7 +93,6 @@ export default function SharedListPage() {
         .order("score", { ascending: false });
 
       if (leadsData) {
-        // Apply saved filters
         const filters = (list.filtros_compartidos as any) || {};
         const filtered = leadsData.filter((l) => {
           if (filters.calificacion && l.calificacion !== filters.calificacion) return false;
@@ -112,6 +116,37 @@ export default function SharedListPage() {
       toast.error("Error al guardar");
       setLeads((prev) => prev.map((l) => (l.id === leadId ? { ...l, [field]: !newVal } : l)));
     }
+  };
+
+  const copyLinkedin = (url: string, leadId: string) => {
+    navigator.clipboard.writeText(url);
+    setCopiedLinkedin(leadId);
+    toast.success("LinkedIn copiado");
+    setTimeout(() => setCopiedLinkedin(null), 1500);
+  };
+
+  const copyMessageForLead = (lead: SharedLead) => {
+    if (!listInfo?.copy_sugerido) return;
+    const name = lead.first_name || "{{Nombre}}";
+    const message = listInfo.copy_sugerido.replace(/\[Nombre\]/gi, name);
+    let fullText = "";
+    if (subject) {
+      fullText = `Subject: ${subject.replace(/\[Nombre\]/gi, name)}\n\n${message}`;
+    } else {
+      fullText = message;
+    }
+    navigator.clipboard.writeText(fullText);
+    setCopiedId(lead.id);
+    toast.success("Mensaje copiado");
+    setTimeout(() => setCopiedId(null), 1500);
+  };
+
+  const saveSubject = async () => {
+    if (!listId) return;
+    setEditingSubject(false);
+    await supabase.from("lists").update({ copy_sugerido_subject: subject } as any).eq("id", listId);
+    if (listInfo) setListInfo({ ...listInfo, copy_sugerido_subject: subject });
+    toast.success("Subject guardado");
   };
 
   if (loading) {
@@ -154,6 +189,8 @@ export default function SharedListPage() {
     conversiones: leads.filter((l) => l.conversion).length,
   };
 
+  const hasCopy = !!listInfo.copy_sugerido;
+
   return (
     <div className="min-h-screen" style={{ background: "hsl(240 15% 6%)" }}>
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-6">
@@ -171,11 +208,39 @@ export default function SharedListPage() {
           )}
         </div>
 
-        {/* Copy sugerido */}
-        {listInfo.copy_sugerido && (
-          <div className="glass-card p-4">
-            <h3 className="text-sm font-medium text-foreground mb-2">Copy Sugerido</h3>
+        {/* Copy sugerido + Subject */}
+        {hasCopy && (
+          <div className="glass-card p-4 space-y-3">
+            <h3 className="text-sm font-medium text-foreground">Copy Sugerido</h3>
             <p className="text-sm text-muted-foreground whitespace-pre-wrap">{listInfo.copy_sugerido}</p>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground whitespace-nowrap">Subject:</span>
+              {editingSubject ? (
+                <div className="flex items-center gap-2 flex-1">
+                  <input
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder="Ej: Hola [Nombre], te escribo por..."
+                    className="flex-1 bg-white/[0.04] border border-white/[0.1] rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50"
+                    autoFocus
+                    onKeyDown={(e) => { if (e.key === "Enter") saveSubject(); if (e.key === "Escape") setEditingSubject(false); }}
+                  />
+                  <button onClick={saveSubject} className="px-2 py-1 rounded text-[11px] bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+                    Guardar
+                  </button>
+                  <button onClick={() => setEditingSubject(false)} className="px-2 py-1 rounded text-[11px] border border-white/10 text-muted-foreground hover:text-foreground transition-colors">
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 flex-1">
+                  <span className="text-xs text-foreground">{subject || <span className="text-muted-foreground italic">Sin subject</span>}</span>
+                  <button onClick={() => setEditingSubject(true)} className="text-[10px] text-primary hover:text-primary/80 transition-colors underline">
+                    {subject ? "Editar" : "Agregar"}
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
@@ -213,14 +278,18 @@ export default function SharedListPage() {
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-white/[0.06]">
-                  {["Nombre", "Cargo", "Empresa", "País", "Email", "LinkedIn", "Score", "Enviado", "Respondido", "Conversión"].map((h) => (
+                  {[
+                    "Nombre", "Cargo", "Empresa", "País", "Email", "LinkedIn", "Score",
+                    ...(hasCopy ? ["Mensaje"] : []),
+                    "Enviado", "Respondido", "Conversión"
+                  ].map((h) => (
                     <th key={h} className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {filtered.map((lead, i) => {
-                  const q = QUARTILE_STYLES[lead.quartile || "Q4"] || QUARTILE_STYLES.Q4;
+                  const qs = QUARTILE_STYLES[lead.quartile || "Q4"] || QUARTILE_STYLES.Q4;
                   return (
                     <tr key={lead.id} className={`border-b border-white/[0.03] ${i % 2 === 0 ? "bg-white/[0.01]" : ""} hover:bg-white/[0.03] transition-colors`}>
                       <td className="px-3 py-2.5 text-foreground font-medium whitespace-nowrap">{lead.first_name} {lead.last_name}</td>
@@ -230,16 +299,43 @@ export default function SharedListPage() {
                         <span className={`px-2 py-0.5 rounded text-[10px] border ${COUNTRY_COLORS[lead.country || ""] || "text-muted-foreground"}`}>{lead.country}</span>
                       </td>
                       <td className="px-3 py-2.5 text-muted-foreground font-mono text-[10px]">{lead.email || "—"}</td>
+                      {/* LinkedIn with copy */}
                       <td className="px-3 py-2.5">
                         {lead.linkedin_url ? (
-                          <a href={lead.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 text-[10px] font-mono truncate underline">
-                            {lead.linkedin_url}
-                          </a>
+                          <div className="flex items-center gap-1.5">
+                            <a href={lead.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 text-[10px] font-mono truncate underline max-w-[120px]">
+                              Perfil
+                            </a>
+                            <button
+                              onClick={() => copyLinkedin(lead.linkedin_url!, lead.id)}
+                              className="p-0.5 rounded hover:bg-white/[0.06] text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                              title="Copiar URL de LinkedIn"
+                            >
+                              {copiedLinkedin === lead.id
+                                ? <Check className="w-3 h-3 text-green-400" />
+                                : <Copy className="w-3 h-3" />}
+                            </button>
+                          </div>
                         ) : <span className="text-muted-foreground text-[10px]">—</span>}
                       </td>
+                      {/* Score */}
                       <td className="px-3 py-2.5">
-                        <span className={`inline-block px-3 py-1 rounded text-xs font-medium border whitespace-nowrap ${q.bg} ${q.text} ${q.border}`}>{q.label}</span>
+                        <span className={`inline-block px-3 py-1.5 rounded text-xs font-medium border whitespace-nowrap ${qs.bg} ${qs.text} ${qs.border}`}>{qs.label}</span>
                       </td>
+                      {/* Mensaje (copy sugerido per lead) */}
+                      {hasCopy && (
+                        <td className="px-3 py-2.5 text-center">
+                          <button
+                            onClick={() => copyMessageForLead(lead)}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-white/[0.1] bg-white/[0.04] hover:bg-white/[0.08] text-foreground transition-colors whitespace-nowrap"
+                            title="Copiar mensaje personalizado"
+                          >
+                            {copiedId === lead.id
+                              ? <><Check className="w-3 h-3 text-green-400" /> Copiado</>
+                              : <><Copy className="w-3 h-3" /> Copiar</>}
+                          </button>
+                        </td>
+                      )}
                       {/* Enviado */}
                       <td className="px-3 py-2.5 text-center">
                         <button onClick={() => toggleField(lead.id, "enviado")} className="transition-colors">
