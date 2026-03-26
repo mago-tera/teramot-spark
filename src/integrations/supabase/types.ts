@@ -140,9 +140,11 @@ export type Database = {
           campaign_id: string | null
           canal: string | null
           company: string | null
+          conversion: boolean
           country: string | null
           created_at: string
           email: string | null
+          enviado: boolean
           first_name: string | null
           headcount: number | null
           id: string
@@ -152,6 +154,7 @@ export type Database = {
           list_id: string | null
           messages: Json | null
           quartile: string | null
+          respondido: boolean
           responsable: string | null
           score: number | null
           seniority: string | null
@@ -162,9 +165,11 @@ export type Database = {
           campaign_id?: string | null
           canal?: string | null
           company?: string | null
+          conversion?: boolean
           country?: string | null
           created_at?: string
           email?: string | null
+          enviado?: boolean
           first_name?: string | null
           headcount?: number | null
           id?: string
@@ -174,6 +179,7 @@ export type Database = {
           list_id?: string | null
           messages?: Json | null
           quartile?: string | null
+          respondido?: boolean
           responsable?: string | null
           score?: number | null
           seniority?: string | null
@@ -184,9 +190,11 @@ export type Database = {
           campaign_id?: string | null
           canal?: string | null
           company?: string | null
+          conversion?: boolean
           country?: string | null
           created_at?: string
           email?: string | null
+          enviado?: boolean
           first_name?: string | null
           headcount?: number | null
           id?: string
@@ -196,6 +204,7 @@ export type Database = {
           list_id?: string | null
           messages?: Json | null
           quartile?: string | null
+          respondido?: boolean
           responsable?: string | null
           score?: number | null
           seniority?: string | null
