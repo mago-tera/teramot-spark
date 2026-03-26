@@ -944,7 +944,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               <p className="text-xs text-muted-foreground">Nombrá el outreach y seleccioná qué leads verá tu equipo.</p>
               <div className="space-y-3">
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Nombre de la vista</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">Nombre del Outreach</label>
                   <input
                     value={shareViewName}
                     onChange={(e) => setShareViewName(e.target.value)}
