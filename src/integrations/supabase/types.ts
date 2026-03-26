@@ -267,6 +267,7 @@ export type Database = {
           profile: string
           quantity: number
           respondidos: number
+          shared: boolean
         }
         Insert: {
           campaign_id: string
@@ -283,6 +284,7 @@ export type Database = {
           profile: string
           quantity?: number
           respondidos?: number
+          shared?: boolean
         }
         Update: {
           campaign_id?: string
@@ -299,6 +301,7 @@ export type Database = {
           profile?: string
           quantity?: number
           respondidos?: number
+          shared?: boolean
         }
         Relationships: [
           {
