@@ -939,7 +939,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                     toast.success("Link copiado al portapapeles: " + link);
                   }}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-                  <UserPlus className="w-4 h-4" /> Continuar
+                  <Copy className="w-4 h-4" /> Copiar link
                 </button>
               </div>
             </div>
