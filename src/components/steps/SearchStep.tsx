@@ -240,7 +240,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         .order("created_at", { ascending: false });
       if (allLists) {
         setProjectLists(
-          allLists.map((l) => ({ ...l, geo_mix: l.geo_mix as Record<string, number>, campaignName: campaignMap[l.campaign_id] }))
+          allLists.map((l) => ({ ...l, geo_mix: l.geo_mix as Record<string, number>, filtros_compartidos: (l as any).filtros_compartidos as Record<string, string> || {}, campaignName: campaignMap[l.campaign_id] }))
         );
       }
     })();
