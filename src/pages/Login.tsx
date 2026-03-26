@@ -15,7 +15,7 @@ export default function Login() {
       },
     });
     if (result.error) {
-      setError("Error al iniciar sesión. Asegurate de usar tu cuenta @teramot.com.");
+      setError("Error al iniciar sesión. Intentá de nuevo.");
       setLoading(false);
     }
   };
