@@ -191,6 +191,10 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [savingField, setSavingField] = useState<Record<string, boolean>>({});
   const [smartAssignField, setSmartAssignField] = useState<"calificacion" | "responsable" | "canal" | null>(null);
   const [shareListId, setShareListId] = useState<string | null>(null);
+  const [showShareFilterModal, setShowShareFilterModal] = useState(false);
+  const [shareFilterAprobado, setShareFilterAprobado] = useState("");
+  const [shareFilterResponsable, setShareFilterResponsable] = useState("");
+  const [shareFilterCanal, setShareFilterCanal] = useState("");
   const [leadSearch, setLeadSearch] = useState("");
 
   const deleteList = async (listId: string) => {
