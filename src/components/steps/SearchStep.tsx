@@ -1217,7 +1217,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                 <button
                   onClick={(e) => { e.stopPropagation(); setSelectedListId(list.id); setShareFilterAprobado(""); setShareFilterResponsable(""); setShareFilterCanal(""); setShareCopySugerido(""); setShareViewName(list.name || ""); setShowShareFilterModal(true); }}
                   className="p-1.5 rounded hover:bg-white/10 text-muted-foreground/40 hover:text-foreground opacity-0 group-hover:opacity-100 transition-all shrink-0"
-                  title="Compartir lista"
+                  title="Crear Outreach"
                 >
                   <UserPlus className="w-4 h-4" />
                 </button>
