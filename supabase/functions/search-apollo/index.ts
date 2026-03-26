@@ -94,7 +94,7 @@ serve(async (req) => {
       // Overfetch 3x to compensate for incomplete leads
       const fetchQty = Math.min(targetQty * 3, 100);
 
-      const response = await fetch("https://api.apollo.io/api/v1/mixed_people/search", {
+      const response = await fetch("https://api.apollo.io/api/v1/mixed_people/api_search", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
