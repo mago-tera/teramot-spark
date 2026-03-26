@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { ICPForm } from "@/components/steps/ICPForm";
-import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users, Download, Zap, UserPlus, FileSpreadsheet, Search } from "lucide-react";
+import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users, Download, Zap, UserPlus, FileSpreadsheet, Search, ExternalLink, Link2 } from "lucide-react";
 import * as XLSX from "xlsx";
 import { Trash2 } from "lucide-react";
 import { SmartAssignDialog } from "@/components/SmartAssignDialog";
