@@ -894,7 +894,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                     {RESPONSABLES.map((r) => <option key={r.label} value={r.label}>{r.label}</option>)}
                   </select>
                 </div>
-                <div>
+              <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Canal</label>
                   <select value={shareFilterCanal} onChange={(e) => setShareFilterCanal(e.target.value)}
                     className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white">
@@ -902,6 +902,16 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                     <option value="LinkedIn">LinkedIn</option>
                     <option value="Mail">Mail</option>
                   </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Copy sugerido</label>
+                  <textarea
+                    value={shareCopySugerido}
+                    onChange={(e) => setShareCopySugerido(e.target.value)}
+                    placeholder="Escribí el mensaje o template que querés que el usuario copie para contactar a los leads..."
+                    rows={4}
+                    className="w-full rounded-lg px-3 py-2 text-sm border border-white/[0.1] bg-[hsl(var(--background))] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                  />
                 </div>
               </div>
               <div className="flex gap-2 pt-2">
