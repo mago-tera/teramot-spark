@@ -303,7 +303,7 @@ export default function SharedListPage() {
                       <td className="px-3 py-2.5">
                         {lead.linkedin_url ? (
                           <div className="flex items-center gap-1.5">
-                            <a href={lead.linkedin_url} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 text-[10px] font-mono truncate underline max-w-[120px]">
+                            <a href={lead.linkedin_url.startsWith("http") ? lead.linkedin_url : `https://${lead.linkedin_url}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 text-[10px] font-mono truncate underline max-w-[120px]">
                               Perfil
                             </a>
                             <button
