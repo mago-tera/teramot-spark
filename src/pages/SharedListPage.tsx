@@ -52,7 +52,6 @@ const COUNTRY_COLORS: Record<string, string> = {
 
 export default function SharedListPage() {
   const { listId } = useParams();
-  const { user, loading: authLoading } = useAuth();
   const [listInfo, setListInfo] = useState<ListInfo | null>(null);
   const [leads, setLeads] = useState<SharedLead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +59,7 @@ export default function SharedListPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (authLoading || !user || !listId) return;
+    if (!listId) return;
 
     (async () => {
       // Load list info
