@@ -1,11 +1,24 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { CampaignConfig, ScoredLead } from "@/hooks/useWizard";
 import { saveCampaign, saveLeads, createApolloSequence } from "@/lib/api";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { Copy, ExternalLink } from "lucide-react";
 
 interface Props {
   config: CampaignConfig;
   scoredLeads: ScoredLead[];
+  campaignId: string | null;
+}
+
+interface SharedListInfo {
+  id: string;
+  name: string;
+  lead_count: number;
+  shared: boolean;
+  enviados: number;
+  respondidos: number;
+  conversiones: number;
 }
 
 const BENCHMARKS = [
@@ -18,13 +31,27 @@ const BENCHMARKS = [
 
 const CHECKPOINTS = [3, 5, 7, 10, 14, 21, "Cierre"];
 
-export function TrackingStep({ config, scoredLeads }: Props) {
+export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
   const [campaignName, setCampaignName] = useState("Cambiale el nombre che!");
   const [loomLinks, setLoomLinks] = useState({ Q1: "", Q2: "", Q3: "", Q4: "" });
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [launching, setLaunching] = useState(false);
   const [launched, setLaunched] = useState(false);
+  const [sharedLists, setSharedLists] = useState<SharedListInfo[]>([]);
+
+  // Fetch all lists for this campaign
+  useEffect(() => {
+    if (!campaignId) return;
+    supabase
+      .from("lists")
+      .select("id, name, lead_count, shared, enviados, respondidos, conversiones")
+      .eq("campaign_id", campaignId)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => {
+        if (data) setSharedLists(data);
+      });
+  }, [campaignId]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -55,12 +82,77 @@ export function TrackingStep({ config, scoredLeads }: Props) {
     }
   };
 
+  const copyLink = (listId: string) => {
+    const link = `${window.location.origin}/shared/list/${listId}`;
+    navigator.clipboard.writeText(link);
+    toast.success("Link copiado");
+  };
+
   return (
     <div className="space-y-6">
       <div>
         <h2 className="text-xl font-semibold text-foreground">Tracking de campaña</h2>
         <p className="text-sm text-muted-foreground mt-1">Configura el seguimiento y benchmarks.</p>
       </div>
+
+      {/* Shared list URLs */}
+      {sharedLists.length > 0 && (
+        <div className="glass-card p-5 space-y-4">
+          <h3 className="text-sm font-medium text-foreground">Vistas compartidas</h3>
+          <div className="space-y-3">
+            {sharedLists.map((list) => (
+              <div key={list.id} className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-muted/30">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-foreground truncate">{list.name}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                      {list.lead_count} leads
+                    </span>
+                    {list.shared && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-primary/10 text-primary">
+                        Pública
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] font-mono text-muted-foreground truncate mt-1">
+                    {window.location.origin}/shared/list/{list.id}
+                  </p>
+                  {/* Mini metrics */}
+                  <div className="flex gap-3 mt-1.5">
+                    <span className="text-[10px] text-muted-foreground">
+                      📤 {list.enviados} enviados
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      💬 {list.respondidos} respondidos
+                    </span>
+                    <span className="text-[10px] text-muted-foreground">
+                      🎯 {list.conversiones} conversiones
+                    </span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-1 ml-3">
+                  <button
+                    onClick={() => copyLink(list.id)}
+                    className="p-1.5 rounded hover:bg-muted transition-colors"
+                    title="Copiar link"
+                  >
+                    <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                  <a
+                    href={`/shared/list/${list.id}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="p-1.5 rounded hover:bg-muted transition-colors"
+                    title="Abrir vista"
+                  >
+                    <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+                  </a>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Campaign name */}
       <div className="glass-card p-5 space-y-3">
