@@ -195,6 +195,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [shareFilterAprobado, setShareFilterAprobado] = useState("");
   const [shareFilterResponsable, setShareFilterResponsable] = useState("");
   const [shareFilterCanal, setShareFilterCanal] = useState("");
+  const [shareCopySugerido, setShareCopySugerido] = useState("");
   const [leadSearch, setLeadSearch] = useState("");
 
   const deleteList = async (listId: string) => {
@@ -652,6 +653,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                 setShareFilterAprobado("");
                 setShareFilterResponsable("");
                 setShareFilterCanal("");
+                setShareCopySugerido("");
                 setShowShareFilterModal(true);
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
@@ -894,7 +896,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                     {RESPONSABLES.map((r) => <option key={r.label} value={r.label}>{r.label}</option>)}
                   </select>
                 </div>
-                <div>
+              <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Canal</label>
                   <select value={shareFilterCanal} onChange={(e) => setShareFilterCanal(e.target.value)}
                     className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white">
@@ -902,6 +904,16 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                     <option value="LinkedIn">LinkedIn</option>
                     <option value="Mail">Mail</option>
                   </select>
+                </div>
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Copy sugerido</label>
+                  <textarea
+                    value={shareCopySugerido}
+                    onChange={(e) => setShareCopySugerido(e.target.value)}
+                    placeholder="Escribí el mensaje o template que querés que el usuario copie para contactar a los leads..."
+                    rows={4}
+                    className="w-full rounded-lg px-3 py-2 text-sm border border-white/[0.1] bg-[hsl(var(--background))] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                  />
                 </div>
               </div>
               <div className="flex gap-2 pt-2">
@@ -916,7 +928,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                       responsable: shareFilterResponsable || null,
                       canal: shareFilterCanal || null,
                     };
-                    await supabase.from("lists").update({ filtros_compartidos: filters }).eq("id", selectedListId);
+                    await supabase.from("lists").update({ filtros_compartidos: filters, copy_sugerido: shareCopySugerido }).eq("id", selectedListId);
                     setShowShareFilterModal(false);
                     setShareListId(selectedListId);
                     toast.success("Filtros guardados");
