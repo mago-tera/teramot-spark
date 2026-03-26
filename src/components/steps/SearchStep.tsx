@@ -197,6 +197,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [shareFilterResponsable, setShareFilterResponsable] = useState("");
   const [shareFilterCanal, setShareFilterCanal] = useState("");
   const [shareCopySugerido, setShareCopySugerido] = useState("");
+  const [shareViewName, setShareViewName] = useState("");
   const [leadSearch, setLeadSearch] = useState("");
 
   const deleteList = async (listId: string) => {
@@ -665,6 +666,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                 setShareFilterResponsable("");
                 setShareFilterCanal("");
                 setShareCopySugerido("");
+                setShareViewName("");
                 setShowShareFilterModal(true);
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
@@ -938,9 +940,18 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         {showShareFilterModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowShareFilterModal(false)}>
             <div className="bg-[hsl(var(--card))] border border-white/[0.1] rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-lg font-semibold text-foreground">Filtros para compartir</h3>
-              <p className="text-xs text-muted-foreground">Seleccioná qué leads verá el usuario con quien compartas.</p>
+              <h3 className="text-lg font-semibold text-foreground">Compartir vista</h3>
+              <p className="text-xs text-muted-foreground">Nombrá la vista y seleccioná qué leads verá el usuario.</p>
               <div className="space-y-3">
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Nombre de la vista</label>
+                  <input
+                    value={shareViewName}
+                    onChange={(e) => setShareViewName(e.target.value)}
+                    placeholder="Ej: Leads LinkedIn - Bruno"
+                    className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
+                </div>
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Aprobado</label>
                   <select value={shareFilterAprobado} onChange={(e) => setShareFilterAprobado(e.target.value)}
@@ -985,6 +996,10 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                 </button>
                 <button
                   onClick={async () => {
+                    if (!shareViewName.trim()) {
+                      toast.error("Poné un nombre a la vista");
+                      return;
+                    }
                     const filters = {
                       calificacion: shareFilterAprobado || null,
                       responsable: shareFilterResponsable || null,
@@ -993,6 +1008,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                     await supabase.from("lists").update({ 
                       filtros_compartidos: filters, 
                       copy_sugerido: shareCopySugerido,
+                      name: shareViewName.trim(),
                       shared: true 
                     } as any).eq("id", selectedListId);
                     setShowShareFilterModal(false);
@@ -1199,7 +1215,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                   {new Date(list.created_at).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}
                 </div>
                 <button
-                  onClick={(e) => { e.stopPropagation(); setSelectedListId(list.id); setShareFilterAprobado(""); setShareFilterResponsable(""); setShareFilterCanal(""); setShareCopySugerido(""); setShowShareFilterModal(true); }}
+                  onClick={(e) => { e.stopPropagation(); setSelectedListId(list.id); setShareFilterAprobado(""); setShareFilterResponsable(""); setShareFilterCanal(""); setShareCopySugerido(""); setShareViewName(list.name || ""); setShowShareFilterModal(true); }}
                   className="p-1.5 rounded hover:bg-white/10 text-muted-foreground/40 hover:text-foreground opacity-0 group-hover:opacity-100 transition-all shrink-0"
                   title="Compartir lista"
                 >
