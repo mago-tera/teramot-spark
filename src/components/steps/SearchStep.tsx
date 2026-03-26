@@ -709,12 +709,17 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                 </thead>
                 <tbody>
                   {(() => {
+                    const sf = selectedList?.filtros_compartidos || {};
+                    let base = listLeads;
+                    if (sf.aprobado) base = base.filter((l) => (l as any).calificacion === sf.aprobado);
+                    if (sf.responsable) base = base.filter((l) => (l as any).responsable === sf.responsable);
+                    if (sf.canal) base = base.filter((l) => (l as any).canal === sf.canal);
                     const q = leadSearch.toLowerCase().trim();
                     const filtered = q
-                      ? listLeads.filter((l) =>
+                      ? base.filter((l) =>
                           `${l.firstName} ${l.lastName} ${l.title} ${l.company} ${l.email} ${l.country} ${l.industry}`.toLowerCase().includes(q)
                         )
-                      : listLeads;
+                      : base;
                     return filtered.map((lead, i) => {
                     const q = QUARTILE_STYLES[lead.quartile] || QUARTILE_STYLES.Q4;
                     const cal = (lead as any).calificacion as string | null;
