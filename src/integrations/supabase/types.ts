@@ -245,7 +245,11 @@ export type Database = {
       lists: {
         Row: {
           campaign_id: string
+          conversiones: number
+          copy_sugerido: string
           created_at: string
+          enviados: number
+          filtros_compartidos: Json
           frequency: string
           geo_mix: Json
           id: string
@@ -253,10 +257,15 @@ export type Database = {
           name: string
           profile: string
           quantity: number
+          respondidos: number
         }
         Insert: {
           campaign_id: string
+          conversiones?: number
+          copy_sugerido?: string
           created_at?: string
+          enviados?: number
+          filtros_compartidos?: Json
           frequency?: string
           geo_mix?: Json
           id?: string
@@ -264,10 +273,15 @@ export type Database = {
           name?: string
           profile: string
           quantity?: number
+          respondidos?: number
         }
         Update: {
           campaign_id?: string
+          conversiones?: number
+          copy_sugerido?: string
           created_at?: string
+          enviados?: number
+          filtros_compartidos?: Json
           frequency?: string
           geo_mix?: Json
           id?: string
@@ -275,6 +289,7 @@ export type Database = {
           name?: string
           profile?: string
           quantity?: number
+          respondidos?: number
         }
         Relationships: [
           {
