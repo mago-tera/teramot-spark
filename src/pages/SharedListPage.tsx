@@ -114,7 +114,7 @@ export default function SharedListPage() {
     }
   };
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: "hsl(240 15% 6%)" }}>
         <div className="animate-pulse text-muted-foreground">Cargando...</div>
