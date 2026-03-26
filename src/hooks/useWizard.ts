@@ -82,9 +82,8 @@ export function useWizard() {
   }, []);
 
   const goToStep = useCallback((stepId: number) => {
-    const canGo = steps[stepId]?.status !== "pending" || stepId <= 1;
-    if (canGo) setCurrentStep(stepId);
-  }, [steps]);
+    setCurrentStep(stepId);
+  }, []);
 
   return {
     currentStep,
