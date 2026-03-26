@@ -11,6 +11,7 @@ import * as XLSX from "xlsx";
 import { Trash2 } from "lucide-react";
 import { SmartAssignDialog } from "@/components/SmartAssignDialog";
 import { ShareEntityDialog } from "@/components/ShareEntityDialog";
+import { ShareListWithCopyDialog } from "@/components/ShareListWithCopyDialog";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -42,6 +43,8 @@ interface ListItem {
   frequency: string;
   lead_count: number;
   created_at: string;
+  copy_sugerido?: string;
+  filtros_compartidos?: Record<string, string>;
 }
 
 const COUNTRY_COLORS: Record<string, string> = {
@@ -237,7 +240,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         .order("created_at", { ascending: false });
       if (allLists) {
         setProjectLists(
-          allLists.map((l) => ({ ...l, geo_mix: l.geo_mix as Record<string, number>, campaignName: campaignMap[l.campaign_id] }))
+          allLists.map((l) => ({ ...l, geo_mix: l.geo_mix as Record<string, number>, filtros_compartidos: (l as any).filtros_compartidos as Record<string, string> || {}, campaignName: campaignMap[l.campaign_id] }))
         );
       }
     })();
@@ -277,6 +280,9 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
             calificacion: d.calificacion || null,
             responsable: d.responsable || null,
             canal: d.canal || null,
+            enviado: (d as any).enviado || false,
+            respondido: (d as any).respondido || false,
+            conversion: (d as any).conversion || false,
           }));
           setListLeads(mapped);
           setScoredLeads(mapped);
@@ -552,7 +558,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     "Mail": "bg-violet-500/20 text-violet-300 border-violet-500/30",
   };
 
-  const updateLeadField = async (leadId: string, field: string, value: string | null) => {
+  const updateLeadField = async (leadId: string, field: string, value: string | boolean | null) => {
     setListLeads((prev) =>
       prev.map((l) => (l.id === leadId ? { ...l, [field]: value } : l))
     );
@@ -652,6 +658,31 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
           </div>
         </div>
 
+        {/* Metrics summary */}
+        {listLeads.length > 0 && (
+          <div className="flex gap-3">
+            {[
+              { label: "Enviados", count: listLeads.filter((l) => (l as any).enviado).length, color: "text-blue-400" },
+              { label: "Respondidos", count: listLeads.filter((l) => (l as any).respondido).length, color: "text-amber-400" },
+              { label: "Conversiones", count: listLeads.filter((l) => (l as any).conversion).length, color: "text-green-400" },
+            ].map((m) => (
+              <div key={m.label} className="glass-card px-4 py-2 flex items-center gap-2">
+                <span className={`text-lg font-semibold ${m.color}`}>{m.count}</span>
+                <span className="text-xs text-muted-foreground">{m.label}</span>
+                <span className="text-[10px] text-muted-foreground/60">/ {listLeads.length}</span>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Copy sugerido banner */}
+        {selectedList?.copy_sugerido && (
+          <div className="rounded-lg border border-primary/20 bg-primary/5 p-4 space-y-1">
+            <p className="text-xs font-medium text-primary">📋 Copy sugerido</p>
+            <p className="text-sm text-foreground whitespace-pre-wrap">{selectedList.copy_sugerido}</p>
+          </div>
+        )}
+
         {listLeads.length > 0 && (
           <div className="glass-card overflow-hidden">
             <div className="flex items-center gap-2 px-3 py-2 border-b border-white/[0.06]">
@@ -671,8 +702,11 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-white/[0.06]">
-                    {["Nombre", "Cargo", "Empresa", "País", "Email", "LinkedIn", "Score"].map((h) => (
+                     {["Nombre", "Cargo", "Empresa", "País", "Email", "LinkedIn", "Score"].map((h) => (
                       <th key={h} className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">{h}</th>
+                    ))}
+                    {["Enviado", "Respondido", "Conversión"].map((h) => (
+                      <th key={h} className="px-3 py-3 text-center text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">{h}</th>
                     ))}
                     {(["calificacion", "responsable", "canal"] as const).map((f) => (
                       <th key={f} className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">
@@ -692,12 +726,17 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                 </thead>
                 <tbody>
                   {(() => {
+                    const sf = selectedList?.filtros_compartidos || {};
+                    let base = listLeads;
+                    if (sf.aprobado) base = base.filter((l) => (l as any).calificacion === sf.aprobado);
+                    if (sf.responsable) base = base.filter((l) => (l as any).responsable === sf.responsable);
+                    if (sf.canal) base = base.filter((l) => (l as any).canal === sf.canal);
                     const q = leadSearch.toLowerCase().trim();
                     const filtered = q
-                      ? listLeads.filter((l) =>
+                      ? base.filter((l) =>
                           `${l.firstName} ${l.lastName} ${l.title} ${l.company} ${l.email} ${l.country} ${l.industry}`.toLowerCase().includes(q)
                         )
-                      : listLeads;
+                      : base;
                     return filtered.map((lead, i) => {
                     const q = QUARTILE_STYLES[lead.quartile] || QUARTILE_STYLES.Q4;
                     const cal = (lead as any).calificacion as string | null;
@@ -768,6 +807,17 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                             {CANALES.map((c) => <option key={c} value={c}>{c}</option>)}
                           </select>
                         </td>
+                        {/* Metrics */}
+                        {(["enviado", "respondido", "conversion"] as const).map((metric) => (
+                          <td key={metric} className="px-3 py-2.5 text-center">
+                            <input
+                              type="checkbox"
+                              checked={!!(lead as any)[metric]}
+                              onChange={(e) => updateLeadField(lead.id, metric, e.target.checked as any)}
+                              className="w-4 h-4 rounded border-border text-primary focus:ring-primary cursor-pointer accent-primary"
+                            />
+                          </td>
+                        ))}
                       </tr>
                     );
                   });
@@ -1104,13 +1154,11 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
 
       {/* Share list dialog */}
       {shareListId && (
-        <ShareEntityDialog
+        <ShareListWithCopyDialog
           open={!!shareListId}
           onOpenChange={(open) => !open && setShareListId(null)}
-          entityType="lista"
-          entityId={shareListId}
-          memberTable="list_members"
-          fkColumn="list_id"
+          listId={shareListId}
+          listName={lists.find((l) => l.id === shareListId)?.name || "Lista"}
         />
       )}
 
