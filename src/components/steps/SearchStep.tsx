@@ -648,15 +648,11 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               <Download className="w-3.5 h-3.5" /> Bajar CSV / Excel
             </button>
             <button
-              onClick={async () => {
-                // Save current filters to the list before sharing
-                const filters = {
-                  calificacion: csvFilterAprobado || null,
-                  responsable: csvFilterResponsable || null,
-                  canal: csvFilterCanal || null,
-                };
-                await supabase.from("lists").update({ filtros_compartidos: filters }).eq("id", selectedListId);
-                setShareListId(selectedListId);
+              onClick={() => {
+                setShareFilterAprobado("");
+                setShareFilterResponsable("");
+                setShareFilterCanal("");
+                setShowShareFilterModal(true);
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
             >
