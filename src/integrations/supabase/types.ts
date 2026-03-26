@@ -140,11 +140,9 @@ export type Database = {
           campaign_id: string | null
           canal: string | null
           company: string | null
-          conversion: boolean
           country: string | null
           created_at: string
           email: string | null
-          enviado: boolean
           first_name: string | null
           headcount: number | null
           id: string
@@ -154,7 +152,6 @@ export type Database = {
           list_id: string | null
           messages: Json | null
           quartile: string | null
-          respondido: boolean
           responsable: string | null
           score: number | null
           seniority: string | null
@@ -165,11 +162,9 @@ export type Database = {
           campaign_id?: string | null
           canal?: string | null
           company?: string | null
-          conversion?: boolean
           country?: string | null
           created_at?: string
           email?: string | null
-          enviado?: boolean
           first_name?: string | null
           headcount?: number | null
           id?: string
@@ -179,7 +174,6 @@ export type Database = {
           list_id?: string | null
           messages?: Json | null
           quartile?: string | null
-          respondido?: boolean
           responsable?: string | null
           score?: number | null
           seniority?: string | null
@@ -190,11 +184,9 @@ export type Database = {
           campaign_id?: string | null
           canal?: string | null
           company?: string | null
-          conversion?: boolean
           country?: string | null
           created_at?: string
           email?: string | null
-          enviado?: boolean
           first_name?: string | null
           headcount?: number | null
           id?: string
@@ -204,7 +196,6 @@ export type Database = {
           list_id?: string | null
           messages?: Json | null
           quartile?: string | null
-          respondido?: boolean
           responsable?: string | null
           score?: number | null
           seniority?: string | null
@@ -254,11 +245,7 @@ export type Database = {
       lists: {
         Row: {
           campaign_id: string
-          conversiones: number
-          copy_sugerido: string
           created_at: string
-          enviados: number
-          filtros_compartidos: Json
           frequency: string
           geo_mix: Json
           id: string
@@ -266,15 +253,10 @@ export type Database = {
           name: string
           profile: string
           quantity: number
-          respondidos: number
         }
         Insert: {
           campaign_id: string
-          conversiones?: number
-          copy_sugerido?: string
           created_at?: string
-          enviados?: number
-          filtros_compartidos?: Json
           frequency?: string
           geo_mix?: Json
           id?: string
@@ -282,15 +264,10 @@ export type Database = {
           name?: string
           profile: string
           quantity?: number
-          respondidos?: number
         }
         Update: {
           campaign_id?: string
-          conversiones?: number
-          copy_sugerido?: string
           created_at?: string
-          enviados?: number
-          filtros_compartidos?: Json
           frequency?: string
           geo_mix?: Json
           id?: string
@@ -298,7 +275,6 @@ export type Database = {
           name?: string
           profile?: string
           quantity?: number
-          respondidos?: number
         }
         Relationships: [
           {
