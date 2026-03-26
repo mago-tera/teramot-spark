@@ -558,7 +558,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     "Mail": "bg-violet-500/20 text-violet-300 border-violet-500/30",
   };
 
-  const updateLeadField = async (leadId: string, field: string, value: string | null) => {
+  const updateLeadField = async (leadId: string, field: string, value: string | boolean | null) => {
     setListLeads((prev) =>
       prev.map((l) => (l.id === leadId ? { ...l, [field]: value } : l))
     );
