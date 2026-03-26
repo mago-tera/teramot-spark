@@ -17,7 +17,7 @@ const Index = () => {
       case 1:
         return <MessagesStep campaignId={campaignId || null} />;
       case 2:
-        return <TrackingStep config={wizard.config} scoredLeads={wizard.scoredLeads} />;
+        return <TrackingStep config={wizard.config} scoredLeads={wizard.scoredLeads} campaignId={campaignId || null} />;
       default:
         return null;
     }
