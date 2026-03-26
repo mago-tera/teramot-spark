@@ -43,7 +43,7 @@ interface ListItem {
   lead_count: number;
   created_at: string;
   shared?: boolean;
-  filtros_compartidos?: Record<string, string | null>;
+  filtros_compartidos?: any;
 }
 
 const COUNTRY_COLORS: Record<string, string> = {
