@@ -1,15 +1,18 @@
 import { lovable } from "@/integrations/lovable/index";
 import { useState } from "react";
+import { useSearchParams } from "react-router-dom";
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [searchParams] = useSearchParams();
 
   const handleLogin = async () => {
     setLoading(true);
     setError("");
+    const redirect = searchParams.get("redirect") || "/";
     const result = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin,
+      redirect_uri: `${window.location.origin}${redirect}`,
       extraParams: {
         prompt: "select_account",
       },
