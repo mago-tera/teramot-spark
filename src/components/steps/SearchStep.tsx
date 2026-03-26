@@ -653,6 +653,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                 setShareFilterAprobado("");
                 setShareFilterResponsable("");
                 setShareFilterCanal("");
+                setShareCopySugerido("");
                 setShowShareFilterModal(true);
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
