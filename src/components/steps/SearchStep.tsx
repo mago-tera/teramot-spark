@@ -860,7 +860,12 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
           </div>
         )}
 
-        {smartAssignField && (
+        {/* List-level tracking */}
+        {selectedList?.shared && selectedListId && (
+          <ListTracking listId={selectedListId} listName={selectedList.name || "Outreach"} />
+        )}
+
+
           <SmartAssignDialog
             open={!!smartAssignField}
             onOpenChange={(open) => !open && setSmartAssignField(null)}
