@@ -996,6 +996,10 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                 </button>
                 <button
                   onClick={async () => {
+                    if (!shareViewName.trim()) {
+                      toast.error("Poné un nombre a la vista");
+                      return;
+                    }
                     const filters = {
                       calificacion: shareFilterAprobado || null,
                       responsable: shareFilterResponsable || null,
@@ -1004,6 +1008,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                     await supabase.from("lists").update({ 
                       filtros_compartidos: filters, 
                       copy_sugerido: shareCopySugerido,
+                      name: shareViewName.trim(),
                       shared: true 
                     } as any).eq("id", selectedListId);
                     setShowShareFilterModal(false);
