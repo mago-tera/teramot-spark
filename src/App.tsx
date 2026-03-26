@@ -25,7 +25,10 @@ function AuthGuard({ children }: { children: React.ReactNode }) {
   }
 
   if (!user) return <Navigate to="/login" replace />;
-  if (!user.email?.endsWith("@teramot.com")) return <Navigate to="/login" replace />;
+
+  // Only restrict non-shared routes to @teramot.com
+  const isSharedRoute = window.location.pathname.startsWith("/shared/");
+  if (!isSharedRoute && !user.email?.endsWith("@teramot.com")) return <Navigate to="/login" replace />;
 
   return <>{children}</>;
 }

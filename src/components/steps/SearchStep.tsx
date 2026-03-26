@@ -10,7 +10,7 @@ import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users, Download, Zap, Use
 import * as XLSX from "xlsx";
 import { Trash2 } from "lucide-react";
 import { SmartAssignDialog } from "@/components/SmartAssignDialog";
-import { ShareEntityDialog } from "@/components/ShareEntityDialog";
+
 import {
   AlertDialog,
   AlertDialogContent,
@@ -190,7 +190,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [projectLists, setProjectLists] = useState<(ListItem & { campaignName?: string })[]>([]);
   const [savingField, setSavingField] = useState<Record<string, boolean>>({});
   const [smartAssignField, setSmartAssignField] = useState<"calificacion" | "responsable" | "canal" | null>(null);
-  const [shareListId, setShareListId] = useState<string | null>(null);
+  
   const [showShareFilterModal, setShowShareFilterModal] = useState(false);
   const [shareFilterAprobado, setShareFilterAprobado] = useState("");
   const [shareFilterResponsable, setShareFilterResponsable] = useState("");
@@ -928,28 +928,22 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                       responsable: shareFilterResponsable || null,
                       canal: shareFilterCanal || null,
                     };
-                    await supabase.from("lists").update({ filtros_compartidos: filters, copy_sugerido: shareCopySugerido }).eq("id", selectedListId);
+                    await supabase.from("lists").update({ 
+                      filtros_compartidos: filters, 
+                      copy_sugerido: shareCopySugerido,
+                      shared: true 
+                    } as any).eq("id", selectedListId);
                     setShowShareFilterModal(false);
-                    setShareListId(selectedListId);
-                    toast.success("Filtros guardados");
+                    const link = `${window.location.origin}/shared/list/${selectedListId}`;
+                    await navigator.clipboard.writeText(link);
+                    toast.success("Link copiado al portapapeles: " + link);
                   }}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-                  <UserPlus className="w-4 h-4" /> Continuar
+                  <Copy className="w-4 h-4" /> Copiar link
                 </button>
               </div>
             </div>
           </div>
-        )}
-
-        {shareListId && (
-          <ShareEntityDialog
-            open={!!shareListId}
-            onOpenChange={(open) => !open && setShareListId(null)}
-            entityType="lista"
-            entityId={shareListId}
-            memberTable="list_members"
-            fkColumn="list_id"
-          />
         )}
 
       </div>
@@ -1143,7 +1137,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                   {new Date(list.created_at).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}
                 </div>
                 <button
-                  onClick={(e) => { e.stopPropagation(); setShareListId(list.id); }}
+                  onClick={(e) => { e.stopPropagation(); setSelectedListId(list.id); setShareFilterAprobado(""); setShareFilterResponsable(""); setShareFilterCanal(""); setShareCopySugerido(""); setShowShareFilterModal(true); }}
                   className="p-1.5 rounded hover:bg-white/10 text-muted-foreground/40 hover:text-foreground opacity-0 group-hover:opacity-100 transition-all shrink-0"
                   title="Compartir lista"
                 >
@@ -1199,17 +1193,6 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         </div>
       )}
 
-      {/* Share list dialog */}
-      {shareListId && (
-        <ShareEntityDialog
-          open={!!shareListId}
-          onOpenChange={(open) => !open && setShareListId(null)}
-          entityType="lista"
-          entityId={shareListId}
-          memberTable="list_members"
-          fkColumn="list_id"
-        />
-      )}
 
     </div>
   );
