@@ -1,0 +1,1 @@
+ALTER TABLE public.lists ADD COLUMN copy_sugerido_subject text NOT NULL DEFAULT '';
