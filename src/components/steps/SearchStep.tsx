@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { CampaignConfig, Lead, ScoredLead } from "@/hooks/useWizard";
-import { HARDCODED_LEADS } from "@/data/hardcoded-leads";
+import { toast } from "sonner";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useParams, useNavigate } from "react-router-dom";
