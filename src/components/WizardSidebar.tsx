@@ -58,7 +58,7 @@ export function WizardSidebar({ steps, currentStep, onStepClick, isInsideList }:
             <button
               key={step.id}
               onClick={() => onStepClick(step.id)}
-              disabled={isPending && step.id >= 2}
+              disabled={false}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
                 isActive
                   ? "bg-primary/15 text-foreground"
