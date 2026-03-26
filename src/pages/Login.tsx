@@ -11,7 +11,6 @@ export default function Login() {
     const result = await lovable.auth.signInWithOAuth("google", {
       redirect_uri: window.location.origin,
       extraParams: {
-        hd: "teramot.com",
         prompt: "select_account",
       },
     });
