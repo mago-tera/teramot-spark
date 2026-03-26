@@ -9,6 +9,7 @@ import CampaignsPage from "./pages/CampaignsPage";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
+import SharedListPage from "./pages/SharedListPage";
 
 const queryClient = new QueryClient();
 
