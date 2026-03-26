@@ -866,6 +866,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         )}
 
 
+        {smartAssignField && (
           <SmartAssignDialog
             open={!!smartAssignField}
             onOpenChange={(open) => !open && setSmartAssignField(null)}
