@@ -940,8 +940,8 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
         {showShareFilterModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowShareFilterModal(false)}>
             <div className="bg-[hsl(var(--card))] border border-white/[0.1] rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
-              <h3 className="text-lg font-semibold text-foreground">Compartir vista</h3>
-              <p className="text-xs text-muted-foreground">Nombrá la vista y seleccioná qué leads verá el usuario.</p>
+              <h3 className="text-lg font-semibold text-foreground">Crear Outreach</h3>
+              <p className="text-xs text-muted-foreground">Nombrá el outreach y seleccioná qué leads verá tu equipo.</p>
               <div className="space-y-3">
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Nombre de la vista</label>
