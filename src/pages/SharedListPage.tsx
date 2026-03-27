@@ -362,7 +362,102 @@ export function OutreachView({ listId }: OutreachViewProps) {
               })}
             </tbody>
           </table>
-        </div>
+      </div>
+
+      {/* Copy sugerido + Subject - Collapsible - at bottom */}
+      {hasCopy && (
+        <Collapsible open={copyOpen} onOpenChange={setCopyOpen}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full rounded-xl border border-border/40 bg-muted/20 px-4 py-3 hover:bg-muted/30 transition-colors">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Copy Sugerido</span>
+            </div>
+            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${copyOpen ? "rotate-180" : ""}`} />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2 rounded-xl border border-border/40 bg-muted/10 p-4 space-y-4">
+            {/* Subject */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground whitespace-nowrap font-medium">Subject:</span>
+              {editingSubject ? (
+                <div className="flex items-center gap-2 flex-1">
+                  <input
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    placeholder="Ej: Hola [Nombre], te escribo por..."
+                    className="flex-1 bg-muted/30 border border-border/40 rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50"
+                    autoFocus
+                    onKeyDown={(e) => { if (e.key === "Enter") saveSubject(); if (e.key === "Escape") setEditingSubject(false); }}
+                  />
+                  <button onClick={saveSubject} className="px-2 py-1 rounded text-[11px] bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+                    Guardar
+                  </button>
+                  <button onClick={() => setEditingSubject(false)} className="px-2 py-1 rounded text-[11px] border border-border/40 text-muted-foreground hover:text-foreground transition-colors">
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 flex-1">
+                  <span className="text-xs text-foreground">{subject || <span className="text-muted-foreground italic">Sin subject</span>}</span>
+                  <button onClick={() => setEditingSubject(true)} className="text-[10px] text-primary hover:text-primary/80 transition-colors underline">
+                    {subject ? "Editar" : "Agregar"}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Copy body */}
+            {editingCopy ? (
+              <div className="space-y-3">
+                <textarea
+                  value={copyDraft}
+                  onChange={(e) => setCopyDraft(e.target.value)}
+                  rows={8}
+                  className="w-full bg-muted/30 border border-border/40 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50 resize-y"
+                />
+                <div className="flex items-center gap-2">
+                  <button onClick={saveCopy} className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
+                    <Save className="w-3 h-3" /> Guardar
+                  </button>
+                  <button onClick={() => { setEditingCopy(false); setCopyDraft(""); }} className="px-3 py-1.5 rounded-lg text-xs border border-border/40 text-muted-foreground hover:text-foreground transition-colors">
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground whitespace-pre-wrap">{listInfo.copy_sugerido}</p>
+                <button
+                  onClick={() => { setCopyDraft(listInfo.copy_sugerido); setEditingCopy(true); }}
+                  className="text-[10px] text-primary hover:text-primary/80 transition-colors underline"
+                >
+                  Editar manualmente
+                </button>
+              </div>
+            )}
+
+            {/* AI edit */}
+            <div className="flex items-center gap-2 pt-2 border-t border-border/30">
+              <Sparkles className="w-4 h-4 text-primary shrink-0" />
+              <input
+                value={aiInstruction}
+                onChange={(e) => setAiInstruction(e.target.value)}
+                placeholder="Ej: Hacelo más corto, cambiá el tono a informal..."
+                className="flex-1 bg-muted/30 border border-border/40 rounded px-2 py-1.5 text-xs text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50"
+                onKeyDown={(e) => { if (e.key === "Enter" && !aiLoading) aiEditCopy(); }}
+                disabled={aiLoading}
+              />
+              <button
+                onClick={aiEditCopy}
+                disabled={aiLoading || !aiInstruction.trim()}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary/15 text-primary hover:bg-primary/25 transition-colors disabled:opacity-50"
+              >
+                {aiLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : <Sparkles className="w-3 h-3" />}
+                Editar con IA
+              </button>
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
       </div>
     </div>
   );
