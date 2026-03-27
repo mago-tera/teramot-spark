@@ -196,6 +196,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [showShareFilterModal, setShowShareFilterModal] = useState(false);
   const [shareFilterAprobado, setShareFilterAprobado] = useState("");
   const [shareFilterResponsable, setShareFilterResponsable] = useState("");
+  const [shareResponsableEmail, setShareResponsableEmail] = useState("");
   const [shareFilterCanal, setShareFilterCanal] = useState("");
   const [shareCopySugerido, setShareCopySugerido] = useState("");
   const [shareViewName, setShareViewName] = useState("");
