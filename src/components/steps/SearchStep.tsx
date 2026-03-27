@@ -809,56 +809,6 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
           </div>
         )}
 
-        {/* Shared list links */}
-        {selectedList?.shared && (
-          <div className="glass-card p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <Link2 className="w-4 h-4 text-primary" />
-              <h3 className="text-sm font-medium text-foreground">Outreach activo</h3>
-            </div>
-            <div className="flex items-center gap-3 p-3 rounded-lg border border-white/[0.06] bg-white/[0.02]">
-              <div className="flex-1 min-w-0">
-                <p className="text-xs text-muted-foreground mb-1">Link público (sin login requerido)</p>
-                <p className="text-xs font-mono text-foreground truncate">
-                  {window.location.origin}/shared/list/{selectedListId}
-                </p>
-                {selectedList.filtros_compartidos && Object.values(selectedList.filtros_compartidos).some(Boolean) && (
-                  <div className="flex items-center gap-1.5 mt-2 flex-wrap">
-                    <span className="text-[10px] text-muted-foreground">Filtros:</span>
-                    {selectedList.filtros_compartidos.calificacion && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded border border-white/[0.1] bg-white/[0.04] text-foreground">Aprobado: {selectedList.filtros_compartidos.calificacion}</span>
-                    )}
-                    {selectedList.filtros_compartidos.responsable && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded border border-white/[0.1] bg-white/[0.04] text-foreground">Responsable: {selectedList.filtros_compartidos.responsable}</span>
-                    )}
-                    {selectedList.filtros_compartidos.canal && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded border border-white/[0.1] bg-white/[0.04] text-foreground">Canal: {selectedList.filtros_compartidos.canal}</span>
-                    )}
-                  </div>
-                )}
-              </div>
-              <div className="flex items-center gap-1.5 shrink-0">
-                <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(`${window.location.origin}/shared/list/${selectedListId}`);
-                    toast.success("Link copiado");
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border border-white/[0.1] bg-white/[0.04] text-foreground hover:bg-white/[0.08] transition-colors"
-                >
-                  <Copy className="w-3 h-3" /> Copiar
-                </button>
-                <a
-                  href={`/shared/list/${selectedListId}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-primary/10 border border-primary/20 text-primary hover:bg-primary/20 transition-colors"
-                >
-                  <ExternalLink className="w-3 h-3" /> Ver progreso
-                </a>
-              </div>
-            </div>
-          </div>
-        )}
 
 
 
