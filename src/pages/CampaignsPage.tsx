@@ -231,64 +231,72 @@ export default function CampaignsPage() {
       </aside>
 
       <main className="flex-1 p-8 max-w-5xl">
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h2 className="text-2xl font-semibold text-foreground">{project?.name || "Campañas"}</h2>
-            <p className="text-sm text-muted-foreground mt-1">Campañas de prospección de este proyecto.</p>
-          </div>
-        </div>
-
-        {/* Members section */}
-        {isOwner && (
-          <div className="glass-card p-5 mb-8 space-y-4">
-            <div className="flex items-center gap-2">
-              <Users className="w-4 h-4 text-muted-foreground" />
-              <h3 className="text-sm font-medium text-foreground">Usuarios con acceso</h3>
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-semibold text-foreground">{project?.name || "Campañas"}</h2>
+              <p className="text-sm text-muted-foreground mt-1">Campañas de prospección de este proyecto.</p>
             </div>
-            {members.length > 0 && (
-              <div className="space-y-2">
-                {members.map((m) => (
-                  <div key={m.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/30">
-                    <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium text-primary">
-                        {(m.full_name || m.email).charAt(0).toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        {m.full_name && <p className="text-sm text-foreground truncate">{m.full_name}</p>}
-                        <p className="text-xs text-muted-foreground truncate">{m.email}</p>
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => removeMember(m.id)}
-                      className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground/40 hover:text-destructive transition-colors"
-                      title="Quitar acceso"
-                    >
-                      <X className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-            <div className="flex items-center gap-2">
-              <input
-                type="email"
-                value={addMemberEmail}
-                onChange={(e) => setAddMemberEmail(e.target.value)}
-                placeholder="email@ejemplo.com"
-                className="glass-input flex-1 text-sm py-2 px-3"
-                onKeyDown={(e) => { if (e.key === "Enter") addMember(); }}
-              />
+            {isOwner && (
               <button
-                onClick={addMember}
-                disabled={addingMember || !addMemberEmail.trim()}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                onClick={() => setShowMembers(!showMembers)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors"
               >
-                <UserPlus className="w-3.5 h-3.5" />
-                {addingMember ? "..." : "Agregar"}
+                <Users className="w-4 h-4" />
+                <span>Usuarios con acceso ({members.length})</span>
+                <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showMembers ? "rotate-180" : ""}`} />
               </button>
-            </div>
+            )}
           </div>
-        )}
+
+          {/* Collapsible members section */}
+          {isOwner && showMembers && (
+            <div className="mt-4 glass-card p-5 space-y-4">
+              {members.length > 0 && (
+                <div className="space-y-2">
+                  {members.map((m) => (
+                    <div key={m.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/30">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium text-primary">
+                          {(m.full_name || m.email).charAt(0).toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          {m.full_name && <p className="text-sm text-foreground truncate">{m.full_name}</p>}
+                          <p className="text-xs text-muted-foreground truncate">{m.email}</p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => removeMember(m.id)}
+                        className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground/40 hover:text-destructive transition-colors"
+                        title="Quitar acceso"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="flex items-center gap-2">
+                <input
+                  type="email"
+                  value={addMemberEmail}
+                  onChange={(e) => setAddMemberEmail(e.target.value)}
+                  placeholder="email@ejemplo.com"
+                  className="glass-input flex-1 text-sm py-2 px-3"
+                  onKeyDown={(e) => { if (e.key === "Enter") addMember(); }}
+                />
+                <button
+                  onClick={addMember}
+                  disabled={addingMember || !addMemberEmail.trim()}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+                >
+                  <UserPlus className="w-3.5 h-3.5" />
+                  {addingMember ? "..." : "Agregar"}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
 
         {loading ? (
           <div className="space-y-3">
