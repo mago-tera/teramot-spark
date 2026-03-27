@@ -104,8 +104,6 @@ export function OutreachView({ listId }: OutreachViewProps) {
       if (leadsData) {
         const filters = (list.filtros_compartidos as any) || {};
         const filtered = leadsData.filter((l) => {
-          if (filters.calificacion && l.calificacion !== filters.calificacion) return false;
-          if (filters.responsable && l.responsable !== filters.responsable) return false;
           if (filters.canal && l.canal !== filters.canal) return false;
           return true;
         });
