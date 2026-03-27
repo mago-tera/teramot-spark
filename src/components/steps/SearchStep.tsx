@@ -860,10 +860,6 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
           </div>
         )}
 
-        {/* List-level tracking */}
-        {selectedList?.shared && selectedListId && (
-          <ListTracking listId={selectedListId} listName={selectedList.name || "Outreach"} />
-        )}
 
 
         {smartAssignField && (
