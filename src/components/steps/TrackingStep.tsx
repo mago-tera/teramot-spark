@@ -6,6 +6,7 @@ import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { ChartTooltip } from "@/components/ui/chart";
 import { toast } from "sonner";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { OutreachView } from "@/pages/SharedListPage";
 
 interface Props {
   config: CampaignConfig;
