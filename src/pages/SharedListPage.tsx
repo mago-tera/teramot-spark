@@ -285,7 +285,10 @@ export function OutreachView({ listId }: OutreachViewProps) {
             <thead>
               <tr className="border-b border-border/40">
                 {[
-                  "Nombre", "Cargo", "Empresa", "País", "Email", "LinkedIn", "Score",
+                  "Nombre", "Cargo", "Empresa", "País",
+                  ...(showEmail ? ["Email"] : []),
+                  ...(showLinkedin ? ["LinkedIn"] : []),
+                  "Score",
                   ...(hasCopy ? ["Mensaje"] : []),
                   "Enviado", "Respondido", "Conversión"
                 ].map((h) => (
