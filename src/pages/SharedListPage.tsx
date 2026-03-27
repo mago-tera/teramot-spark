@@ -114,7 +114,7 @@ export function OutreachView({ listId }: OutreachViewProps) {
     })();
   }, [listId]);
 
-  const toggleField = async (leadId: string, field: "enviado" | "respondido" | "conversion") => {
+  const toggleField = async (leadId: string, field: "agregado" | "enviado" | "respondido" | "conversion") => {
     const lead = leads.find((l) => l.id === leadId);
     if (!lead) return;
     const newVal = !lead[field];
