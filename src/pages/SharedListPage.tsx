@@ -228,6 +228,9 @@ export function OutreachView({ listId }: OutreachViewProps) {
   };
 
   const hasCopy = !!listInfo.copy_sugerido;
+  const canal = filters.canal?.toLowerCase() || "";
+  const showEmail = canal !== "linkedin";
+  const showLinkedin = canal !== "mail";
 
   return (
     <div className="space-y-6">
