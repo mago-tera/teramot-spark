@@ -243,7 +243,7 @@ export default function CampaignsPage() {
                 className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted/20 transition-colors"
               >
                 <Users className="w-4 h-4" />
-                <span>Usuarios con acceso ({members.length})</span>
+                <span>Usuarios con acceso</span>
                 <ChevronDown className={`w-3.5 h-3.5 transition-transform ${showMembers ? "rotate-180" : ""}`} />
               </button>
             )}
