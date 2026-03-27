@@ -1,0 +1,1 @@
+ALTER TABLE public.leads ADD COLUMN agregado boolean NOT NULL DEFAULT false;

@@ -19,6 +19,7 @@ interface SharedLead {
   calificacion: string | null;
   responsable: string | null;
   canal: string | null;
+  agregado: boolean;
   enviado: boolean;
   respondido: boolean;
   conversion: boolean;
@@ -113,7 +114,7 @@ export function OutreachView({ listId }: OutreachViewProps) {
     })();
   }, [listId]);
 
-  const toggleField = async (leadId: string, field: "enviado" | "respondido" | "conversion") => {
+  const toggleField = async (leadId: string, field: "agregado" | "enviado" | "respondido" | "conversion") => {
     const lead = leads.find((l) => l.id === leadId);
     if (!lead) return;
     const newVal = !lead[field];
@@ -300,6 +301,7 @@ export function OutreachView({ listId }: OutreachViewProps) {
                   ...(showLinkedin ? ["LinkedIn"] : []),
                   "Score",
                   ...(hasCopy ? ["Mensaje"] : []),
+                  ...(canal === "linkedin" ? ["Agregado"] : []),
                   "Enviado", "Respondido", "Conversión"
                 ].map((h) => (
                   <th key={h} className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">{h}</th>
@@ -353,6 +355,15 @@ export function OutreachView({ listId }: OutreachViewProps) {
                           {copiedId === lead.id
                             ? <><Check className="w-3 h-3 text-green-400" /> Copiado</>
                             : <><Copy className="w-3 h-3" /> Copiar</>}
+                        </button>
+                      </td>
+                    )}
+                    {canal === "linkedin" && (
+                      <td className="px-3 py-2.5 text-center">
+                        <button onClick={() => toggleField(lead.id, "agregado")} className="transition-colors">
+                          {lead.agregado
+                            ? <CheckCircle2 className="w-5 h-5 text-violet-400" />
+                            : <Circle className="w-5 h-5 text-muted-foreground/40 hover:text-violet-400/60" />}
                         </button>
                       </td>
                     )}
