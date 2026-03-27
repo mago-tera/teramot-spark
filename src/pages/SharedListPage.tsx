@@ -301,6 +301,7 @@ export function OutreachView({ listId }: OutreachViewProps) {
                   ...(showLinkedin ? ["LinkedIn"] : []),
                   "Score",
                   ...(hasCopy ? ["Mensaje"] : []),
+                  ...(canal === "linkedin" ? ["Agregado"] : []),
                   "Enviado", "Respondido", "Conversión"
                 ].map((h) => (
                   <th key={h} className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">{h}</th>
