@@ -667,6 +667,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                 setShareFilterAprobado("");
                 setShareFilterResponsable("");
                 setShareFilterCanal("");
+                setShareResponsableEmail("");
                 setShareCopySugerido("");
                 setShareViewName("");
                 setShowShareFilterModal(true);
