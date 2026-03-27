@@ -112,16 +112,13 @@ export function SmartAssignDialog({
                 <div className="flex-1 space-y-2">
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="text-xs text-muted-foreground shrink-0">Asignar</span>
-                    <Select value={rule.value} onValueChange={(v) => updateRule(rule.id, "value", v)}>
-                      <SelectTrigger className="w-[120px] h-8 text-xs bg-white/[0.06] border-white/[0.1]">
-                        <SelectValue placeholder="Elegir..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {options.map((o) => (
-                          <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <Input
+                      type="text"
+                      placeholder="Nombre o email..."
+                      value={rule.value}
+                      onChange={(e) => updateRule(rule.id, "value", e.target.value)}
+                      className="w-[150px] h-8 text-xs bg-white/[0.06] border-white/[0.1]"
+                    />
 
                     <span className="text-xs text-muted-foreground shrink-0">al</span>
                     
