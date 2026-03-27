@@ -907,21 +907,14 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Aprobado</label>
-                  <select value={shareFilterAprobado} onChange={(e) => setShareFilterAprobado(e.target.value)}
-                    className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white">
-                    <option value="">Todos</option>
-                    <option value="SI">SI</option>
-                    <option value="NO">NO</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Responsable</label>
-                  <select value={shareFilterResponsable} onChange={(e) => setShareFilterResponsable(e.target.value)}
-                    className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white">
-                    <option value="">Todos</option>
-                    {RESPONSABLES.map((r) => <option key={r.label} value={r.label}>{r.label}</option>)}
-                  </select>
+                  <label className="text-xs text-muted-foreground mb-1 block">Responsable (email) <span className="text-destructive">*</span></label>
+                  <input
+                    value={shareResponsableEmail}
+                    onChange={(e) => setShareResponsableEmail(e.target.value)}
+                    placeholder="usuario@teramot.com"
+                    type="email"
+                    className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
                 </div>
               <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Canal <span className="text-destructive">*</span></label>
