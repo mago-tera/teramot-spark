@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, ChevronRight, Zap, Clock, CheckCircle2, Pencil, Check, ArrowLeft, Trash2, UserPlus } from "lucide-react";
+import { Plus, ChevronRight, Zap, Clock, CheckCircle2, Pencil, Check, ArrowLeft, Trash2, UserPlus, Users, X } from "lucide-react";
 import { ShareEntityDialog } from "@/components/ShareEntityDialog";
 import {
   AlertDialog,
