@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle2, Circle, Search, Copy, Check, ChevronDown, Sparkles, Save, Loader2 } from "lucide-react";
+import { CheckCircle2, Circle, Search, Copy, Check, ChevronDown, Sparkles, Save, Loader2, Mail } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface SharedLead {
@@ -231,17 +231,31 @@ export function OutreachView({ listId }: OutreachViewProps) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h2 className="text-xl font-bold text-foreground">{listInfo.name}</h2>
-        <p className="text-sm text-muted-foreground mt-1">{leads.length} leads</p>
-        {activeFilters.length > 0 && (
-          <div className="flex items-center gap-2 mt-2 flex-wrap">
-            <span className="text-xs text-muted-foreground">Filtros:</span>
-            {activeFilters.map((f) => (
-              <span key={f} className="text-xs px-2 py-0.5 rounded-full border border-border/40 bg-muted/20 text-foreground">{f}</span>
-            ))}
-          </div>
-        )}
+      <div className="flex items-start justify-between">
+        <div>
+          <h2 className="text-xl font-bold text-foreground">{listInfo.name}</h2>
+          <p className="text-sm text-muted-foreground mt-1">{leads.length} leads</p>
+          {activeFilters.length > 0 && (
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              <span className="text-xs text-muted-foreground">Filtros:</span>
+              {activeFilters.map((f) => (
+                <span key={f} className="text-xs px-2 py-0.5 rounded-full border border-border/40 bg-muted/20 text-foreground">{f}</span>
+              ))}
+            </div>
+          )}
+        </div>
+        <button
+          onClick={() => {
+            const listUrl = `${window.location.origin}/shared/${listId}`;
+            const subject = encodeURIComponent(`Outreach: ${listInfo.name}`);
+            const body = encodeURIComponent(`Hola,\n\nTe comparto esta lista de outreach "${listInfo.name}" con ${leads.length} leads.\n\nAccedé desde acá: ${listUrl}\n\nSaludos`);
+            window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
+          }}
+          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border border-border/40 bg-muted/20 hover:bg-muted/40 text-foreground transition-colors"
+        >
+          <Mail className="w-3.5 h-3.5" />
+          Compartir por email
+        </button>
       </div>
 
 
