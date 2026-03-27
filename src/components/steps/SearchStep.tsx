@@ -953,6 +953,10 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                       toast.error("Poné un nombre al outreach");
                       return;
                     }
+                    if (!shareFilterCanal) {
+                      toast.error("Seleccioná un canal (LinkedIn o Mail)");
+                      return;
+                    }
                     const filters = {
                       calificacion: shareFilterAprobado || null,
                       responsable: shareFilterResponsable || null,
