@@ -62,6 +62,7 @@ export default function CampaignsPage() {
   const [members, setMembers] = useState<{ id: string; user_id: string; role: string; email: string; full_name: string | null }[]>([]);
   const [addMemberEmail, setAddMemberEmail] = useState("");
   const [addingMember, setAddingMember] = useState(false);
+  const [showMembers, setShowMembers] = useState(false);
 
   const isOwner = project?.user_id === user?.id;
 
