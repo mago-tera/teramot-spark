@@ -151,6 +151,42 @@ export default function CampaignsPage() {
     toast.success("Campaña eliminada");
   };
 
+  const addMember = async () => {
+    if (!addMemberEmail.trim() || !projectId) return;
+    setAddingMember(true);
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, email, full_name")
+        .eq("email", addMemberEmail.trim().toLowerCase())
+        .single();
+      if (!profile) {
+        toast.error("No se encontró un usuario con ese email.");
+        return;
+      }
+      const { error } = await supabase.from("project_members").insert({
+        project_id: projectId,
+        user_id: profile.id,
+        role: "viewer",
+      });
+      if (error) {
+        toast.error(error.code === "23505" ? "Este usuario ya tiene acceso." : error.message);
+        return;
+      }
+      setMembers((prev) => [...prev, { id: crypto.randomUUID(), user_id: profile.id, role: "viewer", email: profile.email, full_name: profile.full_name }]);
+      setAddMemberEmail("");
+      toast.success("Usuario agregado al proyecto.");
+    } finally {
+      setAddingMember(false);
+    }
+  };
+
+  const removeMember = async (memberId: string) => {
+    await supabase.from("project_members").delete().eq("id", memberId);
+    setMembers((prev) => prev.filter((m) => m.id !== memberId));
+    toast.success("Usuario removido del proyecto.");
+  };
+
   const geoSummary = (mix: Record<string, number>) =>
     Object.entries(mix)
       .filter(([, v]) => v > 0)
