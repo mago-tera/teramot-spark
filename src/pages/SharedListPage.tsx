@@ -19,6 +19,7 @@ interface SharedLead {
   calificacion: string | null;
   responsable: string | null;
   canal: string | null;
+  agregado: boolean;
   enviado: boolean;
   respondido: boolean;
   conversion: boolean;
