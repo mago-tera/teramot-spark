@@ -281,11 +281,6 @@ function OutreachRow({ outreach, onCopyLink, onView, onNameUpdated }: {
             </>
           )}
         </div>
-        <div className="flex gap-4 mt-1.5">
-          <span className="text-[10px] text-muted-foreground">📤 {outreach.enviados} enviados</span>
-          <span className="text-[10px] text-muted-foreground">💬 {outreach.respondidos} resp. ({oResponseRate}%)</span>
-          <span className="text-[10px] text-muted-foreground">🎯 {outreach.conversiones} conv. ({oConversionRate}%)</span>
-        </div>
       </div>
       <div className="flex items-center gap-2 ml-3">
         <button onClick={onView} className="px-3 py-1.5 rounded-lg text-[11px] font-medium bg-primary/15 text-primary hover:bg-primary/25 transition-colors">
