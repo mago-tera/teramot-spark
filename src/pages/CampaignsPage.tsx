@@ -84,6 +84,30 @@ export default function CampaignsPage() {
       .eq("project_id", projectId!)
       .order("created_at", { ascending: false });
     setCampaigns((camps as Campaign[]) || []);
+
+    // Load project members
+    if (proj) {
+      const { data: mems } = await supabase
+        .from("project_members")
+        .select("id, user_id, role")
+        .eq("project_id", projectId!);
+      if (mems && mems.length > 0) {
+        const userIds = mems.map((m: any) => m.user_id);
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, email, full_name")
+          .in("id", userIds);
+        const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+        setMembers(mems.map((m: any) => ({
+          ...m,
+          email: profileMap.get(m.user_id)?.email || "",
+          full_name: profileMap.get(m.user_id)?.full_name || null,
+        })));
+      } else {
+        setMembers([]);
+      }
+    }
+
     setLoading(false);
   };
 
