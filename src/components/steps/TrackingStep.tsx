@@ -1,10 +1,11 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { CampaignConfig, ScoredLead } from "@/hooks/useWizard";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, ExternalLink, BarChart3, TrendingUp, Users, Send, MessageSquare, Target, Mail, Linkedin } from "lucide-react";
+import { Copy, ExternalLink, BarChart3, TrendingUp, Users, Send, MessageSquare, Target, Mail, Linkedin, ChevronDown, Pencil, Check, X, ArrowLeft } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { ChartTooltip } from "@/components/ui/chart";
 import { toast } from "sonner";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface Props {
   config: CampaignConfig;
@@ -39,10 +40,11 @@ const PIE_COLORS = [
 export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
   const [leads, setLeads] = useState<LeadMetrics[]>([]);
   const [outreaches, setOutreaches] = useState<OutreachInfo[]>([]);
+  const [outreachOpen, setOutreachOpen] = useState(false);
+  const [viewingOutreachId, setViewingOutreachId] = useState<string | null>(null);
 
   const fetchData = () => {
     if (!campaignId) return;
-    // Fetch all leads for this campaign
     supabase
       .from("leads")
       .select("enviado, respondido, conversion, canal")
@@ -50,7 +52,6 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
       .then(({ data }) => {
         if (data) setLeads(data);
       });
-    // Fetch outreaches (shared lists)
     supabase
       .from("lists")
       .select("id, name, lead_count, shared, enviados, respondidos, conversiones")
@@ -84,7 +85,29 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
     toast.success("Link copiado");
   };
 
-  // Campaign-wide metrics from ALL leads
+  // If viewing an outreach inline, show iframe
+  if (viewingOutreachId) {
+    const outreach = outreaches.find((o) => o.id === viewingOutreachId);
+    return (
+      <div className="space-y-3">
+        <button
+          onClick={() => setViewingOutreachId(null)}
+          className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Volver al dashboard
+        </button>
+        <div className="rounded-xl border border-border/40 overflow-hidden" style={{ height: "calc(100vh - 140px)" }}>
+          <iframe
+            src={`/shared/list/${viewingOutreachId}`}
+            className="w-full h-full border-0"
+            title={outreach?.name || "Outreach"}
+          />
+        </div>
+      </div>
+    );
+  }
+
   const totalLeads = leads.length;
   const totalEnviados = leads.filter((l) => l.enviado).length;
   const totalRespondidos = leads.filter((l) => l.respondido).length;
@@ -92,7 +115,6 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
   const responseRate = totalEnviados > 0 ? ((totalRespondidos / totalEnviados) * 100).toFixed(1) : "0";
   const conversionRate = totalEnviados > 0 ? ((totalConversiones / totalEnviados) * 100).toFixed(1) : "0";
 
-  // Channel breakdown
   const channelMetrics = (channel: string) => {
     const filtered = leads.filter((l) => l.canal?.toLowerCase() === channel);
     const env = filtered.filter((l) => l.enviado).length;
@@ -111,7 +133,6 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
   const emailMetrics = channelMetrics("email");
   const linkedinMetrics = channelMetrics("linkedin");
 
-  // Funnel chart
   const funnelData = [
     { name: "Leads", value: totalLeads },
     { name: "Enviados", value: totalEnviados },
@@ -126,6 +147,33 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
         <p className="text-sm text-muted-foreground mt-1">Métricas generales de todos los leads de la campaña.</p>
       </div>
 
+      {/* Outreaches collapsible - ABOVE dashboard */}
+      {outreaches.length > 0 && (
+        <Collapsible open={outreachOpen} onOpenChange={setOutreachOpen}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full rounded-xl border border-border/40 bg-muted/20 px-4 py-3 hover:bg-muted/30 transition-colors">
+            <div className="flex items-center gap-2">
+              <ExternalLink className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Outreaches activos</span>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                {outreaches.length}
+              </span>
+            </div>
+            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${outreachOpen ? "rotate-180" : ""}`} />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2 space-y-2">
+            {outreaches.map((outreach) => (
+              <OutreachRow
+                key={outreach.id}
+                outreach={outreach}
+                onCopyLink={copyLink}
+                onView={() => setViewingOutreachId(outreach.id)}
+                onNameUpdated={fetchData}
+              />
+            ))}
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+
       {/* General KPI Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <KPICard icon={<Users className="w-4 h-4" />} label="Leads" value={totalLeads} />
@@ -136,16 +184,8 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
 
       {/* Channel breakdown */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ChannelCard
-          icon={<Mail className="w-4 h-4" />}
-          label="Email"
-          metrics={emailMetrics}
-        />
-        <ChannelCard
-          icon={<Linkedin className="w-4 h-4" />}
-          label="LinkedIn"
-          metrics={linkedinMetrics}
-        />
+        <ChannelCard icon={<Mail className="w-4 h-4" />} label="Email" metrics={emailMetrics} />
+        <ChannelCard icon={<Linkedin className="w-4 h-4" />} label="LinkedIn" metrics={linkedinMetrics} />
       </div>
 
       {/* Funnel */}
@@ -171,51 +211,6 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
         </div>
       )}
 
-      {/* Outreach list */}
-      {outreaches.length > 0 && (
-        <div className="rounded-xl border border-border/40 bg-muted/20 p-5 space-y-4">
-          <h3 className="text-sm font-medium text-foreground">Outreaches activos</h3>
-          <div className="space-y-3">
-            {outreaches.map((outreach) => {
-              const oResponseRate = outreach.enviados > 0 ? ((outreach.respondidos / outreach.enviados) * 100).toFixed(1) : "0";
-              const oConversionRate = outreach.enviados > 0 ? ((outreach.conversiones / outreach.enviados) * 100).toFixed(1) : "0";
-              return (
-                <div key={outreach.id} className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-background/50">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-foreground truncate">{outreach.name || "Sin nombre"}</span>
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                        {outreach.lead_count} leads
-                      </span>
-                    </div>
-                    <div className="flex gap-4 mt-1.5">
-                      <span className="text-[10px] text-muted-foreground">📤 {outreach.enviados} enviados</span>
-                      <span className="text-[10px] text-muted-foreground">💬 {outreach.respondidos} resp. ({oResponseRate}%)</span>
-                      <span className="text-[10px] text-muted-foreground">🎯 {outreach.conversiones} conv. ({oConversionRate}%)</span>
-                    </div>
-                    {outreach.lead_count > 0 && (
-                      <div className="flex gap-0.5 mt-2 h-1.5 rounded-full overflow-hidden bg-muted/50 max-w-xs">
-                        <div className="bg-primary/80 rounded-l-full transition-all" style={{ width: `${(outreach.enviados / outreach.lead_count) * 100}%` }} />
-                        <div className="bg-[hsl(var(--chart-2,160_60%_45%))] transition-all" style={{ width: `${(outreach.respondidos / outreach.lead_count) * 100}%` }} />
-                        <div className="bg-[hsl(var(--chart-3,30_80%_55%))] rounded-r-full transition-all" style={{ width: `${(outreach.conversiones / outreach.lead_count) * 100}%` }} />
-                      </div>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-1 ml-3">
-                    <button onClick={() => copyLink(outreach.id)} className="p-1.5 rounded hover:bg-muted transition-colors" title="Copiar link">
-                      <Copy className="w-3.5 h-3.5 text-muted-foreground" />
-                    </button>
-                    <a href={`/shared/list/${outreach.id}`} target="_blank" rel="noopener noreferrer" className="p-1.5 rounded hover:bg-muted transition-colors" title="Abrir outreach">
-                      <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
-                    </a>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
       {leads.length === 0 && (
         <div className="rounded-xl border border-dashed border-border/40 bg-muted/10 p-8 text-center">
           <BarChart3 className="w-8 h-8 text-muted-foreground/50 mx-auto mb-3" />
@@ -226,6 +221,90 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
   );
 }
 
+/* ── Outreach row with editable name ── */
+function OutreachRow({ outreach, onCopyLink, onView, onNameUpdated }: {
+  outreach: OutreachInfo;
+  onCopyLink: (id: string) => void;
+  onView: () => void;
+  onNameUpdated: () => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [editName, setEditName] = useState(outreach.name);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editing) inputRef.current?.focus();
+  }, [editing]);
+
+  const saveName = async () => {
+    const trimmed = editName.trim();
+    if (!trimmed || trimmed === outreach.name) {
+      setEditing(false);
+      setEditName(outreach.name);
+      return;
+    }
+    await supabase.from("lists").update({ name: trimmed }).eq("id", outreach.id);
+    toast.success("Nombre actualizado");
+    setEditing(false);
+    onNameUpdated();
+  };
+
+  const oResponseRate = outreach.enviados > 0 ? ((outreach.respondidos / outreach.enviados) * 100).toFixed(1) : "0";
+  const oConversionRate = outreach.enviados > 0 ? ((outreach.conversiones / outreach.enviados) * 100).toFixed(1) : "0";
+
+  return (
+    <div className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-background/50">
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2">
+          {editing ? (
+            <div className="flex items-center gap-1">
+              <input
+                ref={inputRef}
+                value={editName}
+                onChange={(e) => setEditName(e.target.value)}
+                onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") { setEditing(false); setEditName(outreach.name); } }}
+                className="text-sm font-medium text-foreground bg-muted/50 border border-border rounded px-2 py-0.5 w-48"
+              />
+              <button onClick={saveName} className="p-1 rounded hover:bg-muted transition-colors text-primary">
+                <Check className="w-3.5 h-3.5" />
+              </button>
+              <button onClick={() => { setEditing(false); setEditName(outreach.name); }} className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ) : (
+            <>
+              <button onClick={onView} className="text-sm font-medium text-foreground truncate hover:text-primary transition-colors hover:underline">
+                {outreach.name || "Sin nombre"}
+              </button>
+              <button onClick={() => { setEditing(true); setEditName(outreach.name); }} className="p-1 rounded hover:bg-muted transition-colors" title="Editar nombre">
+                <Pencil className="w-3 h-3 text-muted-foreground" />
+              </button>
+              <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                {outreach.lead_count} leads
+              </span>
+            </>
+          )}
+        </div>
+        <div className="flex gap-4 mt-1.5">
+          <span className="text-[10px] text-muted-foreground">📤 {outreach.enviados} enviados</span>
+          <span className="text-[10px] text-muted-foreground">💬 {outreach.respondidos} resp. ({oResponseRate}%)</span>
+          <span className="text-[10px] text-muted-foreground">🎯 {outreach.conversiones} conv. ({oConversionRate}%)</span>
+        </div>
+      </div>
+      <div className="flex items-center gap-1 ml-3">
+        <button onClick={() => onCopyLink(outreach.id)} className="p-1.5 rounded hover:bg-muted transition-colors" title="Copiar link">
+          <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+        </button>
+        <button onClick={onView} className="p-1.5 rounded hover:bg-muted transition-colors" title="Ver outreach">
+          <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/* ── KPI Card ── */
 function KPICard({ icon, label, value, sub }: { icon: React.ReactNode; label: string; value: number; sub?: string }) {
   return (
     <div className="rounded-xl border border-border/40 bg-muted/20 p-4 space-y-1">
@@ -239,6 +318,7 @@ function KPICard({ icon, label, value, sub }: { icon: React.ReactNode; label: st
   );
 }
 
+/* ── Channel Card ── */
 interface ChannelMetrics {
   total: number;
   enviados: number;
