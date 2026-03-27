@@ -224,16 +224,59 @@ export default function CampaignsPage() {
             <h2 className="text-2xl font-semibold text-foreground">{project?.name || "Campañas"}</h2>
             <p className="text-sm text-muted-foreground mt-1">Campañas de prospección de este proyecto.</p>
           </div>
-          {isOwner && (
-            <button
-              onClick={() => setShowNewDialog(true)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-            >
-              <Plus className="w-4 h-4" />
-              Nueva campaña
-            </button>
-          )}
         </div>
+
+        {/* Members section */}
+        {isOwner && (
+          <div className="glass-card p-5 mb-8 space-y-4">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-muted-foreground" />
+              <h3 className="text-sm font-medium text-foreground">Usuarios con acceso</h3>
+            </div>
+            {members.length > 0 && (
+              <div className="space-y-2">
+                {members.map((m) => (
+                  <div key={m.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/30">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium text-primary">
+                        {(m.full_name || m.email).charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        {m.full_name && <p className="text-sm text-foreground truncate">{m.full_name}</p>}
+                        <p className="text-xs text-muted-foreground truncate">{m.email}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => removeMember(m.id)}
+                      className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground/40 hover:text-destructive transition-colors"
+                      title="Quitar acceso"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <input
+                type="email"
+                value={addMemberEmail}
+                onChange={(e) => setAddMemberEmail(e.target.value)}
+                placeholder="email@ejemplo.com"
+                className="glass-input flex-1 text-sm py-2 px-3"
+                onKeyDown={(e) => { if (e.key === "Enter") addMember(); }}
+              />
+              <button
+                onClick={addMember}
+                disabled={addingMember || !addMemberEmail.trim()}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                {addingMember ? "..." : "Agregar"}
+              </button>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="space-y-3">
@@ -332,6 +375,17 @@ export default function CampaignsPage() {
                 </div>
               );
             })}
+
+            {/* Nueva campaña button below campaigns */}
+            {isOwner && (
+              <button
+                onClick={() => setShowNewDialog(true)}
+                className="glass-card glass-card-hover w-full p-4 flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all border border-dashed border-muted-foreground/20 hover:border-primary/40"
+              >
+                <Plus className="w-4 h-4" />
+                Nueva campaña
+              </button>
+            )}
           </div>
         )}
       </main>
