@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, ChevronRight, Zap, Clock, CheckCircle2, Pencil, Check, ArrowLeft, Trash2, UserPlus } from "lucide-react";
+import { Plus, ChevronRight, Zap, Clock, CheckCircle2, Pencil, Check, ArrowLeft, Trash2, UserPlus, Users, X } from "lucide-react";
 import { ShareEntityDialog } from "@/components/ShareEntityDialog";
 import {
   AlertDialog,
@@ -59,6 +59,9 @@ export default function CampaignsPage() {
   const [newCampaignName, setNewCampaignName] = useState("");
   const [creatingCampaign, setCreatingCampaign] = useState(false);
   const [shareCampaignId, setShareCampaignId] = useState<string | null>(null);
+  const [members, setMembers] = useState<{ id: string; user_id: string; role: string; email: string; full_name: string | null }[]>([]);
+  const [addMemberEmail, setAddMemberEmail] = useState("");
+  const [addingMember, setAddingMember] = useState(false);
 
   const isOwner = project?.user_id === user?.id;
 
@@ -81,6 +84,30 @@ export default function CampaignsPage() {
       .eq("project_id", projectId!)
       .order("created_at", { ascending: false });
     setCampaigns((camps as Campaign[]) || []);
+
+    // Load project members
+    if (proj) {
+      const { data: mems } = await supabase
+        .from("project_members")
+        .select("id, user_id, role")
+        .eq("project_id", projectId!);
+      if (mems && mems.length > 0) {
+        const userIds = mems.map((m: any) => m.user_id);
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("id, email, full_name")
+          .in("id", userIds);
+        const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
+        setMembers(mems.map((m: any) => ({
+          ...m,
+          email: profileMap.get(m.user_id)?.email || "",
+          full_name: profileMap.get(m.user_id)?.full_name || null,
+        })));
+      } else {
+        setMembers([]);
+      }
+    }
+
     setLoading(false);
   };
 
@@ -124,6 +151,42 @@ export default function CampaignsPage() {
     toast.success("Campaña eliminada");
   };
 
+  const addMember = async () => {
+    if (!addMemberEmail.trim() || !projectId) return;
+    setAddingMember(true);
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id, email, full_name")
+        .eq("email", addMemberEmail.trim().toLowerCase())
+        .single();
+      if (!profile) {
+        toast.error("No se encontró un usuario con ese email.");
+        return;
+      }
+      const { error } = await supabase.from("project_members").insert({
+        project_id: projectId,
+        user_id: profile.id,
+        role: "viewer",
+      });
+      if (error) {
+        toast.error(error.code === "23505" ? "Este usuario ya tiene acceso." : error.message);
+        return;
+      }
+      setMembers((prev) => [...prev, { id: crypto.randomUUID(), user_id: profile.id, role: "viewer", email: profile.email, full_name: profile.full_name }]);
+      setAddMemberEmail("");
+      toast.success("Usuario agregado al proyecto.");
+    } finally {
+      setAddingMember(false);
+    }
+  };
+
+  const removeMember = async (memberId: string) => {
+    await supabase.from("project_members").delete().eq("id", memberId);
+    setMembers((prev) => prev.filter((m) => m.id !== memberId));
+    toast.success("Usuario removido del proyecto.");
+  };
+
   const geoSummary = (mix: Record<string, number>) =>
     Object.entries(mix)
       .filter(([, v]) => v > 0)
@@ -161,16 +224,59 @@ export default function CampaignsPage() {
             <h2 className="text-2xl font-semibold text-foreground">{project?.name || "Campañas"}</h2>
             <p className="text-sm text-muted-foreground mt-1">Campañas de prospección de este proyecto.</p>
           </div>
-          {isOwner && (
-            <button
-              onClick={() => setShowNewDialog(true)}
-              className="flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors shadow-lg shadow-primary/20"
-            >
-              <Plus className="w-4 h-4" />
-              Nueva campaña
-            </button>
-          )}
         </div>
+
+        {/* Members section */}
+        {isOwner && (
+          <div className="glass-card p-5 mb-8 space-y-4">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-muted-foreground" />
+              <h3 className="text-sm font-medium text-foreground">Usuarios con acceso</h3>
+            </div>
+            {members.length > 0 && (
+              <div className="space-y-2">
+                {members.map((m) => (
+                  <div key={m.id} className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/30">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-medium text-primary">
+                        {(m.full_name || m.email).charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        {m.full_name && <p className="text-sm text-foreground truncate">{m.full_name}</p>}
+                        <p className="text-xs text-muted-foreground truncate">{m.email}</p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={() => removeMember(m.id)}
+                      className="p-1.5 rounded-md hover:bg-destructive/10 text-muted-foreground/40 hover:text-destructive transition-colors"
+                      title="Quitar acceso"
+                    >
+                      <X className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <div className="flex items-center gap-2">
+              <input
+                type="email"
+                value={addMemberEmail}
+                onChange={(e) => setAddMemberEmail(e.target.value)}
+                placeholder="email@ejemplo.com"
+                className="glass-input flex-1 text-sm py-2 px-3"
+                onKeyDown={(e) => { if (e.key === "Enter") addMember(); }}
+              />
+              <button
+                onClick={addMember}
+                disabled={addingMember || !addMemberEmail.trim()}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                {addingMember ? "..." : "Agregar"}
+              </button>
+            </div>
+          </div>
+        )}
 
         {loading ? (
           <div className="space-y-3">
@@ -269,6 +375,17 @@ export default function CampaignsPage() {
                 </div>
               );
             })}
+
+            {/* Nueva campaña button below campaigns */}
+            {isOwner && (
+              <button
+                onClick={() => setShowNewDialog(true)}
+                className="glass-card glass-card-hover w-full p-4 flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all border border-dashed border-muted-foreground/20 hover:border-primary/40"
+              >
+                <Plus className="w-4 h-4" />
+                Nueva campaña
+              </button>
+            )}
           </div>
         )}
       </main>
