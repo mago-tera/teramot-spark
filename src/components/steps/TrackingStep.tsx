@@ -90,7 +90,7 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
   if (viewingOutreachId) {
     const outreach = outreaches.find((o) => o.id === viewingOutreachId);
     return (
-      <div className="space-y-3">
+      <div className="space-y-4">
         <button
           onClick={() => setViewingOutreachId(null)}
           className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -98,13 +98,7 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
           <ArrowLeft className="w-4 h-4" />
           Volver al dashboard
         </button>
-        <div className="rounded-xl border border-border/40 overflow-hidden" style={{ height: "calc(100vh - 140px)" }}>
-          <iframe
-            src={`/shared/list/${viewingOutreachId}`}
-            className="w-full h-full border-0"
-            title={outreach?.name || "Outreach"}
-          />
-        </div>
+        <OutreachView listId={viewingOutreachId} />
       </div>
     );
   }
