@@ -104,8 +104,6 @@ export function OutreachView({ listId }: OutreachViewProps) {
       if (leadsData) {
         const filters = (list.filtros_compartidos as any) || {};
         const filtered = leadsData.filter((l) => {
-          if (filters.calificacion && l.calificacion !== filters.calificacion) return false;
-          if (filters.responsable && l.responsable !== filters.responsable) return false;
           if (filters.canal && l.canal !== filters.canal) return false;
           return true;
         });
@@ -208,8 +206,6 @@ export function OutreachView({ listId }: OutreachViewProps) {
 
   const filters = listInfo.filtros_compartidos;
   const activeFilters = [
-    filters.calificacion && `Aprobado: ${filters.calificacion}`,
-    filters.responsable && `Responsable: ${filters.responsable}`,
     filters.canal && `Canal: ${filters.canal}`,
   ].filter(Boolean);
 

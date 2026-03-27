@@ -196,6 +196,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [showShareFilterModal, setShowShareFilterModal] = useState(false);
   const [shareFilterAprobado, setShareFilterAprobado] = useState("");
   const [shareFilterResponsable, setShareFilterResponsable] = useState("");
+  const [shareResponsableEmail, setShareResponsableEmail] = useState("");
   const [shareFilterCanal, setShareFilterCanal] = useState("");
   const [shareCopySugerido, setShareCopySugerido] = useState("");
   const [shareViewName, setShareViewName] = useState("");
@@ -666,6 +667,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                 setShareFilterAprobado("");
                 setShareFilterResponsable("");
                 setShareFilterCanal("");
+                setShareResponsableEmail("");
                 setShareCopySugerido("");
                 setShareViewName("");
                 setShowShareFilterModal(true);
@@ -906,21 +908,14 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Aprobado</label>
-                  <select value={shareFilterAprobado} onChange={(e) => setShareFilterAprobado(e.target.value)}
-                    className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white">
-                    <option value="">Todos</option>
-                    <option value="SI">SI</option>
-                    <option value="NO">NO</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Responsable</label>
-                  <select value={shareFilterResponsable} onChange={(e) => setShareFilterResponsable(e.target.value)}
-                    className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white">
-                    <option value="">Todos</option>
-                    {RESPONSABLES.map((r) => <option key={r.label} value={r.label}>{r.label}</option>)}
-                  </select>
+                  <label className="text-xs text-muted-foreground mb-1 block">Responsable (email) <span className="text-destructive">*</span></label>
+                  <input
+                    value={shareResponsableEmail}
+                    onChange={(e) => setShareResponsableEmail(e.target.value)}
+                    placeholder="usuario@teramot.com"
+                    type="email"
+                    className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
                 </div>
               <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Canal <span className="text-destructive">*</span></label>
@@ -953,13 +948,27 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                       toast.error("Poné un nombre al outreach");
                       return;
                     }
+                    if (!shareResponsableEmail.trim()) {
+                      toast.error("Ingresá el email del responsable");
+                      return;
+                    }
                     if (!shareFilterCanal) {
                       toast.error("Seleccioná un canal (LinkedIn o Mail)");
                       return;
                     }
+                    // Look up user by email
+                    const { data: profile } = await supabase
+                      .from("profiles")
+                      .select("id")
+                      .eq("email", shareResponsableEmail.trim().toLowerCase())
+                      .single();
+                    if (!profile) {
+                      toast.error("No se encontró un usuario con ese email.");
+                      return;
+                    }
                     const filters = {
-                      calificacion: shareFilterAprobado || null,
-                      responsable: shareFilterResponsable || null,
+                      calificacion: null,
+                      responsable: shareResponsableEmail.trim().toLowerCase(),
                       canal: shareFilterCanal || null,
                     };
                     await supabase.from("lists").update({ 
@@ -968,13 +977,17 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                       name: shareViewName.trim(),
                       shared: true 
                     } as any).eq("id", selectedListId);
+                    // Add user as list member
+                    await supabase.from("list_members").upsert({
+                      list_id: selectedListId!,
+                      user_id: profile.id,
+                      role: "viewer",
+                    }, { onConflict: "list_id,user_id" });
                     setShowShareFilterModal(false);
-                    const link = `${window.location.origin}/shared/list/${selectedListId}`;
-                    await navigator.clipboard.writeText(link);
-                    toast.success("Outreach creado. Link copiado: " + link);
+                    toast.success("Outreach creado y compartido con " + shareResponsableEmail.trim());
                   }}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-                  <Copy className="w-4 h-4" /> Crear Outreach
+                  Crear Outreach
                 </button>
               </div>
             </div>
@@ -1172,7 +1185,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                   {new Date(list.created_at).toLocaleDateString("es-AR", { day: "numeric", month: "short" })}
                 </div>
                 <button
-                  onClick={(e) => { e.stopPropagation(); setSelectedListId(list.id); setShareFilterAprobado(""); setShareFilterResponsable(""); setShareFilterCanal(""); setShareCopySugerido(""); setShareViewName(list.name || ""); setShowShareFilterModal(true); }}
+                  onClick={(e) => { e.stopPropagation(); setSelectedListId(list.id); setShareFilterAprobado(""); setShareFilterResponsable(""); setShareFilterCanal(""); setShareResponsableEmail(""); setShareCopySugerido(""); setShareViewName(list.name || ""); setShowShareFilterModal(true); }}
                   className="p-1.5 rounded hover:bg-white/10 text-muted-foreground/40 hover:text-foreground opacity-0 group-hover:opacity-100 transition-all shrink-0"
                   title="Crear Outreach"
                 >
