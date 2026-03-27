@@ -9,7 +9,7 @@ import { Plus, ChevronRight, ArrowLeft, Pencil, Check, Users, Download, Zap, Use
 import * as XLSX from "xlsx";
 import { Trash2 } from "lucide-react";
 import { SmartAssignDialog } from "@/components/SmartAssignDialog";
-import { ListTracking } from "@/components/steps/ListTracking";
+
 
 import {
   AlertDialog,
@@ -860,10 +860,6 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
           </div>
         )}
 
-        {/* List-level tracking */}
-        {selectedList?.shared && selectedListId && (
-          <ListTracking listId={selectedListId} listName={selectedList.name || "Outreach"} />
-        )}
 
 
         {smartAssignField && (
