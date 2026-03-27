@@ -923,10 +923,10 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                   </select>
                 </div>
               <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Canal</label>
+                  <label className="text-xs text-muted-foreground mb-1 block">Canal <span className="text-destructive">*</span></label>
                   <select value={shareFilterCanal} onChange={(e) => setShareFilterCanal(e.target.value)}
                     className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white">
-                    <option value="">Todos</option>
+                    <option value="">Seleccioná un canal</option>
                     <option value="LinkedIn">LinkedIn</option>
                     <option value="Mail">Mail</option>
                   </select>
@@ -951,6 +951,10 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                   onClick={async () => {
                     if (!shareViewName.trim()) {
                       toast.error("Poné un nombre al outreach");
+                      return;
+                    }
+                    if (!shareFilterCanal) {
+                      toast.error("Seleccioná un canal (LinkedIn o Mail)");
                       return;
                     }
                     const filters = {

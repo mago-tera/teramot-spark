@@ -228,6 +228,9 @@ export function OutreachView({ listId }: OutreachViewProps) {
   };
 
   const hasCopy = !!listInfo.copy_sugerido;
+  const canal = filters.canal?.toLowerCase() || "";
+  const showEmail = canal !== "linkedin";
+  const showLinkedin = canal !== "mail";
 
   return (
     <div className="space-y-6">
@@ -282,7 +285,10 @@ export function OutreachView({ listId }: OutreachViewProps) {
             <thead>
               <tr className="border-b border-border/40">
                 {[
-                  "Nombre", "Cargo", "Empresa", "País", "Email", "LinkedIn", "Score",
+                  "Nombre", "Cargo", "Empresa", "País",
+                  ...(showEmail ? ["Email"] : []),
+                  ...(showLinkedin ? ["LinkedIn"] : []),
+                  "Score",
                   ...(hasCopy ? ["Mensaje"] : []),
                   "Enviado", "Respondido", "Conversión"
                 ].map((h) => (
@@ -301,25 +307,29 @@ export function OutreachView({ listId }: OutreachViewProps) {
                     <td className="px-3 py-2.5">
                       <span className={`px-2 py-0.5 rounded text-[10px] border ${COUNTRY_COLORS[lead.country || ""] || "text-muted-foreground"}`}>{lead.country}</span>
                     </td>
-                    <td className="px-3 py-2.5 text-muted-foreground font-mono text-[10px]">{lead.email || "—"}</td>
-                    <td className="px-3 py-2.5">
-                      {lead.linkedin_url ? (
-                        <div className="flex items-center gap-1.5">
-                          <a href={lead.linkedin_url.startsWith("http") ? lead.linkedin_url : `https://${lead.linkedin_url}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 text-[10px] font-mono truncate underline max-w-[120px]">
-                            Perfil
-                          </a>
-                          <button
-                            onClick={() => copyLinkedin(lead.linkedin_url!, lead.id)}
-                            className="p-0.5 rounded hover:bg-muted/20 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
-                            title="Copiar URL de LinkedIn"
-                          >
-                            {copiedLinkedin === lead.id
-                              ? <Check className="w-3 h-3 text-green-400" />
-                              : <Copy className="w-3 h-3" />}
-                          </button>
-                        </div>
-                      ) : <span className="text-muted-foreground text-[10px]">—</span>}
-                    </td>
+                    {showEmail && (
+                      <td className="px-3 py-2.5 text-muted-foreground font-mono text-[10px]">{lead.email || "—"}</td>
+                    )}
+                    {showLinkedin && (
+                      <td className="px-3 py-2.5">
+                        {lead.linkedin_url ? (
+                          <div className="flex items-center gap-1.5">
+                            <a href={lead.linkedin_url.startsWith("http") ? lead.linkedin_url : `https://${lead.linkedin_url}`} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:text-blue-300 text-[10px] font-mono truncate underline max-w-[120px]">
+                              Perfil
+                            </a>
+                            <button
+                              onClick={() => copyLinkedin(lead.linkedin_url!, lead.id)}
+                              className="p-0.5 rounded hover:bg-muted/20 text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+                              title="Copiar URL de LinkedIn"
+                            >
+                              {copiedLinkedin === lead.id
+                                ? <Check className="w-3 h-3 text-green-400" />
+                                : <Copy className="w-3 h-3" />}
+                            </button>
+                          </div>
+                        ) : <span className="text-muted-foreground text-[10px]">—</span>}
+                      </td>
+                    )}
                     <td className="px-3 py-2.5">
                       <span className={`inline-block px-3 py-1.5 rounded text-xs font-medium border whitespace-nowrap ${qs.bg} ${qs.text} ${qs.border}`}>{qs.label}</span>
                     </td>
