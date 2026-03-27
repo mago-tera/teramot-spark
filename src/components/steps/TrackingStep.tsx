@@ -287,12 +287,9 @@ function OutreachRow({ outreach, onCopyLink, onView, onNameUpdated }: {
           <span className="text-[10px] text-muted-foreground">🎯 {outreach.conversiones} conv. ({oConversionRate}%)</span>
         </div>
       </div>
-      <div className="flex items-center gap-1 ml-3">
-        <button onClick={() => onCopyLink(outreach.id)} className="p-1.5 rounded hover:bg-muted transition-colors" title="Copiar link">
-          <Copy className="w-3.5 h-3.5 text-muted-foreground" />
-        </button>
-        <button onClick={onView} className="p-1.5 rounded hover:bg-muted transition-colors" title="Ver outreach">
-          <ExternalLink className="w-3.5 h-3.5 text-muted-foreground" />
+      <div className="flex items-center gap-2 ml-3">
+        <button onClick={onView} className="px-3 py-1.5 rounded-lg text-[11px] font-medium bg-primary/15 text-primary hover:bg-primary/25 transition-colors">
+          Ver
         </button>
       </div>
     </div>
