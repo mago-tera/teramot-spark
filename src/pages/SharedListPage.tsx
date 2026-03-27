@@ -66,6 +66,11 @@ export function OutreachView({ listId }: OutreachViewProps) {
   const [copiedLinkedin, setCopiedLinkedin] = useState<string | null>(null);
   const [subject, setSubject] = useState("");
   const [editingSubject, setEditingSubject] = useState(false);
+  const [editingCopy, setEditingCopy] = useState(false);
+  const [copyDraft, setCopyDraft] = useState("");
+  const [aiInstruction, setAiInstruction] = useState("");
+  const [aiLoading, setAiLoading] = useState(false);
+  const [copyOpen, setCopyOpen] = useState(false);
 
   useEffect(() => {
     if (!listId) return;
