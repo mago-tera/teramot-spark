@@ -358,6 +358,15 @@ export function OutreachView({ listId }: OutreachViewProps) {
                         </button>
                       </td>
                     )}
+                    {canal === "linkedin" && (
+                      <td className="px-3 py-2.5 text-center">
+                        <button onClick={() => toggleField(lead.id, "agregado")} className="transition-colors">
+                          {lead.agregado
+                            ? <CheckCircle2 className="w-5 h-5 text-violet-400" />
+                            : <Circle className="w-5 h-5 text-muted-foreground/40 hover:text-violet-400/60" />}
+                        </button>
+                      </td>
+                    )}
                     <td className="px-3 py-2.5 text-center">
                       <button onClick={() => toggleField(lead.id, "enviado")} className="transition-colors">
                         {lead.enviado
