@@ -908,14 +908,31 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                   />
                 </div>
                 <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Responsable (email) <span className="text-destructive">*</span></label>
-                  <input
-                    value={shareResponsableEmail}
-                    onChange={(e) => setShareResponsableEmail(e.target.value)}
-                    placeholder="usuario@teramot.com"
-                    type="email"
-                    className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                  />
+                  <label className="text-xs text-muted-foreground mb-1 block">Responsable <span className="text-destructive">*</span></label>
+                  {(() => {
+                    // Get unique responsables from leads in the current list
+                    const usedResponsables = Array.from(
+                      new Set(listLeads.map((l) => (l as any).responsable as string | null).filter(Boolean))
+                    );
+                    const matchedResponsables = RESPONSABLES.filter((r) => usedResponsables.includes(r.label));
+                    return (
+                      <select
+                        value={shareResponsableEmail}
+                        onChange={(e) => setShareResponsableEmail(e.target.value)}
+                        className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white"
+                      >
+                        <option value="">Seleccioná un responsable</option>
+                        {matchedResponsables.length > 0
+                          ? matchedResponsables.map((r) => (
+                              <option key={r.email} value={r.email}>{r.label} ({r.email})</option>
+                            ))
+                          : RESPONSABLES.map((r) => (
+                              <option key={r.email} value={r.email}>{r.label} ({r.email})</option>
+                            ))
+                        }
+                      </select>
+                    );
+                  })()}
                 </div>
               <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Canal <span className="text-destructive">*</span></label>
