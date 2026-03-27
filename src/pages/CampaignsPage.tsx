@@ -396,16 +396,6 @@ export default function CampaignsPage() {
               );
             })}
 
-            {/* Nueva campaña button below campaigns */}
-            {isOwner && (
-              <button
-                onClick={() => setShowNewDialog(true)}
-                className="glass-card glass-card-hover w-full p-4 flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all border border-dashed border-muted-foreground/20 hover:border-primary/40"
-              >
-                <Plus className="w-4 h-4" />
-                Nueva campaña
-              </button>
-            )}
           </div>
         )}
       </main>
