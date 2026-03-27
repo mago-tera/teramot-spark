@@ -136,6 +136,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          agregado: boolean
           calificacion: string | null
           campaign_id: string | null
           canal: string | null
@@ -161,6 +162,7 @@ export type Database = {
           title: string | null
         }
         Insert: {
+          agregado?: boolean
           calificacion?: string | null
           campaign_id?: string | null
           canal?: string | null
@@ -186,6 +188,7 @@ export type Database = {
           title?: string | null
         }
         Update: {
+          agregado?: boolean
           calificacion?: string | null
           campaign_id?: string | null
           canal?: string | null
