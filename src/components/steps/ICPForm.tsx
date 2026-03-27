@@ -80,6 +80,8 @@ export function ICPForm({ config: initialConfig, onConfirm, onCancel }: Props) {
   const [visibleCountries, setVisibleCountries] = useState<string[]>(DEFAULT_COUNTRIES);
   const [showAddCountry, setShowAddCountry] = useState(false);
   const [customCountry, setCustomCountry] = useState("");
+  const [nameFilter, setNameFilter] = useState("");
+  const [cityFilter, setCityFilter] = useState("");
 
   const total = Object.values(config.geoMix).reduce((a, b) => a + b, 0);
   const isValid = config.profile !== "" && total === 100 && config.quantity > 0;
@@ -108,45 +110,65 @@ export function ICPForm({ config: initialConfig, onConfirm, onCancel }: Props) {
         <button onClick={onCancel} className="text-xs text-muted-foreground hover:text-foreground transition-colors">✕ Cancelar</button>
       </div>
 
-      {/* ICP Profile */}
+      {/* ICP Profile - Dropdown */}
       <div className="space-y-3">
         <h4 className="text-sm font-medium text-foreground">Perfil ICP</h4>
-        <div className="space-y-2">
+        <select
+          value={isCustom ? "__custom__" : config.profile}
+          onChange={(e) => {
+            const val = e.target.value;
+            if (val === "__custom__") {
+              setIsCustom(true);
+              setConfig({ ...config, profile: customProfile });
+            } else {
+              setIsCustom(false);
+              setConfig({ ...config, profile: val });
+            }
+          }}
+          className="glass-input w-full text-sm"
+        >
+          <option value="">Seleccionar perfil...</option>
           {PROFILES.map((p) => (
-            <label key={p} className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors ${
-              config.profile === p && !isCustom ? "bg-primary/10 border border-primary/30" : "hover:bg-white/[0.03] border border-transparent"
-            }`}>
-              <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-                config.profile === p && !isCustom ? "border-primary" : "border-muted-foreground/30"
-              }`}>
-                {config.profile === p && !isCustom && <span className="w-2 h-2 rounded-full bg-primary" />}
-              </span>
-              <span className="text-sm text-foreground">{p}</span>
-              <input type="radio" className="sr-only" checked={config.profile === p && !isCustom} onChange={() => { setIsCustom(false); setConfig({ ...config, profile: p }); }} />
-            </label>
+            <option key={p} value={p}>{p}</option>
           ))}
-          <label className={`flex items-center gap-3 px-4 py-3 rounded-lg cursor-pointer transition-colors ${
-            isCustom ? "bg-primary/10 border border-primary/30" : "hover:bg-white/[0.03] border border-transparent"
-          }`}
-            onClick={() => { setIsCustom(true); setConfig({ ...config, profile: customProfile }); }}
-          >
-            <span className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
-              isCustom ? "border-primary" : "border-muted-foreground/30"
-            }`}>
-              {isCustom && <span className="w-2 h-2 rounded-full bg-primary" />}
-            </span>
-            <span className="text-sm text-foreground">Otros</span>
-          </label>
-          {isCustom && (
+          <option value="__custom__">Otros (personalizado)</option>
+        </select>
+        {isCustom && (
+          <input
+            type="text"
+            placeholder="Ej: Marketing Manager, CTO..."
+            value={customProfile}
+            onChange={(e) => { setCustomProfile(e.target.value); setConfig({ ...config, profile: e.target.value }); }}
+            className="glass-input w-full text-sm"
+            autoFocus
+          />
+        )}
+      </div>
+
+      {/* Additional Filters */}
+      <div className="space-y-3">
+        <h4 className="text-sm font-medium text-foreground">Filtros adicionales</h4>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="space-y-1.5">
+            <label className="text-xs text-muted-foreground">Nombre / Empresa</label>
             <input
               type="text"
-              placeholder="Ej: Marketing Manager, CTO..."
-              value={customProfile}
-              onChange={(e) => { setCustomProfile(e.target.value); setConfig({ ...config, profile: e.target.value }); }}
-              className="glass-input w-full text-sm ml-7"
-              autoFocus
+              placeholder="Ej: Google, Juan..."
+              value={nameFilter}
+              onChange={(e) => setNameFilter(e.target.value)}
+              className="glass-input w-full text-sm"
             />
-          )}
+          </div>
+          <div className="space-y-1.5">
+            <label className="text-xs text-muted-foreground">Ciudad</label>
+            <input
+              type="text"
+              placeholder="Ej: Buenos Aires, Miami..."
+              value={cityFilter}
+              onChange={(e) => setCityFilter(e.target.value)}
+              className="glass-input w-full text-sm"
+            />
+          </div>
         </div>
       </div>
 
