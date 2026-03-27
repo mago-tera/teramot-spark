@@ -947,13 +947,27 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                       toast.error("Poné un nombre al outreach");
                       return;
                     }
+                    if (!shareResponsableEmail.trim()) {
+                      toast.error("Ingresá el email del responsable");
+                      return;
+                    }
                     if (!shareFilterCanal) {
                       toast.error("Seleccioná un canal (LinkedIn o Mail)");
                       return;
                     }
+                    // Look up user by email
+                    const { data: profile } = await supabase
+                      .from("profiles")
+                      .select("id")
+                      .eq("email", shareResponsableEmail.trim().toLowerCase())
+                      .single();
+                    if (!profile) {
+                      toast.error("No se encontró un usuario con ese email.");
+                      return;
+                    }
                     const filters = {
-                      calificacion: shareFilterAprobado || null,
-                      responsable: shareFilterResponsable || null,
+                      calificacion: null,
+                      responsable: shareResponsableEmail.trim().toLowerCase(),
                       canal: shareFilterCanal || null,
                     };
                     await supabase.from("lists").update({ 
@@ -962,13 +976,17 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                       name: shareViewName.trim(),
                       shared: true 
                     } as any).eq("id", selectedListId);
+                    // Add user as list member
+                    await supabase.from("list_members").upsert({
+                      list_id: selectedListId!,
+                      user_id: profile.id,
+                      role: "viewer",
+                    }, { onConflict: "list_id,user_id" });
                     setShowShareFilterModal(false);
-                    const link = `${window.location.origin}/shared/list/${selectedListId}`;
-                    await navigator.clipboard.writeText(link);
-                    toast.success("Outreach creado. Link copiado: " + link);
+                    toast.success("Outreach creado y compartido con " + shareResponsableEmail.trim());
                   }}
                   className="flex-1 flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-                  <Copy className="w-4 h-4" /> Crear Outreach
+                  Crear Outreach
                 </button>
               </div>
             </div>
