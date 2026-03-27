@@ -158,6 +158,35 @@ export function OutreachView({ listId }: OutreachViewProps) {
     toast.success("Subject guardado");
   };
 
+  const saveCopy = async () => {
+    if (!listId) return;
+    await supabase.from("lists").update({ copy_sugerido: copyDraft }).eq("id", listId);
+    if (listInfo) setListInfo({ ...listInfo, copy_sugerido: copyDraft });
+    setEditingCopy(false);
+    toast.success("Copy guardado");
+  };
+
+  const aiEditCopy = async () => {
+    if (!aiInstruction.trim() || !listInfo) return;
+    setAiLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("edit-message", {
+        body: { currentText: editingCopy ? copyDraft : listInfo.copy_sugerido, instruction: aiInstruction, field: "email_cuerpo" },
+      });
+      if (error) throw error;
+      if (data?.text) {
+        setCopyDraft(data.text);
+        setEditingCopy(true);
+        setAiInstruction("");
+        toast.success("Copy editado con IA");
+      }
+    } catch (e: any) {
+      toast.error(e?.message || "Error al editar con IA");
+    } finally {
+      setAiLoading(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-12">
