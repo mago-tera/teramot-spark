@@ -208,8 +208,6 @@ export function OutreachView({ listId }: OutreachViewProps) {
 
   const filters = listInfo.filtros_compartidos;
   const activeFilters = [
-    filters.calificacion && `Aprobado: ${filters.calificacion}`,
-    filters.responsable && `Responsable: ${filters.responsable}`,
     filters.canal && `Canal: ${filters.canal}`,
   ].filter(Boolean);
 
