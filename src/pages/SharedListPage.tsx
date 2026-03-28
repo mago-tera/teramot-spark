@@ -73,6 +73,7 @@ export function OutreachView({ listId }: OutreachViewProps) {
   const [aiInstruction, setAiInstruction] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [copyOpen, setCopyOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     if (!listId) return;
