@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle2, Circle, Search, Copy, Check, ChevronDown, Sparkles, Save, Loader2, Mail } from "lucide-react";
+import { CheckCircle2, Circle, Search, Copy, Check, ChevronDown, Sparkles, Save, Loader2, UserPlus } from "lucide-react";
+import { ShareEntityDialog } from "@/components/ShareEntityDialog";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface SharedLead {
@@ -72,6 +73,7 @@ export function OutreachView({ listId }: OutreachViewProps) {
   const [aiInstruction, setAiInstruction] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [copyOpen, setCopyOpen] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
 
   useEffect(() => {
     if (!listId) return;
@@ -246,17 +248,20 @@ export function OutreachView({ listId }: OutreachViewProps) {
           )}
         </div>
         <button
-          onClick={() => {
-            const listUrl = `${window.location.origin}/shared/${listId}`;
-            const subject = encodeURIComponent(`Outreach: ${listInfo.name}`);
-            const body = encodeURIComponent(`Hola,\n\nTe comparto esta lista de outreach "${listInfo.name}" con ${leads.length} leads.\n\nAccedé desde acá: ${listUrl}\n\nSaludos`);
-            window.open(`mailto:?subject=${subject}&body=${body}`, "_blank");
-          }}
+          onClick={() => setShareOpen(true)}
           className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border border-border/40 bg-muted/20 hover:bg-muted/40 text-foreground transition-colors"
         >
-          <Mail className="w-3.5 h-3.5" />
-          Compartir por email
+          <UserPlus className="w-3.5 h-3.5" />
+          Agregar usuarios
         </button>
+        <ShareEntityDialog
+          open={shareOpen}
+          onOpenChange={setShareOpen}
+          entityType="lista"
+          entityId={listId!}
+          memberTable="list_members"
+          fkColumn="list_id"
+        />
       </div>
 
 
