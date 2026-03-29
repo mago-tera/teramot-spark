@@ -187,16 +187,24 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
   };
 
   const saveSubject = async () => {
-    if (!listId) return;
+    if (!resolvedListId && !outreachData) return;
     setEditingSubject(false);
-    await supabase.from("lists").update({ copy_sugerido_subject: subject } as any).eq("id", listId);
+    if (outreachData) {
+      await supabase.from("outreaches").update({ copy_sugerido_subject: subject }).eq("id", outreachData.id);
+    } else {
+      await supabase.from("lists").update({ copy_sugerido_subject: subject } as any).eq("id", resolvedListId);
+    }
     if (listInfo) setListInfo({ ...listInfo, copy_sugerido_subject: subject });
     toast.success("Subject guardado");
   };
 
   const saveCopy = async () => {
-    if (!listId) return;
-    await supabase.from("lists").update({ copy_sugerido: copyDraft }).eq("id", listId);
+    if (!resolvedListId && !outreachData) return;
+    if (outreachData) {
+      await supabase.from("outreaches").update({ copy_sugerido: copyDraft }).eq("id", outreachData.id);
+    } else {
+      await supabase.from("lists").update({ copy_sugerido: copyDraft }).eq("id", resolvedListId);
+    }
     if (listInfo) setListInfo({ ...listInfo, copy_sugerido: copyDraft });
     setEditingCopy(false);
     toast.success("Copy guardado");
