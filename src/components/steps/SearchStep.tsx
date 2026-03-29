@@ -192,6 +192,8 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [projectLists, setProjectLists] = useState<(ListItem & { campaignName?: string })[]>([]);
   const [savingField, setSavingField] = useState<Record<string, boolean>>({});
   const [smartAssignField, setSmartAssignField] = useState<"calificacion" | "responsable" | "canal" | null>(null);
+  const [applyAllField, setApplyAllField] = useState<"calificacion" | "responsable" | "canal" | null>(null);
+  const [applyAllValue, setApplyAllValue] = useState("");
   
   const [showShareFilterModal, setShowShareFilterModal] = useState(false);
   const [shareFilterAprobado, setShareFilterAprobado] = useState("");
@@ -638,10 +640,25 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     toast.success(`Asignación aplicada a ${rules.reduce((s, r) => s + Math.round((r.percentage / 100) * (leadCountByQuartile[r.quartile] || 0)), 0)} leads`);
   };
 
+  // Dynamic responsable options from leads
+  const usedResponsablesInLeads = Array.from(
+    new Set(listLeads.map((l) => (l as any).responsable as string | null).filter(Boolean))
+  ) as string[];
+
   const SMART_ASSIGN_OPTIONS: Record<string, { label: string; value: string }[]> = {
     calificacion: CALIFICACIONES.map((c) => ({ label: c, value: c })),
-    responsable: RESPONSABLES.map((r) => ({ label: r.label, value: r.label })),
+    responsable: usedResponsablesInLeads.map((r) => ({ label: r, value: r })),
     canal: CANALES.map((c) => ({ label: c, value: c })),
+  };
+
+  const applyToAll = async (field: string, value: string) => {
+    if (!value) return;
+    const ids = listLeads.map((l) => l.id);
+    setListLeads((prev) => prev.map((l) => ({ ...l, [field]: value })));
+    await supabase.from("leads").update({ [field]: value }).in("id", ids);
+    toast.success(`"${value}" aplicado a ${ids.length} leads`);
+    setApplyAllField(null);
+    setApplyAllValue("");
   };
 
   const SMART_ASSIGN_LABELS: Record<string, string> = {
@@ -729,6 +746,13 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                           >
                             <Zap className="w-3 h-3" /> Asignar
                           </button>
+                          <button
+                            onClick={() => { setApplyAllField(f); setApplyAllValue(""); }}
+                            className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] bg-white/[0.06] border border-white/[0.1] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition-colors cursor-pointer"
+                            title="Aplicar a todo"
+                          >
+                            <Check className="w-3 h-3" /> Todo
+                          </button>
                         </div>
                       </th>
                     ))}
@@ -786,18 +810,17 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                             {CALIFICACIONES.map((c) => <option key={c} value={c}>{c}</option>)}
                           </select>
                         </td>
-                        {/* Responsable */}
+                        {/* Responsable - free text input */}
                         <td className="px-3 py-2.5">
-                          <select
+                          <input
+                            type="text"
                             value={resp || ""}
                             onChange={(e) => updateLeadField(lead.id, "responsable", e.target.value || null)}
-                            className={`rounded-md px-2 py-1 text-[11px] font-medium border cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary transition-colors [&>option]:bg-[#1a1a2e] [&>option]:text-white ${
+                            placeholder="—"
+                            className={`w-[120px] rounded-md px-2 py-1 text-[11px] font-medium border cursor-text focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${
                               resp ? "bg-amber-500/20 text-amber-300 border-amber-500/30" : "bg-white/[0.04] border-white/[0.08] text-muted-foreground"
                             }`}
-                          >
-                            <option value="">—</option>
-                            {RESPONSABLES.map((r) => <option key={r.email} value={r.label}>{r.label}</option>)}
-                          </select>
+                          />
                         </td>
                         {/* Canal */}
                         <td className="px-3 py-2.5">
@@ -835,6 +858,50 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
             leadCountByQuartile={leadCountByQuartile}
             onApply={(rules) => smartApplyRules(smartAssignField, rules)}
           />
+        )}
+
+        {/* Apply to all modal */}
+        {applyAllField && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setApplyAllField(null)}>
+            <div className="bg-[hsl(var(--card))] border border-white/[0.1] rounded-xl p-5 w-full max-w-xs shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-sm font-semibold text-foreground">Aplicar a todo — {SMART_ASSIGN_LABELS[applyAllField]}</h3>
+              {applyAllField === "calificacion" && (
+                <select value={applyAllValue} onChange={(e) => setApplyAllValue(e.target.value)}
+                  className="w-full rounded-lg px-3 py-2 text-sm border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white">
+                  <option value="">Seleccionar...</option>
+                  {CALIFICACIONES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              )}
+              {applyAllField === "responsable" && (
+                <input
+                  type="text"
+                  value={applyAllValue}
+                  onChange={(e) => setApplyAllValue(e.target.value)}
+                  placeholder="Nombre o email del responsable"
+                  className="w-full rounded-lg px-3 py-2 text-sm border border-white/[0.1] bg-[hsl(var(--background))] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              )}
+              {applyAllField === "canal" && (
+                <select value={applyAllValue} onChange={(e) => setApplyAllValue(e.target.value)}
+                  className="w-full rounded-lg px-3 py-2 text-sm border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white">
+                  <option value="">Seleccionar...</option>
+                  {CANALES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              )}
+              <div className="flex gap-2">
+                <button onClick={() => setApplyAllField(null)}
+                  className="flex-1 px-3 py-2 rounded-lg text-sm border border-white/[0.1] text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors">
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => applyToAll(applyAllField, applyAllValue)}
+                  disabled={!applyAllValue}
+                  className="flex-1 px-3 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50">
+                  Aplicar a todo
+                </button>
+              </div>
+            </div>
+          </div>
         )}
 
         {showCsvModal && (
@@ -932,24 +999,26 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                     </select>
                   </div>
                   <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Aprobado</label>
+                    <select value={shareFilterAprobado} onChange={(e) => setShareFilterAprobado(e.target.value)}
+                      className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white">
+                      <option value="">Todos</option>
+                      <option value="SI">SI</option>
+                      <option value="NO">NO</option>
+                    </select>
+                  </div>
+                  <div>
                     <label className="text-xs text-muted-foreground mb-1 block">Responsable</label>
-                    {(() => {
-                      const usedResponsables = Array.from(
-                        new Set(listLeads.map((l) => (l as any).responsable as string | null).filter(Boolean))
-                      ) as string[];
-                      return (
-                        <select
-                          value={shareFilterResponsable}
-                          onChange={(e) => setShareFilterResponsable(e.target.value)}
-                          className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white"
-                        >
-                          <option value="">Todos los responsables</option>
-                          {usedResponsables.map((r) => (
-                            <option key={r} value={r}>{r}</option>
-                          ))}
-                        </select>
-                      );
-                    })()}
+                    <select
+                      value={shareFilterResponsable}
+                      onChange={(e) => setShareFilterResponsable(e.target.value)}
+                      className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white"
+                    >
+                      <option value="">Todos los responsables</option>
+                      {usedResponsablesInLeads.map((r) => (
+                        <option key={r} value={r}>{r}</option>
+                      ))}
+                    </select>
                   </div>
                 </div>
 
@@ -1004,7 +1073,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                       return;
                     }
                     const filters = {
-                      calificacion: null,
+                      calificacion: shareFilterAprobado || null,
                       responsable: shareFilterResponsable || null,
                       canal: shareFilterCanal || null,
                     };
