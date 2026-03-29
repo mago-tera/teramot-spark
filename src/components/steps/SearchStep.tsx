@@ -999,13 +999,23 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                       responsable: shareResponsableEmail.trim().toLowerCase(),
                       canal: shareFilterCanal || null,
                     };
-                    await supabase.from("lists").update({ 
-                      filtros_compartidos: filters, 
-                      copy_sugerido: shareCopySugerido,
+                    // Insert outreach record (list stays unchanged)
+                    const { error: outreachErr } = await supabase.from("outreaches").insert({
+                      list_id: selectedListId!,
+                      campaign_id: campaignId!,
                       name: shareViewName.trim(),
-                      shared: true 
-                    } as any).eq("id", selectedListId);
-                    // Add user as list member
+                      responsable: shareResponsableEmail.trim().toLowerCase(),
+                      canal: shareFilterCanal || null,
+                      filtros_compartidos: filters,
+                      copy_sugerido: shareCopySugerido,
+                    });
+                    if (outreachErr) {
+                      toast.error("Error creando outreach");
+                      console.error(outreachErr);
+                      return;
+                    }
+                    // Mark list as shared and add user as list member
+                    await supabase.from("lists").update({ shared: true } as any).eq("id", selectedListId);
                     await supabase.from("list_members").upsert({
                       list_id: selectedListId!,
                       user_id: profile.id,
