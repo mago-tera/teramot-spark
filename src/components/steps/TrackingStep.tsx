@@ -237,14 +237,11 @@ function OutreachRow({ outreach, onCopyLink, onView, onNameUpdated }: {
       setEditName(outreach.name);
       return;
     }
-    await supabase.from("lists").update({ name: trimmed }).eq("id", outreach.id);
+    await supabase.from("outreaches").update({ name: trimmed }).eq("id", outreach.id);
     toast.success("Nombre actualizado");
     setEditing(false);
     onNameUpdated();
   };
-
-  const oResponseRate = outreach.enviados > 0 ? ((outreach.respondidos / outreach.enviados) * 100).toFixed(1) : "0";
-  const oConversionRate = outreach.enviados > 0 ? ((outreach.conversiones / outreach.enviados) * 100).toFixed(1) : "0";
 
   return (
     <div className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-background/50">
@@ -274,9 +271,16 @@ function OutreachRow({ outreach, onCopyLink, onView, onNameUpdated }: {
               <button onClick={() => { setEditing(true); setEditName(outreach.name); }} className="p-1 rounded hover:bg-muted transition-colors" title="Editar nombre">
                 <Pencil className="w-3 h-3 text-muted-foreground" />
               </button>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                {outreach.lead_count} leads
-              </span>
+              {outreach.canal && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                  {outreach.canal}
+                </span>
+              )}
+              {outreach.responsable && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                  {outreach.responsable}
+                </span>
+              )}
             </>
           )}
         </div>
