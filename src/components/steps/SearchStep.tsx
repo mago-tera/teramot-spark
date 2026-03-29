@@ -746,6 +746,13 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                           >
                             <Zap className="w-3 h-3" /> Asignar
                           </button>
+                          <button
+                            onClick={() => { setApplyAllField(f); setApplyAllValue(""); }}
+                            className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[9px] bg-white/[0.06] border border-white/[0.1] text-muted-foreground hover:text-foreground hover:bg-white/[0.1] transition-colors cursor-pointer"
+                            title="Aplicar a todo"
+                          >
+                            <Check className="w-3 h-3" /> Todo
+                          </button>
                         </div>
                       </th>
                     ))}
