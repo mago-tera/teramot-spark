@@ -541,6 +541,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
 
       if (listData) {
         setLists((prev) => [{ ...listData, lead_count: totalCount, geo_mix: listData.geo_mix as Record<string, number> } as ListItem, ...prev]);
+        setSelectedListId(listData.id);
       }
 
       setProgress(100);
