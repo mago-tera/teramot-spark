@@ -55,10 +55,11 @@ const COUNTRY_COLORS: Record<string, string> = {
 };
 
 interface OutreachViewProps {
-  listId: string;
+  listId?: string;
+  outreachId?: string;
 }
 
-export function OutreachView({ listId }: OutreachViewProps) {
+export function OutreachView({ listId: propListId, outreachId }: OutreachViewProps) {
   const [listInfo, setListInfo] = useState<ListInfo | null>(null);
   const [leads, setLeads] = useState<SharedLead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,11 +75,38 @@ export function OutreachView({ listId }: OutreachViewProps) {
   const [aiLoading, setAiLoading] = useState(false);
   const [copyOpen, setCopyOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
+  const [resolvedListId, setResolvedListId] = useState<string | null>(propListId || null);
+  const [outreachData, setOutreachData] = useState<{ id: string; name: string; copy_sugerido: string; copy_sugerido_subject: string; filtros_compartidos: any } | null>(null);
 
   useEffect(() => {
-    if (!listId) return;
-
     (async () => {
+      let listId = propListId || null;
+      let outreachInfo: any = null;
+
+      // If we have an outreachId, fetch outreach data first to get list_id
+      if (outreachId) {
+        const { data: outreach, error: oErr } = await supabase
+          .from("outreaches")
+          .select("id, list_id, name, responsable, canal, filtros_compartidos, copy_sugerido, copy_sugerido_subject")
+          .eq("id", outreachId)
+          .maybeSingle();
+        if (oErr || !outreach) {
+          setError("No se pudo cargar el outreach.");
+          setLoading(false);
+          return;
+        }
+        listId = outreach.list_id;
+        outreachInfo = outreach;
+        setOutreachData(outreach);
+      }
+
+      if (!listId) {
+        setError("No se especificó una lista.");
+        setLoading(false);
+        return;
+      }
+      setResolvedListId(listId);
+
       const { data: list, error: listErr } = await supabase
         .from("lists")
         .select("id, name, copy_sugerido, copy_sugerido_subject, filtros_compartidos")
@@ -91,12 +119,20 @@ export function OutreachView({ listId }: OutreachViewProps) {
         return;
       }
 
+      // Use outreach data if available, otherwise fall back to list data
+      const effectiveName = outreachInfo?.name || list.name;
+      const effectiveCopy = outreachInfo?.copy_sugerido || list.copy_sugerido || "";
+      const effectiveSubject = outreachInfo?.copy_sugerido_subject || (list as any).copy_sugerido_subject || "";
+      const effectiveFilters = outreachInfo?.filtros_compartidos || (list.filtros_compartidos as any) || {};
+
       setListInfo({
-        ...list,
-        copy_sugerido_subject: (list as any).copy_sugerido_subject || "",
-        filtros_compartidos: (list.filtros_compartidos as any) || {},
+        id: list.id,
+        name: effectiveName,
+        copy_sugerido: effectiveCopy,
+        copy_sugerido_subject: effectiveSubject,
+        filtros_compartidos: effectiveFilters,
       });
-      setSubject((list as any).copy_sugerido_subject || "");
+      setSubject(effectiveSubject);
 
       const { data: leadsData } = await supabase
         .from("leads")
@@ -105,16 +141,15 @@ export function OutreachView({ listId }: OutreachViewProps) {
         .order("score", { ascending: false });
 
       if (leadsData) {
-        const filters = (list.filtros_compartidos as any) || {};
         const filtered = leadsData.filter((l) => {
-          if (filters.canal && l.canal !== filters.canal) return false;
+          if (effectiveFilters.canal && l.canal !== effectiveFilters.canal) return false;
           return true;
         });
         setLeads(filtered as SharedLead[]);
       }
       setLoading(false);
     })();
-  }, [listId]);
+  }, [propListId, outreachId]);
 
   const toggleField = async (leadId: string, field: "agregado" | "enviado" | "respondido" | "conversion") => {
     const lead = leads.find((l) => l.id === leadId);
