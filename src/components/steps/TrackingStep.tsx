@@ -71,8 +71,8 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
       .on("postgres_changes", { event: "*", schema: "public", table: "leads", filter: `campaign_id=eq.${campaignId}` }, () => fetchData())
       .subscribe();
     const ch2 = supabase
-      .channel(`tracking-lists-${campaignId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "lists", filter: `campaign_id=eq.${campaignId}` }, () => fetchData())
+      .channel(`tracking-outreaches-${campaignId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "outreaches", filter: `campaign_id=eq.${campaignId}` }, () => fetchData())
       .subscribe();
     return () => {
       supabase.removeChannel(ch1);
