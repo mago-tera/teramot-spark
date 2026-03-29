@@ -23,12 +23,12 @@ interface LeadMetrics {
 
 interface OutreachInfo {
   id: string;
+  list_id: string;
   name: string;
-  lead_count: number;
-  shared: boolean;
-  enviados: number;
-  respondidos: number;
-  conversiones: number;
+  responsable: string | null;
+  canal: string | null;
+  copy_sugerido: string;
+  copy_sugerido_subject: string;
 }
 
 const PIE_COLORS = [
@@ -54,13 +54,12 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
         if (data) setLeads(data);
       });
     supabase
-      .from("lists")
-      .select("id, name, lead_count, shared, enviados, respondidos, conversiones")
+      .from("outreaches")
+      .select("id, list_id, name, responsable, canal, copy_sugerido, copy_sugerido_subject")
       .eq("campaign_id", campaignId)
-      .eq("shared", true)
       .order("created_at", { ascending: false })
       .then(({ data }) => {
-        if (data) setOutreaches(data);
+        if (data) setOutreaches(data as OutreachInfo[]);
       });
   };
 
@@ -72,8 +71,8 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
       .on("postgres_changes", { event: "*", schema: "public", table: "leads", filter: `campaign_id=eq.${campaignId}` }, () => fetchData())
       .subscribe();
     const ch2 = supabase
-      .channel(`tracking-lists-${campaignId}`)
-      .on("postgres_changes", { event: "*", schema: "public", table: "lists", filter: `campaign_id=eq.${campaignId}` }, () => fetchData())
+      .channel(`tracking-outreaches-${campaignId}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "outreaches", filter: `campaign_id=eq.${campaignId}` }, () => fetchData())
       .subscribe();
     return () => {
       supabase.removeChannel(ch1);
@@ -98,7 +97,7 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
           <ArrowLeft className="w-4 h-4" />
           Volver al dashboard
         </button>
-        <OutreachView listId={viewingOutreachId} />
+        <OutreachView outreachId={viewingOutreachId} />
       </div>
     );
   }
@@ -238,14 +237,11 @@ function OutreachRow({ outreach, onCopyLink, onView, onNameUpdated }: {
       setEditName(outreach.name);
       return;
     }
-    await supabase.from("lists").update({ name: trimmed }).eq("id", outreach.id);
+    await supabase.from("outreaches").update({ name: trimmed }).eq("id", outreach.id);
     toast.success("Nombre actualizado");
     setEditing(false);
     onNameUpdated();
   };
-
-  const oResponseRate = outreach.enviados > 0 ? ((outreach.respondidos / outreach.enviados) * 100).toFixed(1) : "0";
-  const oConversionRate = outreach.enviados > 0 ? ((outreach.conversiones / outreach.enviados) * 100).toFixed(1) : "0";
 
   return (
     <div className="flex items-center justify-between p-3 rounded-lg border border-border/40 bg-background/50">
@@ -275,9 +271,16 @@ function OutreachRow({ outreach, onCopyLink, onView, onNameUpdated }: {
               <button onClick={() => { setEditing(true); setEditName(outreach.name); }} className="p-1 rounded hover:bg-muted transition-colors" title="Editar nombre">
                 <Pencil className="w-3 h-3 text-muted-foreground" />
               </button>
-              <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                {outreach.lead_count} leads
-              </span>
+              {outreach.canal && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                  {outreach.canal}
+                </span>
+              )}
+              {outreach.responsable && (
+                <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                  {outreach.responsable}
+                </span>
+              )}
             </>
           )}
         </div>

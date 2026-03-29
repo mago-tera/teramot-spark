@@ -319,6 +319,60 @@ export type Database = {
           },
         ]
       }
+      outreaches: {
+        Row: {
+          campaign_id: string
+          canal: string | null
+          copy_sugerido: string
+          copy_sugerido_subject: string
+          created_at: string
+          filtros_compartidos: Json
+          id: string
+          list_id: string
+          name: string
+          responsable: string | null
+        }
+        Insert: {
+          campaign_id: string
+          canal?: string | null
+          copy_sugerido?: string
+          copy_sugerido_subject?: string
+          created_at?: string
+          filtros_compartidos?: Json
+          id?: string
+          list_id: string
+          name?: string
+          responsable?: string | null
+        }
+        Update: {
+          campaign_id?: string
+          canal?: string | null
+          copy_sugerido?: string
+          copy_sugerido_subject?: string
+          created_at?: string
+          filtros_compartidos?: Json
+          id?: string
+          list_id?: string
+          name?: string
+          responsable?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "outreaches_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "outreaches_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "lists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
