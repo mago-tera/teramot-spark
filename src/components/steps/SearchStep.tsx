@@ -640,10 +640,25 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     toast.success(`Asignación aplicada a ${rules.reduce((s, r) => s + Math.round((r.percentage / 100) * (leadCountByQuartile[r.quartile] || 0)), 0)} leads`);
   };
 
+  // Dynamic responsable options from leads
+  const usedResponsablesInLeads = Array.from(
+    new Set(listLeads.map((l) => (l as any).responsable as string | null).filter(Boolean))
+  ) as string[];
+
   const SMART_ASSIGN_OPTIONS: Record<string, { label: string; value: string }[]> = {
     calificacion: CALIFICACIONES.map((c) => ({ label: c, value: c })),
-    responsable: RESPONSABLES.map((r) => ({ label: r.label, value: r.label })),
+    responsable: usedResponsablesInLeads.map((r) => ({ label: r, value: r })),
     canal: CANALES.map((c) => ({ label: c, value: c })),
+  };
+
+  const applyToAll = async (field: string, value: string) => {
+    if (!value) return;
+    const ids = listLeads.map((l) => l.id);
+    setListLeads((prev) => prev.map((l) => ({ ...l, [field]: value })));
+    await supabase.from("leads").update({ [field]: value }).in("id", ids);
+    toast.success(`"${value}" aplicado a ${ids.length} leads`);
+    setApplyAllField(null);
+    setApplyAllValue("");
   };
 
   const SMART_ASSIGN_LABELS: Record<string, string> = {
