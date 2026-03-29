@@ -194,7 +194,6 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [smartAssignField, setSmartAssignField] = useState<"calificacion" | "responsable" | "canal" | null>(null);
   const [applyAllField, setApplyAllField] = useState<"calificacion" | "responsable" | "canal" | null>(null);
   const [applyAllValue, setApplyAllValue] = useState("");
-  const [shareFilterAprobado, setShareFilterAprobado2] = useState("");
   
   const [showShareFilterModal, setShowShareFilterModal] = useState(false);
   const [shareFilterAprobado, setShareFilterAprobado] = useState("");
