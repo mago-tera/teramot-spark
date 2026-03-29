@@ -986,7 +986,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                       return;
                     }
                     if (!shareResponsableEmail.trim()) {
-                      toast.error("Ingresá el email del responsable");
+                      toast.error("Ingresá el email del owner");
                       return;
                     }
                     if (!shareFilterCanal) {
@@ -1005,7 +1005,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                     }
                     const filters = {
                       calificacion: null,
-                      responsable: shareResponsableEmail.trim().toLowerCase(),
+                      responsable: shareFilterResponsable || null,
                       canal: shareFilterCanal || null,
                     };
                     // Insert outreach record (list stays unchanged)
