@@ -860,6 +860,50 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
           />
         )}
 
+        {/* Apply to all modal */}
+        {applyAllField && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setApplyAllField(null)}>
+            <div className="bg-[hsl(var(--card))] border border-white/[0.1] rounded-xl p-5 w-full max-w-xs shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
+              <h3 className="text-sm font-semibold text-foreground">Aplicar a todo — {SMART_ASSIGN_LABELS[applyAllField]}</h3>
+              {applyAllField === "calificacion" && (
+                <select value={applyAllValue} onChange={(e) => setApplyAllValue(e.target.value)}
+                  className="w-full rounded-lg px-3 py-2 text-sm border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white">
+                  <option value="">Seleccionar...</option>
+                  {CALIFICACIONES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              )}
+              {applyAllField === "responsable" && (
+                <input
+                  type="text"
+                  value={applyAllValue}
+                  onChange={(e) => setApplyAllValue(e.target.value)}
+                  placeholder="Nombre o email del responsable"
+                  className="w-full rounded-lg px-3 py-2 text-sm border border-white/[0.1] bg-[hsl(var(--background))] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              )}
+              {applyAllField === "canal" && (
+                <select value={applyAllValue} onChange={(e) => setApplyAllValue(e.target.value)}
+                  className="w-full rounded-lg px-3 py-2 text-sm border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white">
+                  <option value="">Seleccionar...</option>
+                  {CANALES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              )}
+              <div className="flex gap-2">
+                <button onClick={() => setApplyAllField(null)}
+                  className="flex-1 px-3 py-2 rounded-lg text-sm border border-white/[0.1] text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors">
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => applyToAll(applyAllField, applyAllValue)}
+                  disabled={!applyAllValue}
+                  className="flex-1 px-3 py-2 rounded-lg text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50">
+                  Aplicar a todo
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {showCsvModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowCsvModal(false)}>
             <div className="bg-[hsl(var(--card))] border border-white/[0.1] rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
