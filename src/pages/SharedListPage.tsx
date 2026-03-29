@@ -2,8 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle2, Circle, Search, Copy, Check, ChevronDown, Sparkles, Save, Loader2, UserPlus } from "lucide-react";
-import { ShareEntityDialog } from "@/components/ShareEntityDialog";
+import { CheckCircle2, Circle, Search, Copy, Check, ChevronDown, Sparkles, Save, Loader2, Users, UserPlus, Pencil, X, Trash2 } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface SharedLead {
@@ -36,6 +35,14 @@ interface ListInfo {
     responsable?: string | null;
     canal?: string | null;
   };
+}
+
+interface SharedUser {
+  id: string;
+  user_id: string;
+  role: string;
+  email: string;
+  full_name: string | null;
 }
 
 const QUARTILE_STYLES: Record<string, { bg: string; text: string; border: string; label: string }> = {
@@ -74,16 +81,25 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
   const [aiInstruction, setAiInstruction] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [copyOpen, setCopyOpen] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
   const [resolvedListId, setResolvedListId] = useState<string | null>(propListId || null);
-  const [outreachData, setOutreachData] = useState<{ id: string; name: string; copy_sugerido: string; copy_sugerido_subject: string; filtros_compartidos: any } | null>(null);
+  const [outreachData, setOutreachData] = useState<{ id: string; name: string; copy_sugerido: string; copy_sugerido_subject: string; filtros_compartidos: any; canal: string | null } | null>(null);
+
+  // Editable name
+  const [editingName, setEditingName] = useState(false);
+  const [nameDraft, setNameDraft] = useState("");
+
+  // Users panel
+  const [usersOpen, setUsersOpen] = useState(false);
+  const [sharedUsers, setSharedUsers] = useState<SharedUser[]>([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [newUserEmail, setNewUserEmail] = useState("");
+  const [addingUser, setAddingUser] = useState(false);
 
   useEffect(() => {
     (async () => {
       let listId = propListId || null;
       let outreachInfo: any = null;
 
-      // If we have an outreachId, fetch outreach data first to get list_id
       if (outreachId) {
         const { data: outreach, error: oErr } = await supabase
           .from("outreaches")
@@ -119,7 +135,6 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
         return;
       }
 
-      // Use outreach data if available, otherwise fall back to list data
       const effectiveName = outreachInfo?.name || list.name;
       const effectiveCopy = outreachInfo?.copy_sugerido || list.copy_sugerido || "";
       const effectiveSubject = outreachInfo?.copy_sugerido_subject || (list as any).copy_sugerido_subject || "";
@@ -143,6 +158,7 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
       if (leadsData) {
         const filtered = leadsData.filter((l) => {
           if (effectiveFilters.canal && l.canal !== effectiveFilters.canal) return false;
+          if (effectiveFilters.responsable && l.responsable !== effectiveFilters.responsable) return false;
           return true;
         });
         setLeads(filtered as SharedLead[]);
@@ -150,6 +166,100 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
       setLoading(false);
     })();
   }, [propListId, outreachId]);
+
+  // Load shared users
+  const loadSharedUsers = async () => {
+    if (!resolvedListId) return;
+    setLoadingUsers(true);
+    const { data: members } = await supabase
+      .from("list_members")
+      .select("id, user_id, role")
+      .eq("list_id", resolvedListId);
+
+    if (members && members.length > 0) {
+      const userIds = members.map((m) => m.user_id);
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("id, email, full_name")
+        .in("id", userIds);
+
+      const merged: SharedUser[] = members.map((m) => {
+        const profile = profiles?.find((p) => p.id === m.user_id);
+        return {
+          id: m.id,
+          user_id: m.user_id,
+          role: m.role,
+          email: profile?.email || "—",
+          full_name: profile?.full_name || null,
+        };
+      });
+      setSharedUsers(merged);
+    } else {
+      setSharedUsers([]);
+    }
+    setLoadingUsers(false);
+  };
+
+  const toggleUsersPanel = () => {
+    const next = !usersOpen;
+    setUsersOpen(next);
+    if (next) loadSharedUsers();
+  };
+
+  const addUser = async () => {
+    if (!newUserEmail.trim() || !resolvedListId) return;
+    setAddingUser(true);
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("email", newUserEmail.trim().toLowerCase())
+        .single();
+
+      if (!profile) {
+        toast.error("No se encontró un usuario con ese email.");
+        return;
+      }
+
+      const { error } = await supabase.from("list_members").insert({
+        list_id: resolvedListId,
+        user_id: profile.id,
+        role: "viewer",
+      } as any);
+
+      if (error) {
+        toast.error(error.code === "23505" ? "Este usuario ya tiene acceso." : error.message);
+      } else {
+        toast.success("Usuario agregado");
+        setNewUserEmail("");
+        loadSharedUsers();
+      }
+    } finally {
+      setAddingUser(false);
+    }
+  };
+
+  const removeUser = async (memberId: string) => {
+    const { error } = await supabase.from("list_members").delete().eq("id", memberId);
+    if (error) {
+      toast.error("Error al quitar usuario");
+    } else {
+      toast.success("Usuario removido");
+      setSharedUsers((prev) => prev.filter((u) => u.id !== memberId));
+    }
+  };
+
+  // Save outreach name
+  const saveName = async () => {
+    if (!nameDraft.trim()) return;
+    setEditingName(false);
+    if (outreachData) {
+      await supabase.from("outreaches").update({ name: nameDraft.trim() }).eq("id", outreachData.id);
+      setOutreachData({ ...outreachData, name: nameDraft.trim() });
+    }
+    if (listInfo) setListInfo({ ...listInfo, name: nameDraft.trim() });
+    toast.success("Nombre actualizado");
+  };
 
   const toggleField = async (leadId: string, field: "agregado" | "enviado" | "respondido" | "conversion") => {
     const lead = leads.find((l) => l.id === leadId);
@@ -251,8 +361,13 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
   }
 
   const filters = listInfo.filtros_compartidos;
+  const canal = (outreachData?.canal || filters.canal || "").toLowerCase();
+  const isLinkedin = canal === "linkedin";
+  const isMail = canal === "mail";
+
   const activeFilters = [
     filters.canal && `Canal: ${filters.canal}`,
+    filters.responsable && `Responsable: ${filters.responsable}`,
   ].filter(Boolean);
 
   const q = search.toLowerCase().trim();
@@ -270,16 +385,42 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
   };
 
   const hasCopy = !!listInfo.copy_sugerido;
-  const canal = filters.canal?.toLowerCase() || "";
-  const showEmail = canal !== "linkedin";
-  const showLinkedin = canal !== "mail";
+  const showEmail = !isLinkedin;
+  const showLinkedin = !isMail;
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground">{listInfo.name}</h2>
+          {editingName ? (
+            <div className="flex items-center gap-2">
+              <input
+                value={nameDraft}
+                onChange={(e) => setNameDraft(e.target.value)}
+                className="text-xl font-bold bg-muted/30 border border-border/40 rounded-lg px-3 py-1.5 text-foreground outline-none focus:border-primary/50"
+                autoFocus
+                onKeyDown={(e) => { if (e.key === "Enter") saveName(); if (e.key === "Escape") setEditingName(false); }}
+              />
+              <button onClick={saveName} className="p-1.5 rounded-md hover:bg-muted/30 text-green-400 transition-colors">
+                <Check className="w-4 h-4" />
+              </button>
+              <button onClick={() => setEditingName(false)} className="p-1.5 rounded-md hover:bg-muted/30 text-muted-foreground transition-colors">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <h2 className="text-xl font-bold text-foreground">{listInfo.name}</h2>
+              <button
+                onClick={() => { setNameDraft(listInfo.name); setEditingName(true); }}
+                className="p-1 rounded-md hover:bg-muted/30 text-muted-foreground hover:text-foreground transition-colors"
+                title="Cambiar nombre"
+              >
+                <Pencil className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
           <p className="text-sm text-muted-foreground mt-1">{leads.length} leads</p>
           {activeFilters.length > 0 && (
             <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -291,23 +432,79 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
           )}
         </div>
         <button
-          onClick={() => setShareOpen(true)}
-          className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border border-border/40 bg-muted/20 hover:bg-muted/40 text-foreground transition-colors"
+          onClick={toggleUsersPanel}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium border transition-colors ${
+            usersOpen
+              ? "border-primary/40 bg-primary/10 text-primary"
+              : "border-border/40 bg-muted/20 hover:bg-muted/40 text-foreground"
+          }`}
         >
-          <UserPlus className="w-3.5 h-3.5" />
-          Agregar usuarios
+          <Users className="w-3.5 h-3.5" />
+          Usuarios
         </button>
-        <ShareEntityDialog
-          open={shareOpen}
-          onOpenChange={setShareOpen}
-          entityType="lista"
-          entityId={resolvedListId!}
-          memberTable="list_members"
-          fkColumn="list_id"
-        />
       </div>
 
+      {/* Users panel */}
+      {usersOpen && (
+        <div className="rounded-xl border border-border/40 bg-muted/10 p-4 space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-foreground">Usuarios con acceso</h3>
+            <button onClick={() => setUsersOpen(false)} className="p-1 rounded hover:bg-muted/30 text-muted-foreground">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
 
+          {/* Add user */}
+          <div className="flex items-center gap-2">
+            <input
+              type="email"
+              value={newUserEmail}
+              onChange={(e) => setNewUserEmail(e.target.value)}
+              placeholder="usuario@email.com"
+              className="flex-1 bg-muted/30 border border-border/40 rounded-lg px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:border-primary/50"
+              onKeyDown={(e) => { if (e.key === "Enter") addUser(); }}
+            />
+            <button
+              onClick={addUser}
+              disabled={addingUser || !newUserEmail.trim()}
+              className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-medium bg-primary text-primary-foreground hover:bg-primary/90 transition-colors disabled:opacity-50"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              {addingUser ? "Agregando..." : "Agregar"}
+            </button>
+          </div>
+
+          {/* Users list */}
+          {loadingUsers ? (
+            <p className="text-xs text-muted-foreground animate-pulse">Cargando usuarios...</p>
+          ) : sharedUsers.length === 0 ? (
+            <p className="text-xs text-muted-foreground">No hay usuarios compartidos aún.</p>
+          ) : (
+            <div className="space-y-2">
+              {sharedUsers.map((u) => (
+                <div key={u.id} className="flex items-center justify-between py-2 px-3 rounded-lg border border-border/20 bg-muted/5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-7 h-7 rounded-full bg-primary/15 flex items-center justify-center text-xs font-bold text-primary">
+                      {(u.full_name || u.email).charAt(0).toUpperCase()}
+                    </div>
+                    <div>
+                      <p className="text-sm text-foreground font-medium">{u.full_name || u.email}</p>
+                      {u.full_name && <p className="text-[11px] text-muted-foreground">{u.email}</p>}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => removeUser(u.id)}
+                    className="p-1.5 rounded-md hover:bg-destructive/15 text-muted-foreground hover:text-destructive transition-colors"
+                    title="Quitar acceso"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3">
@@ -349,7 +546,7 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
                   ...(showLinkedin ? ["LinkedIn"] : []),
                   "Score",
                   ...(hasCopy ? ["Mensaje"] : []),
-                  ...(canal === "linkedin" ? ["Agregado"] : []),
+                  ...(isLinkedin ? ["Contactado"] : []),
                   "Enviado", "Respondido", "Conversión"
                 ].map((h) => (
                   <th key={h} className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">{h}</th>
@@ -406,7 +603,7 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
                         </button>
                       </td>
                     )}
-                    {canal === "linkedin" && (
+                    {isLinkedin && (
                       <td className="px-3 py-2.5 text-center">
                         <button onClick={() => toggleField(lead.id, "agregado")} className="transition-colors">
                           {lead.agregado
