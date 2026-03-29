@@ -54,13 +54,12 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
         if (data) setLeads(data);
       });
     supabase
-      .from("lists")
-      .select("id, name, lead_count, shared, enviados, respondidos, conversiones")
+      .from("outreaches")
+      .select("id, list_id, name, responsable, canal, copy_sugerido, copy_sugerido_subject")
       .eq("campaign_id", campaignId)
-      .eq("shared", true)
       .order("created_at", { ascending: false })
       .then(({ data }) => {
-        if (data) setOutreaches(data);
+        if (data) setOutreaches(data as OutreachInfo[]);
       });
   };
 
