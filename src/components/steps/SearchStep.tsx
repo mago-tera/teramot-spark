@@ -513,7 +513,17 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
           score: l.total,
           quartile: l.quartile,
         }));
-        await supabase.from("leads").insert(rows);
+        const { error: insertErr } = await supabase.from("leads").insert(rows);
+        if (insertErr) {
+          console.error("Insert leads error:", insertErr);
+          // Try inserting one by one as fallback
+          let insertedCount = 0;
+          for (const row of rows) {
+            const { error: singleErr } = await supabase.from("leads").insert(row);
+            if (!singleErr) insertedCount++;
+          }
+          setLogs((prev) => [...prev, `⚠ ${insertedCount}/${rows.length} leads insertados (algunos duplicados omitidos)`]);
+        }
       }
 
       // Also copy from selected source lists if any
