@@ -1073,7 +1073,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                       return;
                     }
                     const filters = {
-                      calificacion: null,
+                      calificacion: shareFilterAprobado || null,
                       responsable: shareFilterResponsable || null,
                       canal: shareFilterCanal || null,
                     };
