@@ -810,18 +810,17 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                             {CALIFICACIONES.map((c) => <option key={c} value={c}>{c}</option>)}
                           </select>
                         </td>
-                        {/* Responsable */}
+                        {/* Responsable - free text input */}
                         <td className="px-3 py-2.5">
-                          <select
+                          <input
+                            type="text"
                             value={resp || ""}
                             onChange={(e) => updateLeadField(lead.id, "responsable", e.target.value || null)}
-                            className={`rounded-md px-2 py-1 text-[11px] font-medium border cursor-pointer focus:outline-none focus:ring-1 focus:ring-primary transition-colors [&>option]:bg-[#1a1a2e] [&>option]:text-white ${
+                            placeholder="—"
+                            className={`w-[120px] rounded-md px-2 py-1 text-[11px] font-medium border cursor-text focus:outline-none focus:ring-1 focus:ring-primary transition-colors ${
                               resp ? "bg-amber-500/20 text-amber-300 border-amber-500/30" : "bg-white/[0.04] border-white/[0.08] text-muted-foreground"
                             }`}
-                          >
-                            <option value="">—</option>
-                            {RESPONSABLES.map((r) => <option key={r.email} value={r.label}>{r.label}</option>)}
-                          </select>
+                          />
                         </td>
                         {/* Canal */}
                         <td className="px-3 py-2.5">
