@@ -301,7 +301,7 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
           open={shareOpen}
           onOpenChange={setShareOpen}
           entityType="lista"
-          entityId={listId!}
+          entityId={resolvedListId!}
           memberTable="list_members"
           fkColumn="list_id"
         />
