@@ -97,7 +97,7 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
           <ArrowLeft className="w-4 h-4" />
           Volver al dashboard
         </button>
-        <OutreachView listId={viewingOutreachId} />
+        <OutreachView outreachId={viewingOutreachId} />
       </div>
     );
   }
