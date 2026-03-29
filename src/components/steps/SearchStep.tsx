@@ -907,7 +907,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm" onClick={() => setShowShareFilterModal(false)}>
             <div className="bg-[hsl(var(--card))] border border-white/[0.1] rounded-xl p-6 w-full max-w-sm shadow-2xl space-y-4" onClick={(e) => e.stopPropagation()}>
               <h3 className="text-lg font-semibold text-foreground">Crear Outreach</h3>
-              <p className="text-xs text-muted-foreground">Nombrá el outreach y seleccioná qué leads verá tu equipo.</p>
+              <p className="text-xs text-muted-foreground">Nombrá el outreach y segmentá los leads por canal y responsable.</p>
               <div className="space-y-3">
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Nombre del Outreach</label>
@@ -918,41 +918,50 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                     className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                   />
                 </div>
-                <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Responsable <span className="text-destructive">*</span></label>
-                  {(() => {
-                    // Get unique responsables from leads in the current list
-                    const usedResponsables = Array.from(
-                      new Set(listLeads.map((l) => (l as any).responsable as string | null).filter(Boolean))
-                    );
-                    const matchedResponsables = RESPONSABLES.filter((r) => usedResponsables.includes(r.label));
-                    return (
-                      <select
-                        value={shareResponsableEmail}
-                        onChange={(e) => setShareResponsableEmail(e.target.value)}
-                        className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white"
-                      >
-                        <option value="">Seleccioná un responsable</option>
-                        {matchedResponsables.length > 0
-                          ? matchedResponsables.map((r) => (
-                              <option key={r.email} value={r.email}>{r.label} ({r.email})</option>
-                            ))
-                          : RESPONSABLES.map((r) => (
-                              <option key={r.email} value={r.email}>{r.label} ({r.email})</option>
-                            ))
-                        }
-                      </select>
-                    );
-                  })()}
+
+                {/* Segmentation filters */}
+                <div className="p-3 rounded-lg border border-white/[0.06] bg-white/[0.02] space-y-3">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Segmentación</p>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Canal <span className="text-destructive">*</span></label>
+                    <select value={shareFilterCanal} onChange={(e) => setShareFilterCanal(e.target.value)}
+                      className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white">
+                      <option value="">Todos los canales</option>
+                      <option value="LinkedIn">LinkedIn</option>
+                      <option value="Mail">Mail</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs text-muted-foreground mb-1 block">Responsable</label>
+                    {(() => {
+                      const usedResponsables = Array.from(
+                        new Set(listLeads.map((l) => (l as any).responsable as string | null).filter(Boolean))
+                      ) as string[];
+                      return (
+                        <select
+                          value={shareFilterResponsable}
+                          onChange={(e) => setShareFilterResponsable(e.target.value)}
+                          className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white"
+                        >
+                          <option value="">Todos los responsables</option>
+                          {usedResponsables.map((r) => (
+                            <option key={r} value={r}>{r}</option>
+                          ))}
+                        </select>
+                      );
+                    })()}
+                  </div>
                 </div>
-              <div>
-                  <label className="text-xs text-muted-foreground mb-1 block">Canal <span className="text-destructive">*</span></label>
-                  <select value={shareFilterCanal} onChange={(e) => setShareFilterCanal(e.target.value)}
-                    className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground focus:outline-none focus:ring-2 focus:ring-primary [&>option]:bg-[#1a1a2e] [&>option]:text-white">
-                    <option value="">Seleccioná un canal</option>
-                    <option value="LinkedIn">LinkedIn</option>
-                    <option value="Mail">Mail</option>
-                  </select>
+
+                <div>
+                  <label className="text-xs text-muted-foreground mb-1 block">Owner <span className="text-destructive">*</span></label>
+                  <input
+                    type="email"
+                    value={shareResponsableEmail}
+                    onChange={(e) => setShareResponsableEmail(e.target.value)}
+                    placeholder="Email de quien va a enviar los mensajes"
+                    className="w-full rounded-lg px-3 py-2 text-sm font-medium border border-white/[0.1] bg-[hsl(var(--background))] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
+                  />
                 </div>
                 <div>
                   <label className="text-xs text-muted-foreground mb-1 block">Copy sugerido</label>
@@ -977,7 +986,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                       return;
                     }
                     if (!shareResponsableEmail.trim()) {
-                      toast.error("Ingresá el email del responsable");
+                      toast.error("Ingresá el email del owner");
                       return;
                     }
                     if (!shareFilterCanal) {
@@ -996,7 +1005,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                     }
                     const filters = {
                       calificacion: null,
-                      responsable: shareResponsableEmail.trim().toLowerCase(),
+                      responsable: shareFilterResponsable || null,
                       canal: shareFilterCanal || null,
                     };
                     // Insert outreach record (list stays unchanged)
