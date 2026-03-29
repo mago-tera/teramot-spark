@@ -23,12 +23,12 @@ interface LeadMetrics {
 
 interface OutreachInfo {
   id: string;
+  list_id: string;
   name: string;
-  lead_count: number;
-  shared: boolean;
-  enviados: number;
-  respondidos: number;
-  conversiones: number;
+  responsable: string | null;
+  canal: string | null;
+  copy_sugerido: string;
+  copy_sugerido_subject: string;
 }
 
 const PIE_COLORS = [
