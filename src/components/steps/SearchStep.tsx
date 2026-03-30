@@ -645,11 +645,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     new Set(listLeads.map((l) => (l as any).responsable as string | null).filter(Boolean))
   ) as string[];
 
-  const SMART_ASSIGN_OPTIONS: Record<string, { label: string; value: string }[]> = {
-    calificacion: CALIFICACIONES.map((c) => ({ label: c, value: c })),
-    responsable: usedResponsablesInLeads.map((r) => ({ label: r, value: r })),
-    canal: CANALES.map((c) => ({ label: c, value: c })),
-  };
+  // (SMART_ASSIGN_OPTIONS removed — dialog is now field-aware)
 
   const applyToAll = async (field: string, value: string) => {
     if (!value) return;
