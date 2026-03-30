@@ -850,8 +850,8 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
             onOpenChange={(open) => !open && setSmartAssignField(null)}
             field={smartAssignField}
             fieldLabel={SMART_ASSIGN_LABELS[smartAssignField]}
-            options={SMART_ASSIGN_OPTIONS[smartAssignField]}
             leadCountByQuartile={leadCountByQuartile}
+            usedResponsables={usedResponsablesInLeads}
             onApply={(rules) => smartApplyRules(smartAssignField, rules)}
           />
         )}
