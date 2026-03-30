@@ -615,7 +615,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
 
   const smartApplyRules = async (
     field: string,
-    rules: { value: string; quartile: string; percentage: number }[]
+    rules: SmartAssignResult[]
   ) => {
     // Handle clear all
     if (rules.length === 1 && rules[0].value === "__clear__" && rules[0].quartile === "ALL") {
@@ -623,21 +623,32 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       return;
     }
 
+    let totalAffected = 0;
     for (const rule of rules) {
-      const quartileLeads = listLeads.filter((l) => l.quartile === rule.quartile);
-      const count = Math.round((rule.percentage / 100) * quartileLeads.length);
-      // Pick leads that don't have this field set yet first, then overflow
-      const unset = quartileLeads.filter((l) => !(l as any)[field]);
-      const alreadySet = quartileLeads.filter((l) => (l as any)[field]);
+      // Support "ALL" quartile
+      const pool = rule.quartile === "ALL"
+        ? listLeads
+        : listLeads.filter((l) => l.quartile === rule.quartile);
+
+      // For canal, optionally filter by responsable
+      const filtered = rule.responsable
+        ? pool.filter((l) => (l as any).responsable === rule.responsable)
+        : pool;
+
+      const count = Math.round((rule.percentage / 100) * filtered.length);
+      // Pick leads that don't have this field set yet first
+      const unset = filtered.filter((l) => !(l as any)[field]);
+      const alreadySet = filtered.filter((l) => (l as any)[field]);
       const ordered = [...unset, ...alreadySet];
       const selected = ordered.slice(0, count);
       const ids = selected.map((l) => l.id);
       if (ids.length === 0) continue;
 
+      totalAffected += ids.length;
       setListLeads((prev) => prev.map((l) => ids.includes(l.id) ? { ...l, [field]: rule.value } : l));
       await supabase.from("leads").update({ [field]: rule.value }).in("id", ids);
     }
-    toast.success(`Asignación aplicada a ${rules.reduce((s, r) => s + Math.round((r.percentage / 100) * (leadCountByQuartile[r.quartile] || 0)), 0)} leads`);
+    toast.success(`Asignación aplicada a ${totalAffected} leads`);
   };
 
   // Dynamic responsable options from leads
