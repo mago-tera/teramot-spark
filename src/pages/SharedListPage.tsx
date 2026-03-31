@@ -577,8 +577,8 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
                   "Nombre", "Cargo", "Empresa", "País",
                   ...(showEmail ? ["Email"] : []),
                   ...(showLinkedin ? ["LinkedIn"] : []),
+                  "Mensaje",
                   "Score",
-                  ...(hasCopy ? ["Mensaje"] : []),
                   ...(isLinkedin ? ["Contactado"] : []),
                   "Enviado", "Respondido", "Conversión"
                 ].map((h) => (
