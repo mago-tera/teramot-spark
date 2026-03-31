@@ -514,6 +514,31 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
         </div>
       )}
 
+      {/* Copiar Mensaje - collapsible preview */}
+      {hasCopy && (
+        <Collapsible open={messagePreviewOpen} onOpenChange={setMessagePreviewOpen}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full rounded-xl border border-border/40 bg-muted/20 px-4 py-3 hover:bg-muted/30 transition-colors">
+            <div className="flex items-center gap-2">
+              <Copy className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Copiar Mensaje</span>
+            </div>
+            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${messagePreviewOpen ? "rotate-180" : ""}`} />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2 rounded-xl border border-border/40 bg-muted/10 p-4 space-y-3">
+            <p className="text-[11px] text-muted-foreground">
+              Vista previa del mensaje. Las variables <code className="px-1 py-0.5 rounded bg-muted/40 text-foreground">[Nombre]</code>, <code className="px-1 py-0.5 rounded bg-muted/40 text-foreground">[Empresa]</code> y <code className="px-1 py-0.5 rounded bg-muted/40 text-foreground">[Cargo]</code> se reemplazan al copiar.
+            </p>
+            {subject && (
+              <div className="text-xs">
+                <span className="text-muted-foreground font-medium">Subject: </span>
+                <span className="text-foreground">{subject}</span>
+              </div>
+            )}
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap border-l-2 border-primary/30 pl-3">{listInfo?.copy_sugerido}</p>
+          </CollapsibleContent>
+        </Collapsible>
+      )}
+
       {/* Stats */}
       <div className="grid grid-cols-4 gap-3">
         {[
