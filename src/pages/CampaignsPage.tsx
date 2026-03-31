@@ -195,43 +195,73 @@ export default function CampaignsPage() {
       .map(([k, v]) => `${k} ${v}%`)
       .join(", ");
 
+  const sidebarContent = (
+    <>
+      <div className="px-5 py-6 border-b border-white/[0.08] flex items-center justify-between">
+        <h1 className="text-lg font-semibold tracking-tight text-foreground">
+          <span className="text-primary">Teramot</span>{" "}
+          <span className="text-muted-foreground font-normal text-sm">Prospecting</span>
+        </h1>
+        <button onClick={() => setMobileOpen(false)} className="md:hidden p-1 text-muted-foreground hover:text-foreground">
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+      <button
+        onClick={() => { navigate("/"); setMobileOpen(false); }}
+        className="flex items-center gap-2 px-5 py-3 text-xs text-muted-foreground hover:text-foreground border-b border-white/[0.06] transition-colors"
+      >
+        <ArrowLeft className="w-3.5 h-3.5" />
+        Volver a Proyectos
+      </button>
+      <nav className="flex-1 px-3 py-4">
+        <div className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm bg-primary/15 text-foreground">
+          <span className="w-7 h-7 rounded-md flex items-center justify-center text-xs bg-primary text-primary-foreground">📋</span>
+          <span className="truncate">{project?.name || "Campañas"}</span>
+          <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+        </div>
+        {isOwner && (
+          <button
+            onClick={() => { setShowNewDialog(true); setMobileOpen(false); }}
+            className="w-full flex items-center gap-3 px-3 py-2.5 mt-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
+          >
+            <span className="w-7 h-7 rounded-md flex items-center justify-center text-xs border border-dashed border-muted-foreground/30">
+              <Plus className="w-3.5 h-3.5" />
+            </span>
+            <span>Nueva campaña</span>
+          </button>
+        )}
+      </nav>
+    </>
+  );
+
   return (
     <div className="flex min-h-screen w-full">
-      <aside className="w-60 shrink-0 h-screen sticky top-0 flex flex-col border-r border-white/[0.08]" style={{ background: "hsl(240 15% 6%)" }}>
-        <div className="px-5 py-6 border-b border-white/[0.08]">
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">
-            <span className="text-primary">Teramot</span>{" "}
-            <span className="text-muted-foreground font-normal text-sm">Prospecting</span>
-          </h1>
-        </div>
-        <button
-          onClick={() => navigate("/")}
-          className="flex items-center gap-2 px-5 py-3 text-xs text-muted-foreground hover:text-foreground border-b border-white/[0.06] transition-colors"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          Volver a Proyectos
+      {/* Mobile top bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center gap-3 px-4 py-3 border-b border-white/[0.08]" style={{ background: "hsl(240 15% 6%)" }}>
+        <button onClick={() => setMobileOpen(true)} className="p-1.5 rounded-lg hover:bg-muted/20 text-foreground">
+          <Menu className="w-5 h-5" />
         </button>
-        <nav className="flex-1 px-3 py-4">
-          <div className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm bg-primary/15 text-foreground">
-            <span className="w-7 h-7 rounded-md flex items-center justify-center text-xs bg-primary text-primary-foreground">📋</span>
-            <span className="truncate">{project?.name || "Campañas"}</span>
-            <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-          </div>
-          {isOwner && (
-            <button
-              onClick={() => setShowNewDialog(true)}
-              className="w-full flex items-center gap-3 px-3 py-2.5 mt-2 rounded-lg text-sm text-muted-foreground hover:text-foreground hover:bg-muted/30 transition-colors"
-            >
-              <span className="w-7 h-7 rounded-md flex items-center justify-center text-xs border border-dashed border-muted-foreground/30">
-                <Plus className="w-3.5 h-3.5" />
-              </span>
-              <span>Nueva campaña</span>
-            </button>
-          )}
-        </nav>
+        <h1 className="text-sm font-semibold text-foreground">
+          <span className="text-primary">Teramot</span>{" "}
+          <span className="text-muted-foreground font-normal text-xs">Prospecting</span>
+        </h1>
+      </div>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-50 bg-black/60" onClick={() => setMobileOpen(false)}>
+          <aside className="w-64 h-full flex flex-col border-r border-white/[0.08]" style={{ background: "hsl(240 15% 6%)" }} onClick={(e) => e.stopPropagation()}>
+            {sidebarContent}
+          </aside>
+        </div>
+      )}
+
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-60 shrink-0 h-screen sticky top-0 flex-col border-r border-white/[0.08]" style={{ background: "hsl(240 15% 6%)" }}>
+        {sidebarContent}
       </aside>
 
-      <main className="flex-1 p-8 max-w-5xl">
+      <main className="flex-1 px-4 py-6 pt-16 md:pt-8 md:px-8 max-w-5xl overflow-x-hidden">
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
