@@ -724,7 +724,7 @@ export default function SharedListPage() {
   if (!listId) return null;
   return (
     <div className="min-h-screen" style={{ background: "hsl(240 15% 6%)" }}>
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <OutreachView listId={listId} />
       </div>
     </div>
