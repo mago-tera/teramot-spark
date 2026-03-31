@@ -263,7 +263,7 @@ export default function CampaignsPage() {
 
       <main className="flex-1 px-4 py-6 pt-16 md:pt-8 md:px-8 max-w-5xl overflow-x-hidden">
         <div className="mb-8">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
               <h2 className="text-2xl font-semibold text-foreground">{project?.name || "Campañas"}</h2>
               <p className="text-sm text-muted-foreground mt-1">Campañas de prospección de este proyecto.</p>
