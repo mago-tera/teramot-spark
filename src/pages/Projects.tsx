@@ -199,76 +199,103 @@ export default function Projects() {
 
   const displayed = filter === "mine" ? projects : sharedProjects;
 
+  const sidebarContent = (
+    <>
+      <div className="px-5 py-6 border-b border-white/[0.08] flex items-center justify-between">
+        <h1 className="text-lg font-semibold tracking-tight text-foreground">
+          <span className="text-primary">Teramot</span>{" "}
+          <span className="text-muted-foreground font-normal text-sm">Prospecting</span>
+        </h1>
+        <button onClick={() => setMobileOpen(false)} className="md:hidden p-1 text-muted-foreground hover:text-foreground">
+          <X className="w-5 h-5" />
+        </button>
+      </div>
+      <nav className="flex-1 px-3 py-4 space-y-1">
+        <button
+          onClick={() => { setTab("projects"); setMobileOpen(false); }}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+            tab === "projects" ? "bg-primary/15 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
+          }`}
+        >
+          <span className={`w-7 h-7 rounded-md flex items-center justify-center text-xs ${
+            tab === "projects" ? "bg-primary text-primary-foreground" : "bg-white/[0.04] text-muted-foreground"
+          }`}>
+            <FolderOpen className="w-4 h-4" />
+          </span>
+          <span>Proyectos</span>
+          {tab === "projects" && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
+        </button>
+        <button
+          onClick={() => { setTab("outreaches"); setMobileOpen(false); }}
+          className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
+            tab === "outreaches" ? "bg-primary/15 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
+          }`}
+        >
+          <span className={`w-7 h-7 rounded-md flex items-center justify-center text-xs ${
+            tab === "outreaches" ? "bg-primary text-primary-foreground" : "bg-white/[0.04] text-muted-foreground"
+          }`}>
+            <Send className="w-4 h-4" />
+          </span>
+          <span>Mis Outreaches</span>
+          {myOutreaches.length > 0 && (
+            <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{myOutreaches.length}</span>
+          )}
+        </button>
+      </nav>
+      <div className="px-4 py-4 border-t border-white/[0.08]">
+        <div className="flex items-center gap-3 mb-3">
+          {user?.user_metadata?.avatar_url ? (
+            <img src={user.user_metadata.avatar_url} className="w-8 h-8 rounded-full" alt="" />
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs text-primary font-medium">
+              {user?.email?.[0]?.toUpperCase()}
+            </div>
+          )}
+          <div className="flex-1 min-w-0">
+            <p className="text-xs text-foreground truncate">{user?.user_metadata?.full_name || user?.email}</p>
+            <p className="text-[10px] text-muted-foreground/60 truncate">{user?.email}</p>
+          </div>
+        </div>
+        <button
+          onClick={signOut}
+          className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors"
+        >
+          <LogOut className="w-3.5 h-3.5" />
+          Cerrar sesión
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <div className="flex min-h-screen w-full">
-      {/* Sidebar */}
-      <aside className="w-60 shrink-0 h-screen sticky top-0 flex flex-col border-r border-white/[0.08]" style={{ background: "hsl(240 15% 6%)" }}>
-        <div className="px-5 py-6 border-b border-white/[0.08]">
-          <h1 className="text-lg font-semibold tracking-tight text-foreground">
-            <span className="text-primary">Teramot</span>{" "}
-            <span className="text-muted-foreground font-normal text-sm">Prospecting</span>
-          </h1>
-        </div>
-        <nav className="flex-1 px-3 py-4 space-y-1">
-          <button
-            onClick={() => setTab("projects")}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
-              tab === "projects" ? "bg-primary/15 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
-            }`}
-          >
-            <span className={`w-7 h-7 rounded-md flex items-center justify-center text-xs ${
-              tab === "projects" ? "bg-primary text-primary-foreground" : "bg-white/[0.04] text-muted-foreground"
-            }`}>
-              <FolderOpen className="w-4 h-4" />
-            </span>
-            <span>Proyectos</span>
-            {tab === "projects" && <span className="ml-auto w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />}
-          </button>
-          <button
-            onClick={() => setTab("outreaches")}
-            className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
-              tab === "outreaches" ? "bg-primary/15 text-foreground" : "text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
-            }`}
-          >
-            <span className={`w-7 h-7 rounded-md flex items-center justify-center text-xs ${
-              tab === "outreaches" ? "bg-primary text-primary-foreground" : "bg-white/[0.04] text-muted-foreground"
-            }`}>
-              <Send className="w-4 h-4" />
-            </span>
-            <span>Mis Outreaches</span>
-            {myOutreaches.length > 0 && (
-              <span className="ml-auto text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">{myOutreaches.length}</span>
-            )}
-          </button>
-        </nav>
+      {/* Mobile top bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center gap-3 px-4 py-3 border-b border-white/[0.08]" style={{ background: "hsl(240 15% 6%)" }}>
+        <button onClick={() => setMobileOpen(true)} className="p-1.5 rounded-lg hover:bg-muted/20 text-foreground">
+          <Menu className="w-5 h-5" />
+        </button>
+        <h1 className="text-sm font-semibold text-foreground">
+          <span className="text-primary">Teramot</span>{" "}
+          <span className="text-muted-foreground font-normal text-xs">Prospecting</span>
+        </h1>
+      </div>
 
-        {/* User */}
-        <div className="px-4 py-4 border-t border-white/[0.08]">
-          <div className="flex items-center gap-3 mb-3">
-            {user?.user_metadata?.avatar_url ? (
-              <img src={user.user_metadata.avatar_url} className="w-8 h-8 rounded-full" alt="" />
-            ) : (
-              <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center text-xs text-primary font-medium">
-                {user?.email?.[0]?.toUpperCase()}
-              </div>
-            )}
-            <div className="flex-1 min-w-0">
-              <p className="text-xs text-foreground truncate">{user?.user_metadata?.full_name || user?.email}</p>
-              <p className="text-[10px] text-muted-foreground/60 truncate">{user?.email}</p>
-            </div>
-          </div>
-          <button
-            onClick={signOut}
-            className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-xs text-muted-foreground hover:text-foreground hover:bg-white/[0.04] transition-colors"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            Cerrar sesión
-          </button>
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-50 bg-black/60" onClick={() => setMobileOpen(false)}>
+          <aside className="w-64 h-full flex flex-col border-r border-white/[0.08]" style={{ background: "hsl(240 15% 6%)" }} onClick={(e) => e.stopPropagation()}>
+            {sidebarContent}
+          </aside>
         </div>
+      )}
+
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-60 shrink-0 h-screen sticky top-0 flex-col border-r border-white/[0.08]" style={{ background: "hsl(240 15% 6%)" }}>
+        {sidebarContent}
       </aside>
 
       {/* Main */}
-      <main className="flex-1 p-8 max-w-5xl">
+      <main className="flex-1 px-4 py-6 pt-16 md:pt-8 md:px-8 max-w-5xl overflow-x-hidden">
         {tab === "projects" ? (
           <>
             <div className="flex items-center justify-between mb-6">
