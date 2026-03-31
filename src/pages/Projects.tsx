@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, ChevronRight, Pencil, Check, LogOut, Trash2, UserPlus, FolderOpen, Send, Mail, Linkedin } from "lucide-react";
+import { Plus, ChevronRight, Pencil, Check, LogOut, Trash2, UserPlus, FolderOpen, Send, Mail, Linkedin, Menu, X } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
