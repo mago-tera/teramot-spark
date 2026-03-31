@@ -81,6 +81,7 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
   const [aiInstruction, setAiInstruction] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [copyOpen, setCopyOpen] = useState(false);
+  const [messagePreviewOpen, setMessagePreviewOpen] = useState(false);
   const [resolvedListId, setResolvedListId] = useState<string | null>(propListId || null);
   const [outreachData, setOutreachData] = useState<{ id: string; name: string; copy_sugerido: string; copy_sugerido_subject: string; filtros_compartidos: any; canal: string | null } | null>(null);
 
