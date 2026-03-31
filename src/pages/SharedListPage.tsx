@@ -81,6 +81,7 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
   const [aiInstruction, setAiInstruction] = useState("");
   const [aiLoading, setAiLoading] = useState(false);
   const [copyOpen, setCopyOpen] = useState(false);
+  const [messagePreviewOpen, setMessagePreviewOpen] = useState(false);
   const [resolvedListId, setResolvedListId] = useState<string | null>(propListId || null);
   const [outreachData, setOutreachData] = useState<{ id: string; name: string; copy_sugerido: string; copy_sugerido_subject: string; filtros_compartidos: any; canal: string | null } | null>(null);
 
@@ -280,13 +281,20 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
     setTimeout(() => setCopiedLinkedin(null), 1500);
   };
 
+  const personalizeText = (text: string, lead: SharedLead) => {
+    return text
+      .replace(/\[Nombre\]/gi, lead.first_name || "{{Nombre}}")
+      .replace(/\[Empresa\]/gi, lead.company || "{{Empresa}}")
+      .replace(/\[Cargo\]/gi, lead.title || "{{Cargo}}")
+      .replace(/\[Puesto\]/gi, lead.title || "{{Puesto}}");
+  };
+
   const copyMessageForLead = (lead: SharedLead) => {
     if (!listInfo?.copy_sugerido) return;
-    const name = lead.first_name || "{{Nombre}}";
-    const message = listInfo.copy_sugerido.replace(/\[Nombre\]/gi, name);
+    const message = personalizeText(listInfo.copy_sugerido, lead);
     let fullText = "";
     if (subject) {
-      fullText = `Subject: ${subject.replace(/\[Nombre\]/gi, name)}\n\n${message}`;
+      fullText = `Subject: ${personalizeText(subject, lead)}\n\n${message}`;
     } else {
       fullText = message;
     }
@@ -504,6 +512,31 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
             </div>
           )}
         </div>
+      )}
+
+      {/* Copiar Mensaje - collapsible preview */}
+      {hasCopy && (
+        <Collapsible open={messagePreviewOpen} onOpenChange={setMessagePreviewOpen}>
+          <CollapsibleTrigger className="flex items-center justify-between w-full rounded-xl border border-border/40 bg-muted/20 px-4 py-3 hover:bg-muted/30 transition-colors">
+            <div className="flex items-center gap-2">
+              <Copy className="w-4 h-4 text-primary" />
+              <span className="text-sm font-medium text-foreground">Copiar Mensaje</span>
+            </div>
+            <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${messagePreviewOpen ? "rotate-180" : ""}`} />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="mt-2 rounded-xl border border-border/40 bg-muted/10 p-4 space-y-3">
+            <p className="text-[11px] text-muted-foreground">
+              Vista previa del mensaje. Las variables <code className="px-1 py-0.5 rounded bg-muted/40 text-foreground">[Nombre]</code>, <code className="px-1 py-0.5 rounded bg-muted/40 text-foreground">[Empresa]</code> y <code className="px-1 py-0.5 rounded bg-muted/40 text-foreground">[Cargo]</code> se reemplazan al copiar.
+            </p>
+            {subject && (
+              <div className="text-xs">
+                <span className="text-muted-foreground font-medium">Subject: </span>
+                <span className="text-foreground">{subject}</span>
+              </div>
+            )}
+            <p className="text-sm text-muted-foreground whitespace-pre-wrap border-l-2 border-primary/30 pl-3">{listInfo?.copy_sugerido}</p>
+          </CollapsibleContent>
+        </Collapsible>
       )}
 
       {/* Stats */}
