@@ -399,7 +399,7 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
         <div>
           {editingName ? (
             <div className="flex items-center gap-2">
@@ -579,7 +579,7 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
       </Collapsible>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: "Total", value: stats.total, color: "text-foreground" },
           { label: "Enviados", value: stats.enviados, color: "text-blue-400" },
@@ -724,7 +724,7 @@ export default function SharedListPage() {
   if (!listId) return null;
   return (
     <div className="min-h-screen" style={{ background: "hsl(240 15% 6%)" }}>
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
         <OutreachView listId={listId} />
       </div>
     </div>
