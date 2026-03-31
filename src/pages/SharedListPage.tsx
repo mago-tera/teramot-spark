@@ -579,7 +579,7 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
       </Collapsible>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { label: "Total", value: stats.total, color: "text-foreground" },
           { label: "Enviados", value: stats.enviados, color: "text-blue-400" },
