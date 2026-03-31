@@ -620,11 +620,8 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
                         ) : <span className="text-muted-foreground text-[10px]">—</span>}
                       </td>
                     )}
-                    <td className="px-3 py-2.5">
-                      <span className={`inline-block px-3 py-1.5 rounded text-xs font-medium border whitespace-nowrap ${qs.bg} ${qs.text} ${qs.border}`}>{qs.label}</span>
-                    </td>
-                    {hasCopy && (
-                      <td className="px-3 py-2.5 text-center">
+                    <td className="px-3 py-2.5 text-center">
+                      {hasCopy ? (
                         <button
                           onClick={() => copyMessageForLead(lead)}
                           className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium border border-border/40 bg-muted/20 hover:bg-muted/40 text-foreground transition-colors whitespace-nowrap"
@@ -634,8 +631,13 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
                             ? <><Check className="w-3 h-3 text-green-400" /> Copiado</>
                             : <><Copy className="w-3 h-3" /> Copiar</>}
                         </button>
-                      </td>
-                    )}
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground">—</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-2.5">
+                      <span className={`inline-block px-3 py-1.5 rounded text-xs font-medium border whitespace-nowrap ${qs.bg} ${qs.text} ${qs.border}`}>{qs.label}</span>
+                    </td>
                     {isLinkedin && (
                       <td className="px-3 py-2.5 text-center">
                         <button onClick={() => toggleField(lead.id, "agregado")} className="transition-colors">
