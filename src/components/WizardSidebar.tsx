@@ -1,8 +1,9 @@
 import { StepInfo } from "@/hooks/useWizard";
-import { Check, ArrowLeft, Trash2 } from "lucide-react";
+import { Check, ArrowLeft, Trash2, Menu, X } from "lucide-react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useState } from "react";
 
 interface Props {
   steps: StepInfo[];
@@ -14,6 +15,7 @@ interface Props {
 export function WizardSidebar({ steps, currentStep, onStepClick, isInsideList }: Props) {
   const navigate = useNavigate();
   const { id: campaignId, projectId } = useParams();
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const deleteCampaign = async () => {
     if (!campaignId || campaignId === "new") return;
@@ -25,19 +27,22 @@ export function WizardSidebar({ steps, currentStep, onStepClick, isInsideList }:
     navigate(projectId ? `/project/${projectId}` : "/");
   };
 
-  return (
-    <aside className="w-60 shrink-0 h-screen sticky top-0 flex flex-col border-r border-white/[0.08]" style={{ background: "hsl(240 15% 6%)" }}>
+  const sidebarContent = (
+    <>
       {/* Logo */}
-      <div className="px-5 py-6 border-b border-white/[0.08]">
+      <div className="px-5 py-6 border-b border-white/[0.08] flex items-center justify-between">
         <h1 className="text-lg font-semibold tracking-tight text-foreground">
           <span className="text-primary">Teramot</span>{" "}
           <span className="text-muted-foreground font-normal text-sm">Prospecting</span>
         </h1>
+        <button onClick={() => setMobileOpen(false)} className="md:hidden p-1 text-muted-foreground hover:text-foreground">
+          <X className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Back to projects */}
       <button
-        onClick={() => navigate(projectId ? `/project/${projectId}` : "/")}
+        onClick={() => { navigate(projectId ? `/project/${projectId}` : "/"); setMobileOpen(false); }}
         className="flex items-center gap-2 px-5 py-3 text-xs text-muted-foreground hover:text-foreground border-b border-white/[0.06] transition-colors"
       >
         <ArrowLeft className="w-3.5 h-3.5" />
@@ -56,7 +61,7 @@ export function WizardSidebar({ steps, currentStep, onStepClick, isInsideList }:
           return (
             <button
               key={step.id}
-              onClick={() => onStepClick(step.id)}
+              onClick={() => { onStepClick(step.id); setMobileOpen(false); }}
               disabled={false}
               className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm transition-all ${
                 isActive
@@ -105,7 +110,40 @@ export function WizardSidebar({ steps, currentStep, onStepClick, isInsideList }:
         <ConnectionBadge name="Apollo" connected={false} />
         <ConnectionBadge name="Notion" connected={false} />
       </div>
-    </aside>
+    </>
+  );
+
+  return (
+    <>
+      {/* Mobile top bar */}
+      <div className="md:hidden fixed top-0 left-0 right-0 z-40 flex items-center gap-3 px-4 py-3 border-b border-white/[0.08]" style={{ background: "hsl(240 15% 6%)" }}>
+        <button onClick={() => setMobileOpen(true)} className="p-1.5 rounded-lg hover:bg-muted/20 text-foreground">
+          <Menu className="w-5 h-5" />
+        </button>
+        <h1 className="text-sm font-semibold text-foreground">
+          <span className="text-primary">Teramot</span>{" "}
+          <span className="text-muted-foreground font-normal text-xs">Prospecting</span>
+        </h1>
+      </div>
+
+      {/* Mobile overlay */}
+      {mobileOpen && (
+        <div className="md:hidden fixed inset-0 z-50 bg-black/60" onClick={() => setMobileOpen(false)}>
+          <aside
+            className="w-64 h-full flex flex-col border-r border-white/[0.08]"
+            style={{ background: "hsl(240 15% 6%)" }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {sidebarContent}
+          </aside>
+        </div>
+      )}
+
+      {/* Desktop sidebar */}
+      <aside className="hidden md:flex w-60 shrink-0 h-screen sticky top-0 flex-col border-r border-white/[0.08]" style={{ background: "hsl(240 15% 6%)" }}>
+        {sidebarContent}
+      </aside>
+    </>
   );
 }
 
