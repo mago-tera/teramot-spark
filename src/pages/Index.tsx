@@ -26,7 +26,7 @@ const Index = () => {
   return (
     <div className="flex min-h-screen w-full">
       <WizardSidebar steps={wizard.steps} currentStep={wizard.currentStep} onStepClick={wizard.goToStep} isInsideList={wizard.isInsideList} />
-      <main className="flex-1 p-8 max-w-5xl">
+      <main className="flex-1 px-4 py-6 pt-16 md:pt-6 md:px-8 md:py-8 max-w-5xl overflow-x-hidden">
         {renderStep()}
       </main>
     </div>
