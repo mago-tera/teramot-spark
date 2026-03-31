@@ -280,13 +280,20 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
     setTimeout(() => setCopiedLinkedin(null), 1500);
   };
 
+  const personalizeText = (text: string, lead: SharedLead) => {
+    return text
+      .replace(/\[Nombre\]/gi, lead.first_name || "{{Nombre}}")
+      .replace(/\[Empresa\]/gi, lead.company || "{{Empresa}}")
+      .replace(/\[Cargo\]/gi, lead.title || "{{Cargo}}")
+      .replace(/\[Puesto\]/gi, lead.title || "{{Puesto}}");
+  };
+
   const copyMessageForLead = (lead: SharedLead) => {
     if (!listInfo?.copy_sugerido) return;
-    const name = lead.first_name || "{{Nombre}}";
-    const message = listInfo.copy_sugerido.replace(/\[Nombre\]/gi, name);
+    const message = personalizeText(listInfo.copy_sugerido, lead);
     let fullText = "";
     if (subject) {
-      fullText = `Subject: ${subject.replace(/\[Nombre\]/gi, name)}\n\n${message}`;
+      fullText = `Subject: ${personalizeText(subject, lead)}\n\n${message}`;
     } else {
       fullText = message;
     }
