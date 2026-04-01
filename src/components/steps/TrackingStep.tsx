@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { CampaignConfig, ScoredLead } from "@/hooks/useWizard";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, ExternalLink, BarChart3, TrendingUp, Users, Send, MessageSquare, Target, Mail, Linkedin, ChevronDown, Pencil, Check, X, ArrowLeft } from "lucide-react";
+import { Copy, ExternalLink, BarChart3, TrendingUp, Users, Send, MessageSquare, Target, Mail, Linkedin, ChevronDown, Pencil, Check, X, ArrowLeft, Trash2 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { ChartTooltip } from "@/components/ui/chart";
 import { toast } from "sonner";
@@ -224,6 +224,7 @@ function OutreachRow({ outreach, onCopyLink, onView, onNameUpdated }: {
 }) {
   const [editing, setEditing] = useState(false);
   const [editName, setEditName] = useState(outreach.name);
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -240,6 +241,12 @@ function OutreachRow({ outreach, onCopyLink, onView, onNameUpdated }: {
     await supabase.from("outreaches").update({ name: trimmed }).eq("id", outreach.id);
     toast.success("Nombre actualizado");
     setEditing(false);
+    onNameUpdated();
+  };
+
+  const deleteOutreach = async () => {
+    await supabase.from("outreaches").delete().eq("id", outreach.id);
+    toast.success("Outreach eliminado");
     onNameUpdated();
   };
 
@@ -289,6 +296,20 @@ function OutreachRow({ outreach, onCopyLink, onView, onNameUpdated }: {
         <button onClick={onView} className="px-3 py-1.5 rounded-lg text-[11px] font-medium bg-primary/15 text-primary hover:bg-primary/25 transition-colors">
           Ver
         </button>
+        {confirmDelete ? (
+          <div className="flex items-center gap-1">
+            <button onClick={deleteOutreach} className="px-2 py-1 rounded-lg text-[11px] font-medium bg-destructive text-destructive-foreground hover:bg-destructive/90 transition-colors">
+              Confirmar
+            </button>
+            <button onClick={() => setConfirmDelete(false)} className="p-1 rounded hover:bg-muted transition-colors text-muted-foreground">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        ) : (
+          <button onClick={() => setConfirmDelete(true)} className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors text-muted-foreground hover:text-destructive" title="Eliminar outreach">
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+        )}
       </div>
     </div>
   );
