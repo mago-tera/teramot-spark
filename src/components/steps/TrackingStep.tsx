@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { CampaignConfig, ScoredLead } from "@/hooks/useWizard";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, ExternalLink, BarChart3, TrendingUp, Users, Send, MessageSquare, Target, Mail, Linkedin, ChevronDown, Pencil, Check, X, ArrowLeft } from "lucide-react";
+import { Copy, ExternalLink, BarChart3, TrendingUp, Users, Send, MessageSquare, Target, Mail, Linkedin, ChevronDown, Pencil, Check, X, ArrowLeft, Trash2 } from "lucide-react";
 import { PieChart, Pie, Cell, ResponsiveContainer } from "recharts";
 import { ChartTooltip } from "@/components/ui/chart";
 import { toast } from "sonner";
