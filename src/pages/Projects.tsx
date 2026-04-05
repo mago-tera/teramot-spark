@@ -27,10 +27,7 @@ interface MyOutreach {
   name: string;
   campaign_id: string;
   canal: string | null;
-  lead_count: number;
-  enviados: number;
-  respondidos: number;
-  conversiones: number;
+  responsable: string | null;
   created_at: string;
 }
 
