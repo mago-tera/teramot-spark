@@ -436,44 +436,38 @@ export default function Projects() {
               </div>
             ) : (
               <div className="space-y-3">
-                {myOutreaches.map((o) => {
-                  const responseRate = o.enviados > 0 ? ((o.respondidos / o.enviados) * 100).toFixed(0) : "0";
-                  return (
-                    <div
-                      key={o.id}
-                      onClick={() => navigate(`/shared/list/${o.id}`)}
-                      className="glass-card glass-card-hover w-full p-5 flex items-center gap-5 text-left transition-all group cursor-pointer"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        {o.canal?.toLowerCase() === "linkedin" ? (
-                          <Linkedin className="w-5 h-5 text-primary" />
-                        ) : (
-                          <Mail className="w-5 h-5 text-primary" />
+                {myOutreaches.map((o) => (
+                  <div
+                    key={o.id}
+                    onClick={() => navigate(`/shared/outreach/${o.id}`)}
+                    className="glass-card glass-card-hover w-full p-5 flex items-center gap-5 text-left transition-all group cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      {o.canal?.toLowerCase() === "linkedin" ? (
+                        <Linkedin className="w-5 h-5 text-primary" />
+                      ) : (
+                        <Mail className="w-5 h-5 text-primary" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-sm font-medium text-foreground truncate">{o.name || "Sin nombre"}</h3>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                          {o.canal || "Sin canal"}
+                        </span>
+                        {o.responsable && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                            {o.responsable}
+                          </span>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-medium text-foreground truncate">{o.name || "Sin nombre"}</h3>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                            {o.canal || "Sin canal"}
-                          </span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                            {o.lead_count} leads
-                          </span>
-                        </div>
-                        <div className="flex gap-4 mt-1.5">
-                          <span className="text-[10px] text-muted-foreground">📤 {o.enviados} enviados</span>
-                          <span className="text-[10px] text-muted-foreground">💬 {o.respondidos} resp. ({responseRate}%)</span>
-                          <span className="text-[10px] text-muted-foreground">🎯 {o.conversiones} conv.</span>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground/60 mt-1">
-                          {new Date(o.created_at).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}
-                        </p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-foreground transition-colors" />
+                      <p className="text-[10px] text-muted-foreground/60 mt-1">
+                        {new Date(o.created_at).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}
+                      </p>
                     </div>
-                  );
-                })}
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-foreground transition-colors" />
+                  </div>
+                ))}
               </div>
             )}
           </>
