@@ -720,12 +720,12 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
 
 // Default export for route usage
 export default function SharedListPage() {
-  const { listId } = useParams();
-  if (!listId) return null;
+  const { listId, outreachId } = useParams();
+  if (!listId && !outreachId) return null;
   return (
     <div className="min-h-screen" style={{ background: "hsl(240 15% 6%)" }}>
       <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-8">
-        <OutreachView listId={listId} />
+        <OutreachView listId={listId} outreachId={outreachId} />
       </div>
     </div>
   );
