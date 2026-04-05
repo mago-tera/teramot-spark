@@ -46,6 +46,7 @@ const App = () => (
           <Route path="/project/:projectId/campaign/new" element={<AuthGuard><Index /></AuthGuard>} />
           <Route path="/project/:projectId/campaign/:id" element={<AuthGuard><Index /></AuthGuard>} />
           <Route path="/shared/list/:listId" element={<SharedListPage />} />
+          <Route path="/shared/outreach/:outreachId" element={<SharedListPage />} />
           {/* Legacy routes redirect */}
           <Route path="/campaign/*" element={<Navigate to="/" replace />} />
           <Route path="*" element={<NotFound />} />
