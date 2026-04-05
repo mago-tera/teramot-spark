@@ -29,6 +29,18 @@ interface OutreachInfo {
   canal: string | null;
   copy_sugerido: string;
   copy_sugerido_subject: string;
+  filtros_compartidos: Record<string, string | null>;
+}
+
+interface LeadForTracking {
+  id: string;
+  enviado: boolean;
+  respondido: boolean;
+  conversion: boolean;
+  canal: string | null;
+  responsable: string | null;
+  calificacion: string | null;
+  list_id: string | null;
 }
 
 const PIE_COLORS = [
