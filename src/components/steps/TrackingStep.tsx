@@ -52,35 +52,57 @@ const PIE_COLORS = [
 
 export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
   const [leads, setLeads] = useState<LeadForTracking[]>([]);
+  const [outreaches, setOutreaches] = useState<OutreachInfo[]>([]);
   const [outreachOpen, setOutreachOpen] = useState(false);
   const [viewingOutreachId, setViewingOutreachId] = useState<string | null>(null);
 
   const fetchData = async () => {
     if (!campaignId) return;
 
-    // Fetch outreaches first to get their list_ids
+    // Fetch outreaches with their filters
     const { data: outreachData } = await supabase
       .from("outreaches")
-      .select("id, list_id, name, responsable, canal, copy_sugerido, copy_sugerido_subject")
+      .select("id, list_id, name, responsable, canal, copy_sugerido, copy_sugerido_subject, filtros_compartidos")
       .eq("campaign_id", campaignId)
       .order("created_at", { ascending: false });
 
     if (outreachData) setOutreaches(outreachData as OutreachInfo[]);
 
-    // Get leads only from outreach list_ids to reflect real outreach data
-    const listIds = (outreachData || []).map((o) => o.list_id).filter(Boolean);
+    const listIds = [...new Set((outreachData || []).map((o) => o.list_id).filter(Boolean))];
 
     if (listIds.length > 0) {
       const { data: leadData } = await supabase
         .from("leads")
-        .select("enviado, respondido, conversion, canal")
+        .select("id, enviado, respondido, conversion, canal, responsable, calificacion, list_id")
         .in("list_id", listIds);
-      if (leadData) setLeads(leadData);
+
+      if (leadData && outreachData) {
+        // Only count leads that match at least one outreach's filters
+        const filtered = leadData.filter((lead) =>
+          outreachData.some((o) => {
+            if (lead.list_id !== o.list_id) return false;
+            const f = o.filtros_compartidos || {};
+            if (f.canal && lead.canal?.toLowerCase() !== f.canal.toLowerCase()) return false;
+            if (f.responsable && lead.responsable?.toLowerCase() !== f.responsable.toLowerCase()) return false;
+            if (f.calificacion && lead.calificacion?.toUpperCase() !== f.calificacion.toUpperCase()) return false;
+            return true;
+          })
+        );
+        // Deduplicate by lead id
+        const seen = new Set<string>();
+        const deduped = filtered.filter((l) => {
+          if (seen.has(l.id)) return false;
+          seen.add(l.id);
+          return true;
+        });
+        setLeads(deduped);
+      } else if (leadData) {
+        setLeads(leadData);
+      }
     } else {
-      // Fallback: show all campaign leads if no outreaches yet
       const { data: leadData } = await supabase
         .from("leads")
-        .select("enviado, respondido, conversion, canal")
+        .select("id, enviado, respondido, conversion, canal, responsable, calificacion, list_id")
         .eq("campaign_id", campaignId);
       if (leadData) setLeads(leadData);
     }
