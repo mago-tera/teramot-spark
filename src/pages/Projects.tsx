@@ -87,24 +87,21 @@ export default function Projects() {
     }
 
     const listIds = memberships.map((m) => m.list_id);
-    const { data: lists } = await supabase
-      .from("lists")
-      .select("id, name, campaign_id, lead_count, enviados, respondidos, conversiones, created_at, filtros_compartidos")
-      .in("id", listIds)
-      .eq("shared", true)
+    // Fetch outreaches linked to those lists
+    const { data: outreachData } = await supabase
+      .from("outreaches")
+      .select("id, name, campaign_id, canal, responsable, created_at, list_id")
+      .in("list_id", listIds)
       .order("created_at", { ascending: false });
 
-    if (lists) {
-      setMyOutreaches(lists.map((l) => ({
-        id: l.id,
-        name: l.name,
-        campaign_id: l.campaign_id,
-        canal: (l.filtros_compartidos as any)?.canal || null,
-        lead_count: l.lead_count,
-        enviados: l.enviados,
-        respondidos: l.respondidos,
-        conversiones: l.conversiones,
-        created_at: l.created_at,
+    if (outreachData) {
+      setMyOutreaches(outreachData.map((o) => ({
+        id: o.id,
+        name: o.name,
+        campaign_id: o.campaign_id,
+        canal: o.canal,
+        responsable: o.responsable,
+        created_at: o.created_at,
       })));
     }
   };
