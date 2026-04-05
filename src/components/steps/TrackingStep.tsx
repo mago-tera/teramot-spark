@@ -51,8 +51,7 @@ const PIE_COLORS = [
 ];
 
 export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
-  const [leads, setLeads] = useState<LeadMetrics[]>([]);
-  const [outreaches, setOutreaches] = useState<OutreachInfo[]>([]);
+  const [leads, setLeads] = useState<LeadForTracking[]>([]);
   const [outreachOpen, setOutreachOpen] = useState(false);
   const [viewingOutreachId, setViewingOutreachId] = useState<string | null>(null);
 
