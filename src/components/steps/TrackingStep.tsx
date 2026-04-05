@@ -81,7 +81,7 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
         const filtered = leadData.filter((lead) =>
           outreachData.some((o) => {
             if (lead.list_id !== o.list_id) return false;
-            const f = o.filtros_compartidos || {};
+            const f = (o.filtros_compartidos || {}) as Record<string, string | null>;
             if (f.canal && lead.canal?.toLowerCase() !== f.canal.toLowerCase()) return false;
             if (f.responsable && lead.responsable?.toLowerCase() !== f.responsable.toLowerCase()) return false;
             if (f.calificacion && lead.calificacion?.toUpperCase() !== f.calificacion.toUpperCase()) return false;
