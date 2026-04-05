@@ -27,10 +27,7 @@ interface MyOutreach {
   name: string;
   campaign_id: string;
   canal: string | null;
-  lead_count: number;
-  enviados: number;
-  respondidos: number;
-  conversiones: number;
+  responsable: string | null;
   created_at: string;
 }
 
@@ -90,24 +87,21 @@ export default function Projects() {
     }
 
     const listIds = memberships.map((m) => m.list_id);
-    const { data: lists } = await supabase
-      .from("lists")
-      .select("id, name, campaign_id, lead_count, enviados, respondidos, conversiones, created_at, filtros_compartidos")
-      .in("id", listIds)
-      .eq("shared", true)
+    // Fetch outreaches linked to those lists
+    const { data: outreachData } = await supabase
+      .from("outreaches")
+      .select("id, name, campaign_id, canal, responsable, created_at, list_id")
+      .in("list_id", listIds)
       .order("created_at", { ascending: false });
 
-    if (lists) {
-      setMyOutreaches(lists.map((l) => ({
-        id: l.id,
-        name: l.name,
-        campaign_id: l.campaign_id,
-        canal: (l.filtros_compartidos as any)?.canal || null,
-        lead_count: l.lead_count,
-        enviados: l.enviados,
-        respondidos: l.respondidos,
-        conversiones: l.conversiones,
-        created_at: l.created_at,
+    if (outreachData) {
+      setMyOutreaches(outreachData.map((o) => ({
+        id: o.id,
+        name: o.name,
+        campaign_id: o.campaign_id,
+        canal: o.canal,
+        responsable: o.responsable,
+        created_at: o.created_at,
       })));
     }
   };
@@ -442,44 +436,38 @@ export default function Projects() {
               </div>
             ) : (
               <div className="space-y-3">
-                {myOutreaches.map((o) => {
-                  const responseRate = o.enviados > 0 ? ((o.respondidos / o.enviados) * 100).toFixed(0) : "0";
-                  return (
-                    <div
-                      key={o.id}
-                      onClick={() => navigate(`/shared/list/${o.id}`)}
-                      className="glass-card glass-card-hover w-full p-5 flex items-center gap-5 text-left transition-all group cursor-pointer"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                        {o.canal?.toLowerCase() === "linkedin" ? (
-                          <Linkedin className="w-5 h-5 text-primary" />
-                        ) : (
-                          <Mail className="w-5 h-5 text-primary" />
+                {myOutreaches.map((o) => (
+                  <div
+                    key={o.id}
+                    onClick={() => navigate(`/shared/outreach/${o.id}`)}
+                    className="glass-card glass-card-hover w-full p-5 flex items-center gap-5 text-left transition-all group cursor-pointer"
+                  >
+                    <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                      {o.canal?.toLowerCase() === "linkedin" ? (
+                        <Linkedin className="w-5 h-5 text-primary" />
+                      ) : (
+                        <Mail className="w-5 h-5 text-primary" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-sm font-medium text-foreground truncate">{o.name || "Sin nombre"}</h3>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                          {o.canal || "Sin canal"}
+                        </span>
+                        {o.responsable && (
+                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                            {o.responsable}
+                          </span>
                         )}
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-sm font-medium text-foreground truncate">{o.name || "Sin nombre"}</h3>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                            {o.canal || "Sin canal"}
-                          </span>
-                          <span className="text-[10px] px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                            {o.lead_count} leads
-                          </span>
-                        </div>
-                        <div className="flex gap-4 mt-1.5">
-                          <span className="text-[10px] text-muted-foreground">📤 {o.enviados} enviados</span>
-                          <span className="text-[10px] text-muted-foreground">💬 {o.respondidos} resp. ({responseRate}%)</span>
-                          <span className="text-[10px] text-muted-foreground">🎯 {o.conversiones} conv.</span>
-                        </div>
-                        <p className="text-[10px] text-muted-foreground/60 mt-1">
-                          {new Date(o.created_at).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}
-                        </p>
-                      </div>
-                      <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-foreground transition-colors" />
+                      <p className="text-[10px] text-muted-foreground/60 mt-1">
+                        {new Date(o.created_at).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}
+                      </p>
                     </div>
-                  );
-                })}
+                    <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-foreground transition-colors" />
+                  </div>
+                ))}
               </div>
             )}
           </>
