@@ -44,23 +44,35 @@ export function TrackingStep({ config, scoredLeads, campaignId }: Props) {
   const [outreachOpen, setOutreachOpen] = useState(false);
   const [viewingOutreachId, setViewingOutreachId] = useState<string | null>(null);
 
-  const fetchData = () => {
+  const fetchData = async () => {
     if (!campaignId) return;
-    supabase
-      .from("leads")
-      .select("enviado, respondido, conversion, canal")
-      .eq("campaign_id", campaignId)
-      .then(({ data }) => {
-        if (data) setLeads(data);
-      });
-    supabase
+
+    // Fetch outreaches first to get their list_ids
+    const { data: outreachData } = await supabase
       .from("outreaches")
       .select("id, list_id, name, responsable, canal, copy_sugerido, copy_sugerido_subject")
       .eq("campaign_id", campaignId)
-      .order("created_at", { ascending: false })
-      .then(({ data }) => {
-        if (data) setOutreaches(data as OutreachInfo[]);
-      });
+      .order("created_at", { ascending: false });
+
+    if (outreachData) setOutreaches(outreachData as OutreachInfo[]);
+
+    // Get leads only from outreach list_ids to reflect real outreach data
+    const listIds = (outreachData || []).map((o) => o.list_id).filter(Boolean);
+
+    if (listIds.length > 0) {
+      const { data: leadData } = await supabase
+        .from("leads")
+        .select("enviado, respondido, conversion, canal")
+        .in("list_id", listIds);
+      if (leadData) setLeads(leadData);
+    } else {
+      // Fallback: show all campaign leads if no outreaches yet
+      const { data: leadData } = await supabase
+        .from("leads")
+        .select("enviado, respondido, conversion, canal")
+        .eq("campaign_id", campaignId);
+      if (leadData) setLeads(leadData);
+    }
   };
 
   useEffect(() => {
