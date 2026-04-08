@@ -38,7 +38,7 @@ export default function Projects() {
   const [sharedProjects, setSharedProjects] = useState<Project[]>([]);
   const [myOutreaches, setMyOutreaches] = useState<MyOutreach[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<"projects" | "outreaches">("projects");
+  const [tab, setTab] = useState<"projects" | "outreaches">("outreaches");
   const [mobileOpen, setMobileOpen] = useState(false);
   const [filter, setFilter] = useState<"mine" | "others">("mine");
   const [editingId, setEditingId] = useState<string | null>(null);
