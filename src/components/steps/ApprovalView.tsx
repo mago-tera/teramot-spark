@@ -69,6 +69,7 @@ export function ApprovalView({ listId, listName, onBack }: Props) {
               country: d.country || "",
               email: d.email || "",
               linkedinUrl: d.linkedin_url || "",
+              phone: d.phone || null,
               score: d.score || 0,
               quartile: d.quartile || "Q4",
               calificacion: d.calificacion,
