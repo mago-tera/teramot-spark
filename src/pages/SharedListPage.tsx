@@ -14,6 +14,7 @@ interface SharedLead {
   country: string | null;
   email: string | null;
   linkedin_url: string | null;
+  phone: string | null;
   score: number | null;
   quartile: string | null;
   calificacion: string | null;
@@ -617,7 +618,7 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
                   ...(showEmail ? ["Email"] : []),
                   ...(showLinkedin ? ["LinkedIn"] : []),
                   "Mensaje",
-                  "Score",
+                  "Teléfono",
                   ...(isLinkedin ? ["Contactado"] : []),
                   "Enviado", "Respondido", "Conversión"
                 ].map((h) => (
@@ -674,9 +675,7 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
                         <span className="text-[10px] text-muted-foreground">—</span>
                       )}
                     </td>
-                    <td className="px-3 py-2.5">
-                      <span className={`inline-block px-3 py-1.5 rounded text-xs font-medium border whitespace-nowrap ${qs.bg} ${qs.text} ${qs.border}`}>{qs.label}</span>
-                    </td>
+                    <td className="px-3 py-2.5 text-muted-foreground font-mono text-[10px] whitespace-nowrap">{lead.phone || "—"}</td>
                     {isLinkedin && (
                       <td className="px-3 py-2.5 text-center">
                         <button onClick={() => toggleField(lead.id, "agregado")} className="transition-colors">

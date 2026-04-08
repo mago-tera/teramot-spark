@@ -28,6 +28,7 @@ export interface Lead {
   email: string;
   linkedinUrl: string;
   headcount: number;
+  phone?: string;
   apolloId?: string;
 }
 

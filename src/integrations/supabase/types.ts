@@ -154,6 +154,7 @@ export type Database = {
           linkedin_url: string | null
           list_id: string | null
           messages: Json | null
+          phone: string | null
           quartile: string | null
           respondido: boolean
           responsable: string | null
@@ -180,6 +181,7 @@ export type Database = {
           linkedin_url?: string | null
           list_id?: string | null
           messages?: Json | null
+          phone?: string | null
           quartile?: string | null
           respondido?: boolean
           responsable?: string | null
@@ -206,6 +208,7 @@ export type Database = {
           linkedin_url?: string | null
           list_id?: string | null
           messages?: Json | null
+          phone?: string | null
           quartile?: string | null
           respondido?: boolean
           responsable?: string | null

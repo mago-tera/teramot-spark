@@ -13,6 +13,7 @@ interface ApprovalLead {
   country: string;
   email: string;
   linkedinUrl: string;
+  phone: string | null;
   score: number;
   quartile: string;
   calificacion: string | null;
@@ -68,6 +69,7 @@ export function ApprovalView({ listId, listName, onBack }: Props) {
               country: d.country || "",
               email: d.email || "",
               linkedinUrl: d.linkedin_url || "",
+              phone: d.phone || null,
               score: d.score || 0,
               quartile: d.quartile || "Q4",
               calificacion: d.calificacion,
@@ -121,7 +123,7 @@ export function ApprovalView({ listId, listName, onBack }: Props) {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-white/[0.06]">
-                {["Nombre", "Cargo", "Empresa", "País", "Email", "Score", "Cuartil", "Calificación", "Responsable", "Canal"].map(
+                {["Nombre", "Cargo", "Empresa", "País", "Email", "Teléfono", "Calificación", "Responsable", "Canal"].map(
                   (h) => (
                     <th
                       key={h}
@@ -156,14 +158,7 @@ export function ApprovalView({ listId, listName, onBack }: Props) {
                     <td className="px-3 py-2.5 text-muted-foreground font-mono text-[10px]">
                       {lead.email || "—"}
                     </td>
-                    <td className="px-3 py-2.5 text-foreground font-semibold">{lead.score}</td>
-                    <td className="px-3 py-2.5">
-                      <span
-                        className={`px-2 py-0.5 rounded text-[10px] border ${q.cls}`}
-                      >
-                        {q.label}
-                      </span>
-                    </td>
+                    <td className="px-3 py-2.5 text-muted-foreground font-mono text-[10px] whitespace-nowrap">{lead.phone || "—"}</td>
                     {/* Calificación */}
                     <td className="px-3 py-2.5">
                       <select
