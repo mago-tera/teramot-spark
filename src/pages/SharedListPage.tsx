@@ -420,6 +420,13 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
             </div>
           ) : (
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => window.history.back()}
+                className="p-1.5 rounded-md hover:bg-muted/30 text-muted-foreground hover:text-foreground transition-colors"
+                title="Volver"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
               <h2 className="text-xl font-bold text-foreground">{listInfo.name}</h2>
               <button
                 onClick={() => { setNameDraft(listInfo.name); setEditingName(true); }}
