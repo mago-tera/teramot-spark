@@ -614,7 +614,7 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
             <thead>
               <tr className="border-b border-border/40">
                 {[
-                  "Nombre", "Cargo", "Empresa", "País",
+                  "Nombre", "Apellido", "Cargo", "Empresa", "País",
                   ...(showEmail ? ["Email"] : []),
                   ...(showLinkedin ? ["LinkedIn"] : []),
                   "Mensaje",
