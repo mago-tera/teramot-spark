@@ -614,7 +614,7 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
             <thead>
               <tr className="border-b border-border/40">
                 {[
-                  "Nombre", "Cargo", "Empresa", "País",
+                  "Nombre", "Apellido", "Cargo", "Empresa", "País",
                   ...(showEmail ? ["Email"] : []),
                   ...(showLinkedin ? ["LinkedIn"] : []),
                   "Mensaje",
@@ -631,7 +631,8 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
                 const qs = QUARTILE_STYLES[lead.quartile || "Q4"] || QUARTILE_STYLES.Q4;
                 return (
                   <tr key={lead.id} className={`border-b border-border/20 ${i % 2 === 0 ? "bg-muted/5" : ""} hover:bg-muted/10 transition-colors`}>
-                    <td className="px-3 py-2.5 text-foreground font-medium whitespace-nowrap">{lead.first_name} {lead.last_name}</td>
+                    <td className="px-3 py-2.5 text-foreground font-medium whitespace-nowrap">{lead.first_name}</td>
+                    <td className="px-3 py-2.5 text-foreground whitespace-nowrap">{lead.last_name}</td>
                     <td className="px-3 py-2.5 text-muted-foreground max-w-[160px] truncate">{lead.title}</td>
                     <td className="px-3 py-2.5 text-muted-foreground">{lead.company}</td>
                     <td className="px-3 py-2.5">
@@ -675,7 +676,18 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
                         <span className="text-[10px] text-muted-foreground">—</span>
                       )}
                     </td>
-                    <td className="px-3 py-2.5 text-muted-foreground font-mono text-[10px] whitespace-nowrap">{lead.phone || "—"}</td>
+                    <td className="px-3 py-2.5 whitespace-nowrap">
+                      {lead.phone ? (
+                        <a
+                          href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-400 hover:text-green-300 font-mono text-[10px] underline"
+                        >
+                          {lead.phone}
+                        </a>
+                      ) : <span className="text-muted-foreground text-[10px]">—</span>}
+                    </td>
                     {isLinkedin && (
                       <td className="px-3 py-2.5 text-center">
                         <button onClick={() => toggleField(lead.id, "agregado")} className="transition-colors">
