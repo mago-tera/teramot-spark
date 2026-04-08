@@ -631,7 +631,8 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
                 const qs = QUARTILE_STYLES[lead.quartile || "Q4"] || QUARTILE_STYLES.Q4;
                 return (
                   <tr key={lead.id} className={`border-b border-border/20 ${i % 2 === 0 ? "bg-muted/5" : ""} hover:bg-muted/10 transition-colors`}>
-                    <td className="px-3 py-2.5 text-foreground font-medium whitespace-nowrap">{lead.first_name} {lead.last_name}</td>
+                    <td className="px-3 py-2.5 text-foreground font-medium whitespace-nowrap">{lead.first_name}</td>
+                    <td className="px-3 py-2.5 text-foreground whitespace-nowrap">{lead.last_name}</td>
                     <td className="px-3 py-2.5 text-muted-foreground max-w-[160px] truncate">{lead.title}</td>
                     <td className="px-3 py-2.5 text-muted-foreground">{lead.company}</td>
                     <td className="px-3 py-2.5">
