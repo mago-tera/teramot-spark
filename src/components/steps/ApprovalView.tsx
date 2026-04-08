@@ -123,7 +123,7 @@ export function ApprovalView({ listId, listName, onBack }: Props) {
           <table className="w-full text-xs">
             <thead>
               <tr className="border-b border-white/[0.06]">
-                {["Nombre", "Cargo", "Empresa", "País", "Email", "Teléfono", "Calificación", "Responsable", "Canal"].map(
+                {["Nombre", "Apellido", "Cargo", "Empresa", "País", "Email", "Teléfono", "Calificación", "Responsable", "Canal"].map(
                   (h) => (
                     <th
                       key={h}
