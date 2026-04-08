@@ -161,7 +161,18 @@ export function ApprovalView({ listId, listName, onBack }: Props) {
                     <td className="px-3 py-2.5 text-muted-foreground font-mono text-[10px]">
                       {lead.email || "—"}
                     </td>
-                    <td className="px-3 py-2.5 text-muted-foreground font-mono text-[10px] whitespace-nowrap">{lead.phone || "—"}</td>
+                    <td className="px-3 py-2.5 whitespace-nowrap">
+                      {lead.phone ? (
+                        <a
+                          href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, "")}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-green-400 hover:text-green-300 font-mono text-[10px] underline"
+                        >
+                          {lead.phone}
+                        </a>
+                      ) : <span className="text-muted-foreground text-[10px]">—</span>}
+                    </td>
                     {/* Calificación */}
                     <td className="px-3 py-2.5">
                       <select
