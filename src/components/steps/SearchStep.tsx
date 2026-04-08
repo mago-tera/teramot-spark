@@ -739,7 +739,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
               <table className="w-full text-xs">
                 <thead>
                   <tr className="border-b border-white/[0.06]">
-                    {["Nombre", "Cargo", "Empresa", "País", "Email", "LinkedIn", "Score"].map((h) => (
+                    {["Nombre", "Cargo", "Empresa", "País", "Email", "LinkedIn", "Teléfono"].map((h) => (
                       <th key={h} className="px-3 py-3 text-left text-[11px] uppercase tracking-wider text-muted-foreground font-medium whitespace-nowrap">{h}</th>
                     ))}
                     {(["calificacion", "responsable", "canal"] as const).map((f) => (
@@ -801,9 +801,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                             </div>
                           ) : <span className="text-muted-foreground text-[10px]">—</span>}
                         </td>
-                        <td className="px-3 py-2.5">
-                          <span className={`px-2 py-0.5 rounded text-[10px] border ${q.bg} ${q.text} ${q.border}`}>{q.label}</span>
-                        </td>
+                        <td className="px-3 py-2.5 text-muted-foreground font-mono text-[10px] whitespace-nowrap">{(lead as any).phone || "—"}</td>
                         {/* Aprobado */}
                         <td className="px-3 py-2.5">
                           <select
