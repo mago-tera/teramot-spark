@@ -14,6 +14,7 @@ interface SharedLead {
   country: string | null;
   email: string | null;
   linkedin_url: string | null;
+  phone: string | null;
   score: number | null;
   quartile: string | null;
   calificacion: string | null;

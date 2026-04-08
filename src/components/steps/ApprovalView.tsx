@@ -13,6 +13,7 @@ interface ApprovalLead {
   country: string;
   email: string;
   linkedinUrl: string;
+  phone: string | null;
   score: number;
   quartile: string;
   calificacion: string | null;
