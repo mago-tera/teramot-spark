@@ -677,16 +677,20 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
                       )}
                     </td>
                     <td className="px-3 py-2.5 whitespace-nowrap">
-                      {lead.phone ? (
-                        <a
-                          href={`https://wa.me/${lead.phone.replace(/[^0-9]/g, "")}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-green-400 hover:text-green-300 font-mono text-[10px] underline"
-                        >
-                          {lead.phone}
-                        </a>
-                      ) : <span className="text-muted-foreground text-[10px]">—</span>}
+                      {lead.phone ? (() => {
+                        const digits = lead.phone!.replace(/[^0-9]/g, "");
+                        return (
+                          <a
+                            href={`https://wa.me/${digits}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded text-[10px] font-medium bg-green-500/10 border border-green-500/20 text-green-400 hover:bg-green-500/20 transition-colors"
+                          >
+                            <MessageCircle className="w-3 h-3" />
+                            WhatsApp
+                          </a>
+                        );
+                      })() : <span className="text-muted-foreground text-[10px]">—</span>}
                     </td>
                     {isLinkedin && (
                       <td className="px-3 py-2.5 text-center">
