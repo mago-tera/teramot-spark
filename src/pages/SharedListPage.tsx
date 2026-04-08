@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle2, Circle, Search, Copy, Check, ChevronDown, Sparkles, Save, Loader2, Users, UserPlus, Pencil, X, Trash2, MessageCircle } from "lucide-react";
+import { CheckCircle2, Circle, Search, Copy, Check, ChevronDown, Sparkles, Save, Loader2, Users, UserPlus, Pencil, X, Trash2, MessageCircle, ArrowLeft } from "lucide-react";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 interface SharedLead {
@@ -420,6 +420,13 @@ export function OutreachView({ listId: propListId, outreachId }: OutreachViewPro
             </div>
           ) : (
             <div className="flex items-center gap-2">
+              <button
+                onClick={() => window.history.back()}
+                className="p-1.5 rounded-md hover:bg-muted/30 text-muted-foreground hover:text-foreground transition-colors"
+                title="Volver"
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
               <h2 className="text-xl font-bold text-foreground">{listInfo.name}</h2>
               <button
                 onClick={() => { setNameDraft(listInfo.name); setEditingName(true); }}
