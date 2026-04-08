@@ -146,7 +146,10 @@ export function ApprovalView({ listId, listName, onBack }: Props) {
                     } hover:bg-white/[0.03] transition-colors`}
                   >
                     <td className="px-3 py-2.5 text-foreground font-medium whitespace-nowrap">
-                      {lead.firstName} {lead.lastName}
+                      {lead.firstName}
+                    </td>
+                    <td className="px-3 py-2.5 text-foreground whitespace-nowrap">
+                      {lead.lastName}
                     </td>
                     <td className="px-3 py-2.5 text-muted-foreground max-w-[160px] truncate">
                       {lead.title}
