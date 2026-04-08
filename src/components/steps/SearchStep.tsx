@@ -802,7 +802,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                             </div>
                           ) : <span className="text-muted-foreground text-[10px]">—</span>}
                         </td>
-                        <td className="px-3 py-2.5 text-muted-foreground font-mono text-[10px] whitespace-nowrap">{(lead as any).phone || "—"}</td>
+                        <td className="px-3 py-2.5 text-muted-foreground font-mono text-[10px] whitespace-nowrap">{lead.phone || "—"}</td>
                         {/* Aprobado */}
                         <td className="px-3 py-2.5">
                           <select
