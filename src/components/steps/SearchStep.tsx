@@ -489,6 +489,7 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     }
   };
 
+  const startSearch = async (searchConfig: CampaignConfig) => {
     setShowICPForm(false);
     setConfig(searchConfig);
     setSearching(true);
