@@ -1255,8 +1255,8 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
       </div>
 
       {/* New list name dialog */}
-      <AlertDialog open={showNewListDialog} onOpenChange={(open) => { setShowNewListDialog(open); if (!open) setSelectedSourceLists([]); }}>
-        <AlertDialogContent className="glass-card border-white/10 max-w-lg">
+      <AlertDialog open={showNewListDialog} onOpenChange={(open) => { setShowNewListDialog(open); if (!open) { setSelectedSourceLists([]); setCsvFile(null); setCsvPreviewCount(null); } }}>
+        <AlertDialogContent className="glass-card border-white/10 max-w-lg max-h-[90vh] overflow-y-auto">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-foreground">Nueva lista</AlertDialogTitle>
           </AlertDialogHeader>
