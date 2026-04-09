@@ -376,7 +376,119 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
     }
   };
 
-  const startSearch = async (searchConfig: CampaignConfig) => {
+  const handleCreateListFromCSV = async () => {
+    if (!csvFile || !newListName.trim()) return;
+    setShowNewListDialog(false);
+    setSearching(true);
+    setLogs([]);
+    setProgress(10);
+
+    try {
+      const text = await csvFile.text();
+      const wb = XLSX.read(text, { type: "string" });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows: any[] = XLSX.utils.sheet_to_json(ws, { defval: "" });
+
+      if (!rows.length) throw new Error("El archivo no contiene datos");
+
+      setLogs((prev) => [...prev, `📄 ${rows.length} filas encontradas en el CSV`]);
+      setProgress(20);
+
+      // Map columns (case-insensitive, flexible naming)
+      const colMap = (row: any) => {
+        const get = (keys: string[]) => {
+          for (const k of keys) {
+            const found = Object.keys(row).find((rk) => rk.toLowerCase().trim() === k.toLowerCase());
+            if (found && row[found]) return String(row[found]).trim();
+          }
+          return null;
+        };
+        return {
+          first_name: get(["first_name", "firstname", "nombre", "first name", "name"]),
+          last_name: get(["last_name", "lastname", "apellido", "last name", "surname"]),
+          email: get(["email", "correo", "mail", "e-mail"]),
+          title: get(["title", "titulo", "cargo", "job title", "position"]),
+          company: get(["company", "empresa", "organization", "compañía", "compania"]),
+          industry: get(["industry", "industria", "sector"]),
+          country: get(["country", "pais", "país", "location"]),
+          seniority: get(["seniority", "nivel", "level"]),
+          linkedin_url: get(["linkedin_url", "linkedin", "linkedin url", "linkedinurl", "linkedin profile"]),
+          phone: get(["phone", "telefono", "teléfono", "celular", "mobile", "whatsapp"]),
+          headcount: parseInt(get(["headcount", "employees", "empleados", "company size"]) || "0") || 0,
+        };
+      };
+
+      let activeCampaignId = campaignId;
+      if (!activeCampaignId) {
+        const { data: newCampaign, error: campErr } = await supabase.from("campaigns").insert({
+          name: `Campaña ${new Date().toLocaleDateString("es-AR", { day: "numeric", month: "short" })}`,
+          profile: "CSV Import", geo_mix: {}, quantity: rows.length, frequency: "once",
+          status: "configuracion", user_id: user?.id, project_id: projectId || null,
+        }).select().single();
+        if (campErr || !newCampaign) throw new Error("No se pudo crear la campaña");
+        activeCampaignId = newCampaign.id;
+        setCampaignId(activeCampaignId);
+        navigate(`/project/${projectId}/campaign/${activeCampaignId}`, { replace: true });
+      }
+
+      setProgress(40);
+      setLogs((prev) => [...prev, `📋 Creando lista...`]);
+
+      const { data: listData } = await supabase.from("lists").insert({
+        campaign_id: activeCampaignId, name: newListName.trim(),
+        profile: "CSV Import", geo_mix: {}, quantity: rows.length, frequency: "once", lead_count: 0,
+      }).select().single();
+
+      if (!listData) throw new Error("No se pudo crear la lista");
+
+      setProgress(60);
+      setLogs((prev) => [...prev, `⬆️ Insertando ${rows.length} leads...`]);
+
+      const leadsToInsert = rows.map((row) => {
+        const mapped = colMap(row);
+        return {
+          campaign_id: activeCampaignId,
+          list_id: listData.id,
+          first_name: mapped.first_name,
+          last_name: mapped.last_name,
+          email: mapped.email,
+          title: mapped.title,
+          company: mapped.company,
+          industry: mapped.industry,
+          country: mapped.country,
+          seniority: mapped.seniority,
+          linkedin_url: mapped.linkedin_url,
+          phone: mapped.phone,
+          headcount: mapped.headcount,
+        };
+      });
+
+      // Insert in batches of 100
+      let inserted = 0;
+      for (let i = 0; i < leadsToInsert.length; i += 100) {
+        const batch = leadsToInsert.slice(i, i + 100);
+        const { error } = await supabase.from("leads").insert(batch);
+        if (error) console.error("Batch insert error:", error);
+        else inserted += batch.length;
+        setProgress(60 + Math.round((i / leadsToInsert.length) * 35));
+      }
+
+      await supabase.from("lists").update({ lead_count: inserted }).eq("id", listData.id);
+      setLists((prev) => [{ ...listData, lead_count: inserted, geo_mix: {} as Record<string, number> } as ListItem, ...prev]);
+      setProgress(100);
+      setLogs((prev) => [...prev, `✓ ${inserted} leads importados desde CSV`]);
+      toast.success(`${inserted} leads importados a la nueva lista`);
+    } catch (e: any) {
+      console.error("CSV import error:", e);
+      toast.error(e.message || "Error importando CSV");
+      setLogs((prev) => [...prev, `✗ Error: ${e.message}`]);
+    } finally {
+      setSearching(false);
+      setCsvFile(null);
+      setCsvPreviewCount(null);
+    }
+  };
+
     setShowICPForm(false);
     setConfig(searchConfig);
     setSearching(true);
