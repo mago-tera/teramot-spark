@@ -188,6 +188,8 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
   const [deletingListId, setDeletingListId] = useState<string | null>(null);
   const [selectedSourceLists, setSelectedSourceLists] = useState<string[]>([]);
   const [copyingFromLists, setCopyingFromLists] = useState(false);
+  const [csvFile, setCsvFile] = useState<File | null>(null);
+  const [csvPreviewCount, setCsvPreviewCount] = useState<number | null>(null);
   // All lists across all campaigns in this project (for copy feature)
   const [projectLists, setProjectLists] = useState<(ListItem & { campaignName?: string })[]>([]);
   const [savingField, setSavingField] = useState<Record<string, boolean>>({});
