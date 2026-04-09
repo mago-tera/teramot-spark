@@ -1308,10 +1308,57 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                 )}
               </div>
             )}
+
+            {/* CSV Import */}
+            <div>
+              <label className="text-sm text-muted-foreground flex items-center gap-1.5 mb-2">
+                <Upload className="w-3.5 h-3.5" /> Importar desde CSV/Excel <span className="text-xs text-muted-foreground/60">(opcional)</span>
+              </label>
+              <label className="flex items-center justify-center gap-2 py-3 px-4 rounded-lg border border-dashed border-white/[0.12] bg-white/[0.02] hover:bg-white/[0.05] cursor-pointer transition-colors">
+                <Upload className="w-4 h-4 text-muted-foreground" />
+                <span className="text-xs text-muted-foreground">
+                  {csvFile ? `${csvFile.name} (${csvPreviewCount ?? "..."} filas)` : "Seleccionar archivo .csv o .xlsx"}
+                </span>
+                <input
+                  type="file"
+                  accept=".csv,.xlsx,.xls"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setCsvFile(file);
+                    // Preview row count
+                    file.text().then((text) => {
+                      try {
+                        const wb = XLSX.read(text, { type: "string" });
+                        const ws = wb.Sheets[wb.SheetNames[0]];
+                        const rows = XLSX.utils.sheet_to_json(ws);
+                        setCsvPreviewCount(rows.length);
+                      } catch { setCsvPreviewCount(null); }
+                    });
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+              {csvFile && (
+                <button onClick={() => { setCsvFile(null); setCsvPreviewCount(null); }} className="text-[10px] text-muted-foreground hover:text-foreground mt-1">
+                  ✕ Quitar archivo
+                </button>
+              )}
+            </div>
           </div>
           <AlertDialogFooter className="flex-col sm:flex-row gap-2">
             <AlertDialogCancel className="border-white/10 text-muted-foreground hover:bg-white/5">Cancelar</AlertDialogCancel>
-            {selectedSourceLists.length > 0 && (
+            {csvFile && (
+              <button
+                disabled={!newListName.trim()}
+                onClick={handleCreateListFromCSV}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-accent text-accent-foreground hover:bg-accent/80 transition-colors disabled:opacity-50"
+              >
+                <Upload className="w-3.5 h-3.5" /> Importar CSV
+              </button>
+            )}
+            {selectedSourceLists.length > 0 && !csvFile && (
               <button
                 disabled={!newListName.trim()}
                 onClick={handleCreateListWithCopies}
@@ -1320,13 +1367,15 @@ export function SearchStep({ config, setConfig, leads, setLeads, setScoredLeads,
                 <Copy className="w-3.5 h-3.5" /> Solo copiar
               </button>
             )}
-            <AlertDialogAction
-              disabled={!newListName.trim()}
-              onClick={() => { setShowICPForm(true); }}
-              className="bg-primary text-primary-foreground hover:bg-primary/90"
-            >
-              {selectedSourceLists.length > 0 ? "Copiar + buscar nuevos" : "Buscar leads"}
-            </AlertDialogAction>
+            {!csvFile && (
+              <AlertDialogAction
+                disabled={!newListName.trim()}
+                onClick={() => { setShowICPForm(true); }}
+                className="bg-primary text-primary-foreground hover:bg-primary/90"
+              >
+                {selectedSourceLists.length > 0 ? "Copiar + buscar nuevos" : "Buscar leads"}
+              </AlertDialogAction>
+            )}
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
