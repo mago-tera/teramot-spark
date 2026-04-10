@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, ChevronRight, Pencil, Check, LogOut, Trash2, UserPlus, FolderOpen, Send, Mail, Linkedin, Menu, X } from "lucide-react";
+import { Plus, ChevronRight, Pencil, Check, LogOut, Trash2, UserPlus, FolderOpen, Send, Mail, Linkedin, Menu, X, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,7 @@ interface MyOutreach {
   id: string;
   name: string;
   campaign_id: string;
+  list_id: string;
   canal: string | null;
   responsable: string | null;
   created_at: string;
@@ -99,10 +101,43 @@ export default function Projects() {
         id: o.id,
         name: o.name,
         campaign_id: o.campaign_id,
+        list_id: o.list_id,
         canal: o.canal,
         responsable: o.responsable,
         created_at: o.created_at,
       })));
+    }
+  };
+
+  const downloadOutreachExcel = async (e: React.MouseEvent, outreach: MyOutreach) => {
+    e.stopPropagation();
+    try {
+      const { data: leads, error } = await supabase
+        .from("leads")
+        .select("first_name, last_name, email, linkedin_url, company, title, enviado, respondido, conversion, canal, responsable")
+        .eq("list_id", outreach.list_id);
+      if (error) throw error;
+      if (!leads || leads.length === 0) { toast.error("No hay leads para exportar"); return; }
+
+      const isLinkedin = outreach.canal?.toLowerCase() === "linkedin";
+      const rows = leads.map((l) => ({
+        Nombre: l.first_name || "",
+        Apellido: l.last_name || "",
+        ...(isLinkedin ? { LinkedIn: l.linkedin_url || "" } : { Email: l.email || "" }),
+        Empresa: l.company || "",
+        Cargo: l.title || "",
+        Enviado: l.enviado ? "SI" : "NO",
+        Respondido: l.respondido ? "SI" : "NO",
+        Conversión: l.conversion ? "SI" : "NO",
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Leads");
+      XLSX.writeFile(wb, `${outreach.name || "outreach"}.xlsx`);
+      toast.success("Excel descargado");
+    } catch (err: any) {
+      toast.error(err.message || "Error descargando");
     }
   };
 
@@ -465,6 +500,13 @@ export default function Projects() {
                         {new Date(o.created_at).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}
                       </p>
                     </div>
+                    <button
+                      onClick={(e) => downloadOutreachExcel(e, o)}
+                      className="p-2 rounded-lg text-muted-foreground/40 hover:text-primary hover:bg-primary/10 transition-colors opacity-0 group-hover:opacity-100"
+                      title="Descargar Excel"
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
                     <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-foreground transition-colors" />
                   </div>
                 ))}
