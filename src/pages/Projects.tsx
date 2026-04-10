@@ -101,6 +101,7 @@ export default function Projects() {
         id: o.id,
         name: o.name,
         campaign_id: o.campaign_id,
+        list_id: o.list_id,
         canal: o.canal,
         responsable: o.responsable,
         created_at: o.created_at,
