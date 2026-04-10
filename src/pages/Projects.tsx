@@ -500,6 +500,13 @@ export default function Projects() {
                         {new Date(o.created_at).toLocaleDateString("es-AR", { day: "numeric", month: "short", year: "numeric" })}
                       </p>
                     </div>
+                    <button
+                      onClick={(e) => downloadOutreachExcel(e, o)}
+                      className="p-2 rounded-lg text-muted-foreground/40 hover:text-primary hover:bg-primary/10 transition-colors opacity-0 group-hover:opacity-100"
+                      title="Descargar Excel"
+                    >
+                      <Download className="w-4 h-4" />
+                    </button>
                     <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-foreground transition-colors" />
                   </div>
                 ))}
