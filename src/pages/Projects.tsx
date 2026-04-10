@@ -141,6 +141,7 @@ export default function Projects() {
     }
   };
 
+  const createProject = async () => {
     if (!newName.trim()) return;
     setCreating(true);
     try {
