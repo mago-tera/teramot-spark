@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Plus, ChevronRight, Pencil, Check, LogOut, Trash2, UserPlus, FolderOpen, Send, Mail, Linkedin, Menu, X } from "lucide-react";
+import { Plus, ChevronRight, Pencil, Check, LogOut, Trash2, UserPlus, FolderOpen, Send, Mail, Linkedin, Menu, X, Download } from "lucide-react";
+import * as XLSX from "xlsx";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,7 @@ interface MyOutreach {
   id: string;
   name: string;
   campaign_id: string;
+  list_id: string;
   canal: string | null;
   responsable: string | null;
   created_at: string;
