@@ -109,7 +109,38 @@ export default function Projects() {
     }
   };
 
-  const createProject = async () => {
+  const downloadOutreachExcel = async (e: React.MouseEvent, outreach: MyOutreach) => {
+    e.stopPropagation();
+    try {
+      const { data: leads, error } = await supabase
+        .from("leads")
+        .select("first_name, last_name, email, linkedin_url, company, title, enviado, respondido, conversion, canal, responsable")
+        .eq("list_id", outreach.list_id);
+      if (error) throw error;
+      if (!leads || leads.length === 0) { toast.error("No hay leads para exportar"); return; }
+
+      const isLinkedin = outreach.canal?.toLowerCase() === "linkedin";
+      const rows = leads.map((l) => ({
+        Nombre: l.first_name || "",
+        Apellido: l.last_name || "",
+        ...(isLinkedin ? { LinkedIn: l.linkedin_url || "" } : { Email: l.email || "" }),
+        Empresa: l.company || "",
+        Cargo: l.title || "",
+        Enviado: l.enviado ? "SI" : "NO",
+        Respondido: l.respondido ? "SI" : "NO",
+        Conversión: l.conversion ? "SI" : "NO",
+      }));
+
+      const ws = XLSX.utils.json_to_sheet(rows);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Leads");
+      XLSX.writeFile(wb, `${outreach.name || "outreach"}.xlsx`);
+      toast.success("Excel descargado");
+    } catch (err: any) {
+      toast.error(err.message || "Error descargando");
+    }
+  };
+
     if (!newName.trim()) return;
     setCreating(true);
     try {
