@@ -502,10 +502,11 @@ export default function Projects() {
                     </div>
                     <button
                       onClick={(e) => downloadOutreachExcel(e, o)}
-                      className="p-2 rounded-lg text-muted-foreground/40 hover:text-primary hover:bg-primary/10 transition-colors opacity-0 group-hover:opacity-100"
+                      className="px-3 py-1.5 rounded-lg text-xs font-medium bg-primary/10 text-primary hover:bg-primary/20 transition-colors flex items-center gap-1.5"
                       title="Descargar Excel"
                     >
-                      <Download className="w-4 h-4" />
+                      <Download className="w-3.5 h-3.5" />
+                      Excel
                     </button>
                     <ChevronRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-foreground transition-colors" />
                   </div>
